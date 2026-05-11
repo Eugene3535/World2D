@@ -6,8 +6,8 @@
 class Bullet: public Entity
 {
 public:
-	Bullet(sf::Sprite* sprite, const AnimationManager& a, std::span<Object> obj, int x, int y, bool dir) noexcept:
-		Entity(sprite, a, x, y)
+	Bullet(const Animator& a, std::span<Object> obj, int x, int y, bool dir) noexcept:
+		Entity(a, x, y)
 	{
 		setType<Bullet>(); 
 		setOptions(400.0f, 10, Animation::Type::BulletMove);

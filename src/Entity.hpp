@@ -9,7 +9,7 @@
 class Entity
 {
 public:
-	AnimationManager anim;
+	Animator anim;
 	std::span<Object> objects;
 	float timer, timer_end;
 	sf::FloatRect hitbox;
@@ -17,12 +17,9 @@ public:
 	int Health;
 	bool isAlive, dir;
 
-	Entity(sf::Sprite* sprite, const AnimationManager& A, int X, int Y) noexcept:
+	Entity(const Animator& A, int X, int Y) noexcept:
 		anim(A)
 	{
-		// setType<Entity>(); 
-		anim.sprite = sprite;
-
 		hitbox.position.x = X;
 		hitbox.position.y = Y;
 		dir = 0;

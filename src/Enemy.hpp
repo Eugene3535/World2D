@@ -7,8 +7,8 @@
 class Enemy: public Entity
 {
 public:
-	Enemy(sf::Sprite* sprite, const AnimationManager& a, int x, int y) noexcept:
-		Entity(sprite, a, x, y)
+	Enemy(const Animator& a, int x, int y) noexcept:
+		Entity(a, x, y)
 	{
 		setType<Enemy>(); 
 		setOptions(20.0f, 15, Animation::Type::EnemyMove);

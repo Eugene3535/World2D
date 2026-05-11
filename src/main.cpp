@@ -72,43 +72,49 @@ int main()
 	if (!bullet_t.loadFromFile("res/images/bullet.png")) return -1;
 
 
-	auto allocator = std::make_unique<MemoryAllocator<1024 * 48>>();
+	auto allocator = std::make_unique<MemoryAllocator<1024 * 24>>();
 
-	AnimationManager anim(allocator->allocate<sf::Sprite>(megaman_t));
-	anim.loadFromXML("res/anim_megaman.xml", megaman_t);
+	Animator anim(megaman_t);
+	anim.loadFromXML("res/anim_megaman.xml");
 	anim.animList[Animation::Type::PlayerJump].loop = 0;
 
-	AnimationManager anim2(allocator->allocate<sf::Sprite>(bullet_t));
-	anim2.create("BulletMove", bullet_t, 7, 10, 8, 8, 1, 0);
-	anim2.create("BulletExplode", bullet_t, 27, 7, 18, 18, 4, 16, 29, false);
+	Animator anim2(bullet_t);
+	anim2.create("BulletMove", 7, 10, 8, 8, 1, 0);
+	anim2.create("BulletExplode", 27, 7, 18, 18, 4, 16, 29, false);
 //	anim2.set("move"); // start animation
 
-	AnimationManager anim3(allocator->allocate<sf::Sprite>(enemy_t));
-	anim3.create("EnemyMove", enemy_t, 0, 0, 16, 16, 2, 4, 18);
-	anim3.create("EnemyDead", enemy_t, 58, 0, 16, 16, 1, 0);
+	Animator anim3(enemy_t);
+	anim3.create("EnemyMove", 0, 0, 16, 16, 2, 4, 18);
+	anim3.create("EnemyDead", 58, 0, 16, 16, 1, 0);
 
-	AnimationManager anim4(allocator->allocate<sf::Sprite>(moveplatform_t));
-	anim4.create("MovingPlatformMove", moveplatform_t, 0, 0, 95, 22, 1, 0);
+	Animator anim4(moveplatform_t);
+	anim4.create("MovingPlatformMove", 0, 0, 95, 22, 1, 0);
 
 	sf::Sprite* background = allocator->allocate<sf::Sprite>(bg);
 	background->setOrigin(sf::Vector2f(bg.getSize()) * 0.5f);
 	SetSpriteSize(*background, 800, 600);
 
-	std::vector<std::unique_ptr<Entity>> entities;
+	std::vector<Entity*> entities;
 
 	std::vector<Object> enemyObjects = lvl.GetObjects("enemy");
 	std::vector<Object> mpObjects    = lvl.GetObjects("MovingPlatform");
 	std::vector<Object> solidObjects = lvl.GetObjects("solid");
 	std::vector<Object> allObjects   = lvl.GetAllObjects();
 
-	for (int i = 0; i < enemyObjects.size(); i++)
-		entities.emplace_back(std::make_unique<Enemy>(allocator->allocate<sf::Sprite>(enemy_t), anim3, static_cast<int>(enemyObjects[i].bounds.position.x), static_cast<int>(enemyObjects[i].bounds.position.y)));
+	for (size_t i = 0; i < enemyObjects.size(); ++i)
+	{
+		auto entity = allocator->allocate<Enemy>(anim3, static_cast<int>(enemyObjects[i].bounds.position.x), static_cast<int>(enemyObjects[i].bounds.position.y));
+		entities.push_back(entity);
+	}
 
-	for (int i = 0; i < mpObjects.size(); i++)
-		entities.emplace_back(std::make_unique<MovingPlatform>(allocator->allocate<sf::Sprite>(moveplatform_t), anim4, static_cast<int>(mpObjects[i].bounds.position.x), static_cast<int>(mpObjects[i].bounds.position.y)));
+	for (size_t i = 0; i < mpObjects.size(); ++i)
+	{
+		auto entity = allocator->allocate<MovingPlatform>(anim3, static_cast<int>(enemyObjects[i].bounds.position.x), static_cast<int>(enemyObjects[i].bounds.position.y));
+		entities.push_back(entity);
+	}
 
 	Object pl = lvl.GetObject("player");
-	Player Mario(allocator->allocate<sf::Sprite>(megaman_t), anim, allObjects, pl.bounds.position.x, pl.bounds.position.y);
+	Player Mario(anim, allObjects, pl.bounds.position.x, pl.bounds.position.y);
 
 	HealthBar healthBar;
 
@@ -137,7 +143,7 @@ int main()
 				{
 					if (cooldown > 10)
 					{
-						entities.emplace_back(new Bullet(allocator->allocate<sf::Sprite>(bullet_t), anim2, solidObjects, static_cast<int>(Mario.hitbox.position.x + 18), static_cast<int>(Mario.hitbox.position.y + 18), Mario.dir));
+						entities.emplace_back(new Bullet(anim2, solidObjects, static_cast<int>(Mario.hitbox.position.x + 18), static_cast<int>(Mario.hitbox.position.y + 18), Mario.dir));
 						cooldown = 0;
 					}
 				}
@@ -166,12 +172,19 @@ int main()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
 			Mario.key.Space = true;
 
-		auto quick_remove = [&allocator](std::vector<std::unique_ptr<Entity>>& v, size_t i)
+		auto quick_remove = [&allocator, &entities](std::vector<Entity*>& v, size_t i)
 		{
-			auto sprite = v[i]->anim.sprite;
-			v[i].swap(v.back());
-			allocator->release<sf::Sprite>(sprite);
-			v.pop_back();
+			auto entity = entities[i];
+			entities[i] = entities.back();
+			entities.pop_back();
+
+			size_t entitySize = 0;
+
+			if (entity->is<Enemy>()) entitySize = sizeof(Enemy); // TODO: entity->getSizeInBytes()
+			if (entity->is<Bullet>()) entitySize = sizeof(Bullet);
+			if (entity->is<MovingPlatform>()) entitySize = sizeof(MovingPlatform);
+
+			allocator->release(entity, entitySize);
 		};
 
 		for (auto i = 0; i < entities.size(); ++i)
@@ -187,13 +200,13 @@ int main()
 		Mario.update(dt);
 		healthBar.update(Mario.Health);
 
-		for (auto& it : entities)
+		for (auto it : entities)
 		{
 			// 1. �����
 			//if ((*it)->Name == "Enemy")
-			if(it->is<Enemy>())
+			if (it->is<Enemy>())
 			{
-				Entity* enemy = it.get();
+				Entity* enemy = it;
 
 				if (enemy->Health < 1)
 					continue;
@@ -217,16 +230,20 @@ int main()
 					}
 				}
 
-				for (auto& it2 : entities)
+				for (auto it2 : entities)
 				{
 					//if (bullet->Name == "Bullet")
 					if(it2->is<Bullet>())
+					{
 						if (it2->Health > 0)
+						{
 							if (it2->hitbox.findIntersection(enemy->hitbox))
 							{
 								it2->Health = 0;
 								enemy->Health -= 5;
 							}
+						}
+					}
 				}
 			}
 
@@ -235,6 +252,7 @@ int main()
 			if(it->is<MovingPlatform>())
 			{
 				if (Mario.hitbox.findIntersection(it->hitbox))
+				{
 					if (Mario.dy > 0)
 					{
 						if (Mario.hitbox.position.y + Mario.hitbox.size.y < it->hitbox.position.y + it->hitbox.size.y)
@@ -245,6 +263,7 @@ int main()
 							Mario.state = Player::stay;
 						}
 					}
+				}
 			}
 
 			// 3.. � �.�.

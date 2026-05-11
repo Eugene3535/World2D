@@ -36,7 +36,6 @@ public:
 
 	std::span<const sf::IntRect> frames;
 	std::span<const sf::IntRect> frames_flip;
-	const sf::Texture* texture = nullptr;
 
 	float currentFrame = 0;
 	float speed = 0;
@@ -45,25 +44,24 @@ public:
 	bool isPlaying = true;
 };
 
-class AnimationManager
+class Animator
 {
 public:
-	AnimationManager(sf::Sprite* s) noexcept:
-		sprite(s)
+	Animator(const sf::Texture& texture) noexcept:
+		sprite(texture)
 	{
 
 	}
 
 
-	void create(const std::string& name, const sf::Texture& texture, int x, int y, int w, int h, int count, float speed, int step = 0, bool Loop = true)
+	void create(const std::string& name, int x, int y, int w, int h, int count, float speed, int step = 0, bool Loop = true)
 	{
 		Animation a;
-		a.texture = &texture;
 		a.speed = speed;
 		a.loop = Loop;
 
-		auto& frames = AnimationManager::frameList.emplace_back();
-		auto& frames_flip = AnimationManager::frameList.emplace_back();
+		auto& frames = Animator::frameList.emplace_back();
+		auto& frames_flip = Animator::frameList.emplace_back();
 
 		frames.reserve(count);
 		frames_flip.reserve(count);
@@ -84,7 +82,7 @@ public:
 		currentAnim = &animList[animType];
 	}
 
-	void loadFromXML(const std::string& fileName, const sf::Texture& texture)
+	void loadFromXML(const std::string& fileName)
 	{
 		auto document = std::make_unique<rapidxml::xml_document<char>>();
 		rapidxml::file<char> xmlFile(fileName.c_str());
@@ -96,13 +94,12 @@ public:
 		while (animations)
 		{
 			Animation anim;
-			anim.texture = &texture;
 			std::string title = animations->first_attribute("title")->value();
 			int delay = atoi(animations->first_attribute("delay")->value());
 			anim.speed = delay;
 
-			auto& frames = AnimationManager::frameList.emplace_back();
-			auto& frames_flip = AnimationManager::frameList.emplace_back();
+			auto& frames = Animator::frameList.emplace_back();
+			auto& frames_flip = Animator::frameList.emplace_back();
 
 			auto cut = animations->first_node("cut");
 
@@ -143,20 +140,19 @@ public:
 		{
 			currentAnim = &it->second;
 			currentAnim->flip = 0;
-			sprite->setTexture(*currentAnim->texture);
-			sprite->setTextureRect(currentAnim->flip ? currentAnim->frames_flip[0] : currentAnim->frames[0]);
+			sprite.setTextureRect(currentAnim->flip ? currentAnim->frames_flip[0] : currentAnim->frames[0]);
 		}
 	}
 
 	void draw(sf::RenderWindow& window, int x = 0, int y = 0)
 	{
-		sprite->setPosition(sf::Vector2f(x, y));
-		window.draw(*sprite);
+		sprite.setPosition(sf::Vector2f(x, y));
+		window.draw(sprite);
 	}
 
 	void flip(bool b = 1) 
 	{ 
-		if(currentAnim)
+		if (currentAnim)
 			currentAnim->flip = b; 
 	}
 
@@ -181,7 +177,7 @@ public:
 		int i = currentAnim->currentFrame;
 		const auto* nextFrame = currentAnim->flip ? (currentAnim->frames_flip.data() + i) : (currentAnim->frames.data() + i);
 
-		sprite->setTextureRect(*nextFrame);
+		sprite.setTextureRect(*nextFrame);
 	}
 
 	void pause() 
@@ -227,12 +223,12 @@ public:
 
 	Animation* currentAnim = nullptr;
 	std::unordered_map<Animation::Type, Animation> animList;
-	sf::Sprite* sprite;
+	sf::Sprite sprite;
 
 private:
 	static std::list<std::vector<sf::IntRect>> frameList;
 };
 
-std::list<std::vector<sf::IntRect>> AnimationManager::frameList;
+std::list<std::vector<sf::IntRect>> Animator::frameList;
 
 #endif // !ANIMATION_HPP

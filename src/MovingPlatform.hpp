@@ -6,8 +6,8 @@
 class MovingPlatform: public Entity
 {
 public:
-	MovingPlatform(sf::Sprite* sprite, const AnimationManager& a, int x, int y) noexcept:
-		Entity(sprite, a, x, y)
+	MovingPlatform(const Animator& a, int x, int y) noexcept:
+		Entity(a, x, y)
 	{
 		setType<Enemy>();
 		setOptions(60.0f, 0, Animation::Type::MovingPlatformMove);

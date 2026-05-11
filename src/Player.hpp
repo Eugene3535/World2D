@@ -16,8 +16,8 @@ public:
 	} key;
 
 
-	Player(sf::Sprite* sprite, const AnimationManager& a, std::span<Object> lev, int x, int y) noexcept:
-		Entity(sprite, a, x, y)
+	Player(const Animator& a, std::span<Object> lev, int x, int y) noexcept:
+		Entity(a, x, y)
 	{
 		setType<Player>(); 
 		setOptions(0, 100, Animation::Type::PlayerIdle);
