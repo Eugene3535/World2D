@@ -45,6 +45,7 @@ set(HDR_FILES
 
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${HDR_FILES})
 add_subdirectory(${EXTERNAL_SOURCE_DIR}/sfml sfml)
+add_subdirectory(${EXTERNAL_SOURCE_DIR}/magic_enum magic_enum)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
 	${PROJECT_SOURCE_DIR}/src
@@ -56,6 +57,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	SFML::Window
 	SFML::Graphics
 	SFML::Audio
+	magic_enum::magic_enum
 )
 
 if(MSVC)

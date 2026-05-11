@@ -20,7 +20,7 @@ public:
 		Entity(sprite, a, x, y)
 	{
 		setType<Player>(); 
-		setOptions(0, 100, "stay");
+		setOptions(0, 100, Animation::Type::PlayerIdle);
 		state = stay; hit = false;
 		objects = lev;
 		key.R = key.L = key.Up = key.Down = key.Space = false;
@@ -45,7 +45,7 @@ public:
 		if (key.Up)
 		{
 			if (onLadder) state = climb;
-			if (state == stay || state == walk) { dy = -360; state = jump; anim.play("jump"); }
+			if (state == stay || state == walk) { dy = -360; state = jump; anim.play(Animation::Type::PlayerJump); }
 			if (state == climb) dy = -100;
 			if (state == climb) if (key.L || key.R) state = stay;
 		}
@@ -88,24 +88,24 @@ public:
 
 	void Animation(float dt) noexcept
 	{
-		if (state == stay) anim.set("stay");
-		if (state == walk) anim.set("walk");
-		if (state == jump) anim.set("jump");
-		if (state == duck) anim.set("duck");
-		if (state == climb) { anim.set("climb"); anim.pause(); if (dy != 0) anim.play(); }
+		if (state == stay) anim.set(Animation::Type::PlayerIdle);
+		if (state == walk) anim.set(Animation::Type::PlayerWalk);
+		if (state == jump) anim.set(Animation::Type::PlayerJump);
+		if (state == duck) anim.set(Animation::Type::PlayerDuck);
+		if (state == climb) { anim.set(Animation::Type::PlayerClimb); anim.pause(); if (dy != 0) anim.play(); }
 
 		if (shoot) 
 		{
-			anim.set("shoot");
+			anim.set(Animation::Type::PlayerShoot);
 			if (state == walk) 
-				anim.set("shootAndWalk");
+				anim.set(Animation::Type::PlayerShootAndWalk);
 		}
 
 		if (hit) 
 		{
 			timer += dt;
 			if (timer > 1) { hit = false; timer = 0; }
-			anim.set("hit");
+			anim.set(Animation::Type::PlayerHit);
 		}
 
 		if (dir) anim.flip();

@@ -44,7 +44,7 @@ public:
 		anim.draw(window, hitbox.position.x, hitbox.position.y);
 	}
 
-	void setOptions(float speed, int hp, const char* startAnim) noexcept
+	void setOptions(float speed, int hp, Animation::Type startAnim) noexcept
 	{
 		anim.set(startAnim);
 

@@ -4,16 +4,36 @@
 #include <list>
 #include <unordered_map>
 #include <span>
+#include <cassert>
 
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
-
 #include "RapidXML/rapidxml.hpp"
 #include "RapidXML/rapidxml_utils.hpp"
+#include <magic_enum/magic_enum.hpp>
 
 class Animation
 {
 public:
+	enum class Type
+	{
+		BulletMove,
+		BulletExplode,
+		EnemyMove,
+		EnemyDead,
+		MovingPlatformMove,
+		PlayerJump,
+		PlayerHit,
+		PlayerDuck,
+		PlayerShoot,
+		PlayerShootAndWalk,
+		PlayerClimb,
+		PlayerIdle,
+		PlayerWalk,
+		Undefined
+	};
+
+
 	std::span<const sf::IntRect> frames;
 	std::span<const sf::IntRect> frames_flip;
 	const sf::Texture* texture = nullptr;
@@ -57,8 +77,11 @@ public:
 		a.frames = frames;
 		a.frames_flip = frames_flip;
 
-		animList[name] = a;
-		currentAnim = &animList[name];
+		const auto animType = magic_enum::enum_cast<Animation::Type>(name).value_or(Animation::Type::Undefined);
+		assert(animType != Animation::Type::Undefined);
+
+		animList[animType] = a;
+		currentAnim = &animList[animType];
 	}
 
 	void loadFromXML(const std::string& fileName, const sf::Texture& texture)
@@ -104,14 +127,17 @@ public:
 			anim.frames = frames;
 			anim.frames_flip = frames_flip;
 
-			animList[title] = anim;
-			currentAnim = &animList[title];
+			const auto animType = magic_enum::enum_cast<Animation::Type>(title).value_or(Animation::Type::Undefined);
+			assert(animType != Animation::Type::Undefined);
+
+			animList[animType] = anim;
+			currentAnim = &animList[animType];
 
 			animations = animations->next_sibling("animation");
 		}
 	}
 
-	void set(const std::string& name)
+	void set(Animation::Type name)
 	{
 		if(auto it = animList.find(name); it != animList.end())
 		{
@@ -170,7 +196,7 @@ public:
 			currentAnim->isPlaying = true; 
 	}
 
-	void play(const std::string& name) 
+	void play(Animation::Type name) 
 	{ 
 		animList[name].isPlaying = true; 
 	}
@@ -200,7 +226,7 @@ public:
 	}
 
 	Animation* currentAnim = nullptr;
-	std::unordered_map<std::string, Animation> animList;
+	std::unordered_map<Animation::Type, Animation> animList;
 	sf::Sprite* sprite;
 
 private:

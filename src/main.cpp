@@ -76,19 +76,19 @@ int main()
 
 	AnimationManager anim(allocator->allocate<sf::Sprite>(megaman_t));
 	anim.loadFromXML("res/anim_megaman.xml", megaman_t);
-	anim.animList["jump"].loop = 0;
+	anim.animList[Animation::Type::PlayerJump].loop = 0;
 
 	AnimationManager anim2(allocator->allocate<sf::Sprite>(bullet_t));
-	anim2.create("move", bullet_t, 7, 10, 8, 8, 1, 0);
-	anim2.create("explode", bullet_t, 27, 7, 18, 18, 4, 16, 29, false);
+	anim2.create("BulletMove", bullet_t, 7, 10, 8, 8, 1, 0);
+	anim2.create("BulletExplode", bullet_t, 27, 7, 18, 18, 4, 16, 29, false);
 //	anim2.set("move"); // start animation
 
 	AnimationManager anim3(allocator->allocate<sf::Sprite>(enemy_t));
-	anim3.create("move", enemy_t, 0, 0, 16, 16, 2, 4, 18);
-	anim3.create("dead", enemy_t, 58, 0, 16, 16, 1, 0);
+	anim3.create("EnemyMove", enemy_t, 0, 0, 16, 16, 2, 4, 18);
+	anim3.create("EnemyDead", enemy_t, 58, 0, 16, 16, 1, 0);
 
 	AnimationManager anim4(allocator->allocate<sf::Sprite>(moveplatform_t));
-	anim4.create("move", moveplatform_t, 0, 0, 95, 22, 1, 0);
+	anim4.create("MovingPlatformMove", moveplatform_t, 0, 0, 95, 22, 1, 0);
 
 	sf::Sprite* background = allocator->allocate<sf::Sprite>(bg);
 	background->setOrigin(sf::Vector2f(bg.getSize()) * 0.5f);

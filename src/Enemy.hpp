@@ -11,7 +11,7 @@ public:
 		Entity(sprite, a, x, y)
 	{
 		setType<Enemy>(); 
-		setOptions(20.0f, 15, "move");
+		setOptions(20.0f, 15, Animation::Type::EnemyMove);
 	}
 
 	void update(float dt) noexcept
@@ -27,7 +27,7 @@ public:
 
 		if (Health < 1)
 		{
-			anim.set("dead");
+			anim.set(Animation::Type::EnemyDead);
 			dx = 0;
 			timer_end += dt;
 

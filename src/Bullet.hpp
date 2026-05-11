@@ -10,7 +10,7 @@ public:
 		Entity(sprite, a, x, y)
 	{
 		setType<Bullet>(); 
-		setOptions(400.0f, 10, "move");
+		setOptions(400.0f, 10, Animation::Type::BulletMove);
 
 		if (dir) dx = -dx;
 		objects = obj;
@@ -26,7 +26,7 @@ public:
 		
 		if (Health < 1) 
 		{
-			anim.set("explode"); 
+			anim.set(Animation::Type::BulletExplode); 
 			dx = 0;
 
 			if (!anim.isPlaying()) 

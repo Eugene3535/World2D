@@ -10,7 +10,7 @@ public:
 		Entity(sprite, a, x, y)
 	{
 		setType<Enemy>();
-		setOptions(60.0f, 0, "move");
+		setOptions(60.0f, 0, Animation::Type::MovingPlatformMove);
 	}
 
 	void update(float dt) noexcept
