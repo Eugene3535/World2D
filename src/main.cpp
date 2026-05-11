@@ -180,10 +180,11 @@ int main()
 
 			size_t entitySize = 0;
 
-			if (entity->is<Enemy>()) entitySize = sizeof(Enemy); // TODO: entity->getSizeInBytes()
+			if (entity->is<Enemy>()) entitySize = sizeof(Enemy); // TODO: entity->getSizeInBytes() may be
 			if (entity->is<Bullet>()) entitySize = sizeof(Bullet);
 			if (entity->is<MovingPlatform>()) entitySize = sizeof(MovingPlatform);
 
+			assert(entitySize);
 			allocator->release(entity, entitySize);
 		};
 
