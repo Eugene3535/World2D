@@ -126,6 +126,12 @@ std::span<const TileMap::Object> TileMap::getObjects() const noexcept
 }
 
 
+std::span<const uint32_t> TileMap::getCollisionMask() const noexcept
+{
+    return m_collisionMask;
+}
+
+
 ivec2s TileMap::getMapSize() const noexcept
 {
     return m_mapSize;

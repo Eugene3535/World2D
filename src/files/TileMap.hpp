@@ -46,19 +46,21 @@ public:
 
 	bool loadFromFile(const std::filesystem::path& filepath) noexcept;
 
-	const std::list<Plane>& getPlanes()   const noexcept;
-	std::span<const Object> getObjects()  const noexcept;
-	ivec2s                  getMapSize()  const noexcept;
-	ivec2s                  getTileSize() const noexcept;
+	const std::list<Plane>&   getPlanes()        const noexcept;
+	std::span<const Object>   getObjects()       const noexcept;
+	std::span<const uint32_t> getCollisionMask() const noexcept;
+	ivec2s                    getMapSize()       const noexcept;
+	ivec2s                    getTileSize()      const noexcept;
 
 private:
     bool loadTilePlanes(const void* rootNode) noexcept;
     bool loadObjects(const void* rootNode)    noexcept;
 
-	std::list<Plane>    m_planes;
-    std::vector<Object> m_objects;
-    ivec2s              m_mapSize;
-    ivec2s              m_tileSize;
+	std::list<Plane>      m_planes;
+    std::vector<Object>   m_objects;
+	std::vector<uint32_t> m_collisionMask;
+    ivec2s                m_mapSize;
+    ivec2s                m_tileSize;
 };
 
 #endif // !TILEMAP_HPP

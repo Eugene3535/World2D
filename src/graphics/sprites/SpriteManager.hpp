@@ -32,14 +32,14 @@ public:
 	SpriteManager& operator = (SpriteManager&&)      noexcept = delete;
 	~SpriteManager();
 
-	void createSprite(const std::string& name, const struct Texture2D& texture) noexcept;
-	void createSprite(const std::string& name, const struct Texture2D& texture, const ivec4s& frame) noexcept;
+	void createSprite(const std::string& name, uint32_t texture) noexcept;
+	void createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept;
 
-	void createLinearAnimaton(const std::string& name, const struct Texture2D& texture, int duration) noexcept;
-	void createGridAnimaton(const std::string& name, const struct Texture2D& texture, int columns, int rows) noexcept;
-	void createCustomAnimaton(const std::string& name, const struct Texture2D& texture, std::span<const ivec4s> frames) noexcept;
+	void createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept;
+	void createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept;
+	void createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept;
 	
-	void loadSpriteSheet(const std::filesystem::path& filePath, const struct Texture2D& texture) noexcept;
+	void loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept;
 
 	std::optional<Sprite2D> getSprite(const std::string& name) const noexcept;
 	std::vector<Sprite2D> getAnimation(const std::string& name) const noexcept;
