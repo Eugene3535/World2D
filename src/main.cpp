@@ -7,10 +7,12 @@ extern "C"
 }
 #endif
 
+#include "files/TileMap.hpp"
 
 int main()
 {
-
+    TileMap tm;
+    tm.loadFromFile("res/levels/Level-1.tmx");
 
 	return 0;
 }

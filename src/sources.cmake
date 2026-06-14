@@ -3,12 +3,14 @@ set(FILE_SRC_FILES
 	# src/files/Font.cpp
 	src/files/Shader.cpp
 	src/files/StbImage.cpp
+	src/files/TileMap.cpp
 )
 
 set(FILE_HDR_FILES
 	# src/files/Font.hpp
 	src/files/Shader.hpp
 	src/files/StbImage.hpp
+	src/files/TileMap.hpp
 )
 
 set(GRAPHICS_SRC_FILES
