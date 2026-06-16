@@ -20,17 +20,17 @@ struct Sprite2D
 };
 
 
-class SpriteManager final
+class SpriteSheet final
 {
-	using sprite_range = std::pair<uint32_t, uint32_t>; // start sprite number, count
+	using sprite_range = std::pair<uint32_t, uint32_t>; // start sprite number, count ( single = 1, animation = n )
 
 public:
-	SpriteManager() noexcept;
-	SpriteManager(const SpriteManager&)              noexcept = delete;
-	SpriteManager(SpriteManager&&)                   noexcept = delete;
-	SpriteManager& operator = (const SpriteManager&) noexcept = delete;
-	SpriteManager& operator = (SpriteManager&&)      noexcept = delete;
-	~SpriteManager();
+	SpriteSheet() noexcept;
+	SpriteSheet(const SpriteSheet&)              noexcept = delete;
+	SpriteSheet(SpriteSheet&&)                   noexcept = delete;
+	SpriteSheet& operator = (const SpriteSheet&) noexcept = delete;
+	SpriteSheet& operator = (SpriteSheet&&)      noexcept = delete;
+	~SpriteSheet();
 
 	void createSprite(const std::string& name, uint32_t texture) noexcept;
 	void createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept;
@@ -41,8 +41,8 @@ public:
 	
 	void loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept;
 
-	std::optional<Sprite2D> getSprite(const std::string& name) const noexcept;
-	std::vector<Sprite2D> getAnimation(const std::string& name) const noexcept;
+	std::optional<Sprite2D>   getSprite(const std::string& name) const noexcept;
+	std::span<const Sprite2D> getAnimation(const std::string& name) const noexcept;
 
 	void bind(bool toBind) const noexcept;
 

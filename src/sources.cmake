@@ -19,14 +19,14 @@ set(GRAPHICS_SRC_FILES
 	src/graphics/vao/VertexBufferLayout.cpp
 	src/graphics/transform/Transform2D.cpp
 	src/graphics/camera/OrthoMatrix.cpp
-	src/graphics/sprites/SpriteManager.cpp
+	src/graphics/sprites/SpriteSheet.cpp
 )
 
 set(GRAPHICS_HDR_FILES
 	src/graphics/shaders/ShaderProgram.hpp
 	src/graphics/texture/Texture2D.hpp
 	src/graphics/vao/VertexBufferLayout.hpp
-	src/graphics/sprites/SpriteManager.hpp
+	src/graphics/sprites/SpriteSheet.hpp
 	src/graphics/transform/Transform2D.hpp
 	src/graphics/camera/OrthoMatrix.hpp
 )
