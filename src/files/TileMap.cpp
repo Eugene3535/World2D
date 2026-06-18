@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <charconv>
 #include <cstring>
+#include <unordered_map>
 
 #include "RapidXML/rapidxml.hpp"
 #include "RapidXML/rapidxml_utils.hpp"
@@ -16,12 +17,54 @@ struct Tileset
     int32_t rows;
     int32_t tileCount;
     int32_t firstGID;
+    std::vector<TileMap::PackedTile> tiles;
 };
 
 
-static bool load_tilesets(const void* node, std::list<Tileset>& tilesets) noexcept
+static bool load_tiles(const void* node, std::vector<TileMap::PackedTile>& tiles) noexcept
 {
-    const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(node);
+    const auto tilesetNode = static_cast<const rapidxml::xml_node<char>*>(node); 
+    auto tileNode = tilesetNode->first_node("tile");
+
+    uint32_t tileCount = 0;
+    std::unordered_map<std::string, int> tileData;
+
+    while (tileNode)
+    {
+        ++tileCount;
+
+        const auto id = tileNode->first_attribute("id");
+        const int index = id ? atoi(id->value()) : 0;
+
+        if (const auto propertiesNode = tileNode->first_node("properties"))
+        {
+            auto propertyNode = propertiesNode->first_node("property");
+            auto& tile = tiles[static_cast<size_t>(index)];
+
+            while (propertyNode)
+            {
+                const std::string name = { propertyNode->first_attribute("name")->value(), propertyNode->first_attribute("name")->value_size() };
+                const int value = atoi(propertyNode->first_attribute("value")->value());
+                tileData[name] = value;
+                propertyNode = propertyNode->next_sibling("property");
+            }
+
+            tile.left  = tileData["Left"];
+            tile.quest = tileData["Quest"];
+            tile.right = tileData["Right"];
+            tile.type  = tileData["Type"];
+        }
+
+        tileNode = tileNode->next_sibling("tile");
+    }
+
+    return (tileCount > 0);
+}
+
+
+static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) noexcept
+{
+    const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
     auto tilesetNode = mapNode->first_node("tileset");
 
     while (tilesetNode)
@@ -48,10 +91,18 @@ static bool load_tilesets(const void* node, std::list<Tileset>& tilesets) noexce
         auto columns   = tilesetNode->first_attribute("columns");
         auto firstGID  = tilesetNode->first_attribute("firstgid");
 
-        tileset.tileCount = tileCount ? std::atoi(tileCount->value()) : 0;
-        tileset.columns   = columns ? std::atoi(columns->value()) : 0;
+        tileset.tileCount = tileCount ? atoi(tileCount->value()) : 0;
+        tileset.columns   = columns ? atoi(columns->value()) : 0;
         tileset.rows      = (!tileCount || !columns) ? 0 : tileset.tileCount / tileset.columns;
-        tileset.firstGID  = firstGID ? std::atoi(firstGID->value()) : 0;
+        tileset.firstGID  = firstGID ? atoi(firstGID->value()) : 0;
+
+        if (tileset.firstGID == 1) // first tileset, so we use it for collision mask
+        {
+            tileset.tiles.resize(tileset.tileCount, { .type = 0, .left = 32, .right = 32, .quest = 0 });
+
+            if (!load_tiles(tilesetNode, tileset.tiles))
+                return false;
+        }
 
         tilesetNode = tilesetNode->next_sibling("tileset");
     }
@@ -126,9 +177,9 @@ std::span<const TileMap::Object> TileMap::getObjects() const noexcept
 }
 
 
-std::span<const uint32_t> TileMap::getCollisionMask() const noexcept
+std::span<const TileMap::PackedTile> TileMap::getTileMask() const noexcept
 {
-    return m_collisionMask;
+    return m_tileMask;
 }
 
 
@@ -171,6 +222,9 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 
 	while (layerNode)
 	{
+        if (!tileset->tiles.empty())
+            m_tileMask.swap(tileset->tiles);
+
 		auto dataNode = layerNode->first_node("data");
 		auto parsedLayer = parse_csv(dataNode);
         auto& tilePlane = m_planes.emplace_back();
@@ -269,16 +323,16 @@ bool TileMap::loadObjects(const void* rootNode) noexcept
 	const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
 	for (auto objectGroupNode = mapNode->first_node("objectgroup");
-		      objectGroupNode != nullptr;
+		      objectGroupNode;
 		      objectGroupNode = objectGroupNode->next_sibling("objectgroup"))
 	{
 		for (auto objectNode = objectGroupNode->first_node("object");
-			      objectNode != nullptr;
+			      objectNode;
 			      objectNode = objectNode->next_sibling("object"))
 		{
 			auto& object = m_objects.emplace_back();
 
-			for (auto attribute = objectNode->first_attribute(); attribute != nullptr; attribute = attribute->next_attribute())
+			for (auto attribute = objectNode->first_attribute(); attribute; attribute = attribute->next_attribute())
 			{
 				if (strcmp(attribute->name(), "x") == 0)      { object.position.x = atoi(attribute->value()); continue; }
 				if (strcmp(attribute->name(), "y") == 0)      { object.position.y = atoi(attribute->value()); continue; }
@@ -288,15 +342,15 @@ bool TileMap::loadObjects(const void* rootNode) noexcept
 				if (strcmp(attribute->name(), "class")  == 0)   object.type       = { attribute->value(), attribute->value_size() };
 			}
 
-			if (const auto propertiesNode = objectNode->first_node("properties"); propertiesNode != nullptr)
+			if (const auto propertiesNode = objectNode->first_node("properties"))
 			{
 				for (auto propertyNode = propertiesNode->first_node("property");
-					      propertyNode != nullptr;
+					      propertyNode;
 					      propertyNode = propertyNode->next_sibling("property"))
 				{
 					auto& property = object.properties.emplace_back();
 
-					for (auto attribute = propertyNode->first_attribute(); attribute != nullptr; attribute = attribute->next_attribute())
+					for (auto attribute = propertyNode->first_attribute(); attribute; attribute = attribute->next_attribute())
 					{
 						if (strcmp(attribute->name(), "name") == 0) { property.name  = { attribute->value(), attribute->value_size() }; continue; }
 						if (strcmp(attribute->name(), "type") == 0) { property.type  = { attribute->value(), attribute->value_size() }; continue; }

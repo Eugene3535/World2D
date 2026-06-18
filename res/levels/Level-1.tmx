@@ -1,17 +1,316 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="55" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="48">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="55" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="48">
  <tileset firstgid="1" name="tileset1" tilewidth="32" tileheight="32" tilecount="300" columns="20">
   <image source="../textures/tileset1.png" width="640" height="480"/>
   <tile id="1">
    <properties>
-    <property name="Solid" type="bool" value="true"/>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="2">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="32"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="3">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="16"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="4">
+   <properties>
+    <property name="Left" type="int" value="16"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="2"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="5">
+   <properties>
+    <property name="Left" type="int" value="2"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="16"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="6">
+   <properties>
+    <property name="Left" type="int" value="16"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="65">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="66">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="85">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="86">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="132">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="1"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="0"/>
+   </properties>
+  </tile>
+  <tile id="133">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="1"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="0"/>
+   </properties>
+  </tile>
+  <tile id="152">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="1"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="0"/>
+   </properties>
+  </tile>
+  <tile id="153">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="1"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="0"/>
+   </properties>
+  </tile>
+  <tile id="200">
+   <properties>
+    <property name="Left" type="int" value="0"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="22"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="201">
+   <properties>
+    <property name="Left" type="int" value="0"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="20"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="202">
+   <properties>
+    <property name="Left" type="int" value="22"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="203">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="22"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="204">
+   <properties>
+    <property name="Left" type="int" value="20"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="0"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="205">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="9"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="208">
+   <properties>
+    <property name="Left" type="int" value="0"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="209">
+   <properties>
+    <property name="Left" type="int" value="0"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="16"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="210">
+   <properties>
+    <property name="Left" type="int" value="16"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="211">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="16"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="212">
+   <properties>
+    <property name="Left" type="int" value="16"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="0"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="213">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="0"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="220">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="221">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="224">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="225">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="226">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="227">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="228">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="229">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="230">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="231">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="232">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
+   </properties>
+  </tile>
+  <tile id="233">
+   <properties>
+    <property name="Left" type="int" value="32"/>
+    <property name="Quest" type="int" value="0"/>
+    <property name="Right" type="int" value="32"/>
+    <property name="Type" type="int" value="1"/>
    </properties>
   </tile>
  </tileset>
  <layer id="1" name="Background" width="55" height="20">
   <data encoding="csv">
 3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,126,0,0,0,0,0,0,0,0,0,62,0,0,0,0,0,
-3,0,0,69,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,146,207,207,207,0,0,0,0,0,0,62,0,0,0,0,0,
+3,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,146,207,207,207,0,0,0,0,0,0,62,0,0,0,0,0,
 3,0,0,0,0,0,0,0,0,0,0,126,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,146,227,227,227,0,0,0,0,0,0,82,0,0,0,0,0,
 3,0,0,0,0,0,0,0,0,0,0,146,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,146,0,0,0,0,0,0,0,0,0,102,0,0,0,0,0,
 3,0,0,0,182,183,207,207,207,207,207,166,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,207,207,207,207,0,0,146,0,0,0,0,0,0,0,0,0,102,0,0,0,0,0,
