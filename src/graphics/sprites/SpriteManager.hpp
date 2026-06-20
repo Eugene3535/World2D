@@ -20,17 +20,17 @@ struct Sprite2D
 };
 
 
-class SpriteSheet final
+class SpriteManager final
 {
 	using sprite_range = std::pair<uint32_t, uint32_t>; // start sprite number, count ( single = 1, animation = n )
 
 public:
-	SpriteSheet() noexcept;
-	SpriteSheet(const SpriteSheet&)              noexcept = delete;
-	SpriteSheet(SpriteSheet&&)                   noexcept = delete;
-	SpriteSheet& operator = (const SpriteSheet&) noexcept = delete;
-	SpriteSheet& operator = (SpriteSheet&&)      noexcept = delete;
-	~SpriteSheet();
+	SpriteManager() noexcept;
+	SpriteManager(const SpriteManager&)              noexcept = delete;
+	SpriteManager(SpriteManager&&)                   noexcept = delete;
+	SpriteManager& operator = (const SpriteManager&) noexcept = delete;
+	SpriteManager& operator = (SpriteManager&&)      noexcept = delete;
+	~SpriteManager();
 
 	void createSprite(const std::string& name, uint32_t texture) noexcept;
 	void createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept;

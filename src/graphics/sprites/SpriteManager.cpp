@@ -4,10 +4,10 @@
 
 #include "graphics/vao/VertexBufferLayout.hpp"
 #include "graphics/texture/Texture2D.hpp"
-#include "graphics/sprites/SpriteSheet.hpp"
+#include "graphics/sprites/SpriteManager.hpp"
 
 
-SpriteSheet::SpriteSheet() noexcept:
+SpriteManager::SpriteManager() noexcept:
 	m_vbo(0),
 	m_vao(0)
 {
@@ -15,14 +15,14 @@ SpriteSheet::SpriteSheet() noexcept:
 }
 
 
-SpriteSheet::~SpriteSheet()
+SpriteManager::~SpriteManager()
 {
 	glDeleteBuffers(1, &m_vbo);
 	glDeleteVertexArrays(1, &m_vao);
 }
 
 
-void SpriteSheet::createSprite(const std::string& name, uint32_t texture) noexcept
+void SpriteManager::createSprite(const std::string& name, uint32_t texture) noexcept
 {
 	if(auto it = m_animations.find(name); it == m_animations.end())
 	{
@@ -37,7 +37,7 @@ void SpriteSheet::createSprite(const std::string& name, uint32_t texture) noexce
 }
 
 
-void SpriteSheet::createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept
+void SpriteManager::createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept
 {
 	if(auto it = m_animations.find(name); it == m_animations.end())
 	{
@@ -55,7 +55,7 @@ void SpriteSheet::createSprite(const std::string& name, uint32_t texture, const 
 }
 
 
-void SpriteSheet::createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept
+void SpriteManager::createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept
 {
 	if(auto it = m_animations.find(name); it == m_animations.end())
 	{
@@ -80,7 +80,7 @@ void SpriteSheet::createLinearAnimaton(const std::string& name, uint32_t texture
 }
 
 
-void SpriteSheet::createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept
+void SpriteManager::createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept
 {
 	if(auto it = m_animations.find(name); it == m_animations.end())
 	{
@@ -110,7 +110,7 @@ void SpriteSheet::createGridAnimaton(const std::string& name, uint32_t texture, 
 }
 
 
-void SpriteSheet::createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept
+void SpriteManager::createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept
 {
 	if(auto it = m_animations.find(name); it == m_animations.end())
 	{
@@ -129,7 +129,7 @@ void SpriteSheet::createCustomAnimaton(const std::string& name, uint32_t texture
 }
 
 
-void SpriteSheet::loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept
+void SpriteManager::loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept
 {
 	auto document = std::make_unique<rapidxml::xml_document<char>>();
 	rapidxml::file<char> xmlFile(filePath.string().c_str());
@@ -186,7 +186,7 @@ void SpriteSheet::loadSpriteSheet(const std::filesystem::path& filePath, uint32_
 }
 
 
-std::optional<Sprite2D> SpriteSheet::getSprite(const std::string& name) const noexcept
+std::optional<Sprite2D> SpriteManager::getSprite(const std::string& name) const noexcept
 {
 	if(auto it = m_animations.find(name); it != m_animations.end())
 	{
@@ -200,7 +200,7 @@ std::optional<Sprite2D> SpriteSheet::getSprite(const std::string& name) const no
 }
 
 
-std::span<const Sprite2D> SpriteSheet::getAnimation(const std::string& name) const noexcept
+std::span<const Sprite2D> SpriteManager::getAnimation(const std::string& name) const noexcept
 {
 	if(auto it = m_animations.find(name); it != m_animations.end())
 	{
@@ -214,13 +214,13 @@ std::span<const Sprite2D> SpriteSheet::getAnimation(const std::string& name) con
 }
 
 
-void SpriteSheet::bind(bool toBind) const noexcept
+void SpriteManager::bind(bool toBind) const noexcept
 {
 	glBindVertexArray(toBind ? m_vao : 0);
 }
 
 
-void SpriteSheet::pushVerticesOnGPU() noexcept
+void SpriteManager::pushVerticesOnGPU() noexcept
 {
 	if (m_vertices.empty())
 		return;
@@ -244,7 +244,7 @@ void SpriteSheet::pushVerticesOnGPU() noexcept
 }
 
 
-void SpriteSheet::addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept
+void SpriteManager::addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept
 {
 	auto& sprite   = m_sprites.emplace_back();
 	sprite.frame   = m_vertices.size() >> 2;

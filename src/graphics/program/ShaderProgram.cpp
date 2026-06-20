@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 
 #include "files/Shader.hpp"
-#include "graphics/shaders/ShaderProgram.hpp"
+#include "graphics/program/ShaderProgram.hpp"
 
 
 ShaderProgram::ShaderProgram() noexcept:

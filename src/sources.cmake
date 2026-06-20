@@ -14,20 +14,20 @@ set(FILE_HDR_FILES
 )
 
 set(GRAPHICS_SRC_FILES
-	src/graphics/shaders/ShaderProgram.cpp
+	src/graphics/program/ShaderProgram.cpp
 	src/graphics/texture/Texture2D.cpp
 	src/graphics/vao/VertexBufferLayout.cpp
 	src/graphics/transform/Transform2D.cpp
 	src/graphics/camera/OrthoMatrix.cpp
-	src/graphics/sprites/SpriteSheet.cpp
+	src/graphics/sprites/SpriteManager.cpp
 )
 
 set(GRAPHICS_HDR_FILES
-	src/graphics/shaders/ShaderProgram.hpp
+	src/graphics/program/ShaderProgram.hpp
 	src/graphics/texture/Texture2D.hpp
 	src/graphics/vao/VertexBufferLayout.hpp
-	src/graphics/sprites/SpriteSheet.hpp
 	src/graphics/transform/Transform2D.hpp
+	src/graphics/sprites/SpriteManager.hpp
 	src/graphics/camera/OrthoMatrix.hpp
 )
 

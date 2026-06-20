@@ -152,6 +152,9 @@ TileMap::~TileMap() = default;
 
 bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
 {
+    if (!std::filesystem::exists(filepath))
+        return false;
+
     auto document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filepath.string().c_str());
     document->parse<0>(xmlFile.data());

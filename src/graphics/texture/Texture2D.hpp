@@ -1,8 +1,9 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
-#include <array>
 #include <filesystem>
+
+#include <cglm/struct/ivec2.h>
 
 // There are a number of different types of textures. These are:
 
@@ -20,20 +21,26 @@
 
 // More information is available here: https://www.khronos.org/opengl/wiki/texture
 
-struct Texture2D
+
+class Texture2D
 {
+public:
+	explicit Texture2D(uint32_t handle) noexcept;
+	~Texture2D();
+
 	bool loadFromImage(const struct StbImage& image) noexcept;
 	bool loadFromFile(const std::filesystem::path& filePath) noexcept;
 
 	void setSmooth(bool smooth)    noexcept;
 	void setRepeated(bool repeate) noexcept;
 
-	uint32_t handle = 0;
-	int32_t width   = 0;
-    int32_t height  = 0;
+	ivec2s getSize() const noexcept;
+	uint32_t getHandle() const noexcept;
 
-	bool isSmooth   = false;
-	bool isRepeated = false;
+private:
+	uint32_t m_handle;
+	bool m_isSmooth;
+	bool m_isRepeated;
 };
 
 #endif // !TEXTURE_HPP
