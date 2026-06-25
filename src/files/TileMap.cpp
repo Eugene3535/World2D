@@ -65,9 +65,9 @@ static bool load_tiles(const void* node, std::vector<TileMap::PackedTile>& tiles
 static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) noexcept
 {
     const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
-    auto tilesetNode = mapNode->first_node("tileset");
+    std::vector<std::filesystem::path> imagePaths;
 
-    while (tilesetNode)
+    for (auto tilesetNode = mapNode->first_node("tileset"); tilesetNode; tilesetNode = tilesetNode->next_sibling("tileset"))
     {
         auto imageNode = tilesetNode->first_node("image");
 
@@ -81,6 +81,13 @@ static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) no
 
         const auto filename = std::filesystem::path(source->value()).filename().string();
         const auto filepath = std::filesystem::path("res/textures") / filename;
+
+        auto alreadyExists = std::find(imagePaths.begin(), imagePaths.end(), filepath);
+
+        if (alreadyExists != imagePaths.end())
+            continue; // Uploading for the first time only
+
+        imagePaths.push_back(filepath);
 
         Tileset& tileset = tilesets.emplace_back();
 
@@ -96,15 +103,13 @@ static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) no
         tileset.rows      = (!tileCount || !columns) ? 0 : tileset.tileCount / tileset.columns;
         tileset.firstGID  = firstGID ? atoi(firstGID->value()) : 0;
 
-        if (tileset.firstGID == 1) // first tileset, so we use it for collision mask
+        if (tileset.firstGID == 1) // The first tileset, so we use it for collision mask
         {
             tileset.tiles.resize(tileset.tileCount, { .type = 0, .left = 32, .right = 32, .quest = 0 });
 
             if (!load_tiles(tilesetNode, tileset.tiles))
                 return false;
         }
-
-        tilesetNode = tilesetNode->next_sibling("tileset");
     }
 
     return (!tilesets.empty());
@@ -159,6 +164,8 @@ bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
     rapidxml::file<char> xmlFile(filepath.string().c_str());
     document->parse<0>(xmlFile.data());
     const auto mapNode = document->first_node("map");
+
+    m_planes.clear();
 
     if (loadTilePlanes(static_cast<const void*>(mapNode)))
         if (loadObjects(static_cast<const void*>(mapNode)))
@@ -232,14 +239,18 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 		auto parsedLayer = parse_csv(dataNode);
         auto& tilePlane = m_planes.emplace_back();
 
-        if (auto name = layerNode->first_attribute("name"))
+        if (auto name = layerNode->first_attribute("name"); name)
             tilePlane.name = std::string(name->value(), name->value_size());
 
         auto& image = tilePlane.image;
-        image.pixels.swap(tileset->image.pixels);
-        image.width = tileset->image.width;
-        image.height = tileset->image.height;
-        image.bytePerPixel = tileset->image.bytePerPixel;
+
+        if (tileset->image.pixels)
+        {
+            image.pixels.swap(tileset->image.pixels);
+            image.width = tileset->image.width;
+            image.height = tileset->image.height;
+            image.bytePerPixel = tileset->image.bytePerPixel;
+        }
 
 		const vec2s ratio = { 1.f / (float)image.width, 1.f / (float)image.height };
         size_t index = 0;
@@ -317,7 +328,7 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
             tileset++;
 	}
 
-	return true;
+	return (!m_planes.empty());
 }
 
 

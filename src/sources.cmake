@@ -20,6 +20,7 @@ set(GRAPHICS_SRC_FILES
 	src/graphics/transform/Transform2D.cpp
 	src/graphics/camera/OrthoMatrix.cpp
 	src/graphics/sprites/SpriteManager.cpp
+	src/graphics/level/Level.cpp
 )
 
 set(GRAPHICS_HDR_FILES
@@ -27,8 +28,9 @@ set(GRAPHICS_HDR_FILES
 	src/graphics/texture/Texture2D.hpp
 	src/graphics/vao/VertexBufferLayout.hpp
 	src/graphics/transform/Transform2D.hpp
-	src/graphics/sprites/SpriteManager.hpp
 	src/graphics/camera/OrthoMatrix.hpp
+	src/graphics/sprites/SpriteManager.hpp
+	src/graphics/level/Level.hpp
 )
 
 set(GAME_SRC_FILES
@@ -46,8 +48,8 @@ set(GAME_HDR_FILES
 
 
 set(SHADER_FILES
-	src/shaders/tilemap.vert
-	src/shaders/tilemap.frag
+	src/shaders/sprite.vert
+	src/shaders/sprite.frag
 )
 
 source_group("shaders" FILES ${SHADER_FILES})

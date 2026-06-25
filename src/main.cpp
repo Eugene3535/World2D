@@ -20,6 +20,7 @@ extern "C"
 #include "graphics/program/ShaderProgram.hpp"
 #include "graphics/sprites/SpriteManager.hpp"
 #include "graphics/camera/OrthoMatrix.hpp"
+#include "graphics/level/Level.hpp"
 
 
 GLFWwindow* createGLFWwindow(const char* title, int width, int height) noexcept
@@ -200,14 +201,22 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
 	{
-		glViewport(0, 0, width, height);
-		camera->resize(width, height);
+        if (glViewport)
+        {
+            glViewport(0, 0, width, height);
+            camera->resize(width, height);
+        }
 	});
     orthoMatrix.resize(width, height);
 
-    TileMap tm;
+    TileMap tilemap;
 
-    if (!tm.loadFromFile("res/levels/Level-1.tmx"))
+    if (!tilemap.loadFromFile("res/levels/Level-1.tmx"))
+        return 1;
+
+    Level level;
+
+    if (!level.load(tilemap))
         return 1;
 
     uint32_t textureHandle;
@@ -239,13 +248,14 @@ int main()
 
     Player player(goombaFrames[0]);
 
-
     float deltaTime = 0.f;
 	float lastFrame = 0.f;
 
+    glClearColor(0.f, 0.f, 0.f, 1.f);
+
     while (!glfwWindowShouldClose(window))
 	{
-        glClearColor(0.f, 0.f, 0.f, 1.f);
+
         glClear(GL_COLOR_BUFFER_BIT);
 
 		glfwPollEvents();
@@ -257,6 +267,7 @@ int main()
         auto projection = orthoMatrix.getProjectionMatrix();
         orthoMatrix.updateUniformBuffer(projection.raw);
 
+        level.draw(program.getHandle());
         sprites.bind(true);
         player.draw();
         sprites.bind(false);

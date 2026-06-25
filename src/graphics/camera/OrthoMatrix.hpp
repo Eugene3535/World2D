@@ -1,8 +1,9 @@
 #ifndef ORTHO_MATRIX_HPP
 #define ORTHO_MATRIX_HPP
 
+#include <cstdint>
 
-#include <cglm/mat4.h>
+#include <cglm/struct/mat4.h>
 
 class OrthoMatrix final
 {
