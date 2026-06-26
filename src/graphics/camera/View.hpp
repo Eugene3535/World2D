@@ -5,11 +5,11 @@
 
 #include <cglm/struct/mat4.h>
 
-class OrthoMatrix final
+class View final
 {
 public:
-    OrthoMatrix() noexcept;
-    ~OrthoMatrix();
+    View() noexcept;
+    ~View();
 
     void create() noexcept;
 

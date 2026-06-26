@@ -2,10 +2,10 @@
 #include <cglm/struct/cam.h>
 #include "cglm/struct/affine-mat.h"
 
-#include "graphics/camera/OrthoMatrix.hpp"
+#include "graphics/camera/View.hpp"
 
 
-OrthoMatrix::OrthoMatrix() noexcept:
+View::View() noexcept:
     m_projection(glms_mat4_identity()),
     m_uniformBuffer(0),
     m_flipVertically(true)
@@ -14,14 +14,14 @@ OrthoMatrix::OrthoMatrix() noexcept:
 }
 
 
-OrthoMatrix::~OrthoMatrix()
+View::~View()
 {
     if(m_uniformBuffer)
         glDeleteBuffers(1, &m_uniformBuffer);
 }
 
 
-void OrthoMatrix::create() noexcept
+void View::create() noexcept
 {
     if (!m_uniformBuffer)
     {
@@ -33,7 +33,7 @@ void OrthoMatrix::create() noexcept
 }
 
 
-void OrthoMatrix::resize(int32_t width, int32_t height) noexcept
+void View::resize(int32_t width, int32_t height) noexcept
 {
     m_projection = m_flipVertically ? 
         glms_ortho(0.f, static_cast<float>(width), static_cast<float>(height), 0.f, -1.f, 1.f) :
@@ -41,27 +41,25 @@ void OrthoMatrix::resize(int32_t width, int32_t height) noexcept
 }
 
 
-void OrthoMatrix::updateUniformBuffer(mat4 modelViewProjection) const noexcept
+void View::updateUniformBuffer(mat4 modelViewProjection) const noexcept
 {
-    glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4s), static_cast<const void*>(modelViewProjection));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glNamedBufferSubData(m_uniformBuffer, 0, sizeof(mat4s), static_cast<const void*>(modelViewProjection));
 }
 
 
-void OrthoMatrix::flipVertically(bool flip) noexcept
+void View::flipVertically(bool flip) noexcept
 {
     m_flipVertically = flip;
 }
 
 
-const mat4s& OrthoMatrix::getProjectionMatrix() const noexcept
+const mat4s& View::getProjectionMatrix() const noexcept
 {
     return m_projection;
 }
 
 
-bool OrthoMatrix::isUpsideDown() const noexcept
+bool View::isUpsideDown() const noexcept
 {
     return m_flipVertically;
 }

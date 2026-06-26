@@ -19,7 +19,7 @@ extern "C"
 #include "graphics/texture/Texture2D.hpp"
 #include "graphics/program/ShaderProgram.hpp"
 #include "graphics/sprites/SpriteManager.hpp"
-#include "graphics/camera/OrthoMatrix.hpp"
+#include "graphics/camera/View.hpp"
 #include "graphics/level/Level.hpp"
 
 
@@ -147,22 +147,22 @@ public:
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
-
+            m_transform.move({0, 1});
         }
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
-
+            m_transform.move({0, -1});
         }
 
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
-
+            m_transform.move({-1, 0});
         }
 
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
-
+            m_transform.move({1, 0});
         }
     }
 
@@ -174,10 +174,11 @@ public:
     }
 
     Sprite2D m_sprite;
+    Transform2D m_transform;
 };
 
 
-OrthoMatrix* camera;
+View* camera;
 
 
 int main()
@@ -195,17 +196,14 @@ int main()
 
     initDebug();
 
-    OrthoMatrix orthoMatrix;
+    View orthoMatrix;
     orthoMatrix.create();
     camera = &orthoMatrix;
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
 	{
-        if (glViewport)
-        {
-            glViewport(0, 0, width, height);
-            camera->resize(width, height);
-        }
+        glViewport(0, 0, width, height);
+        camera->resize(width, height);
 	});
     orthoMatrix.resize(width, height);
 
@@ -255,7 +253,6 @@ int main()
 
     while (!glfwWindowShouldClose(window))
 	{
-
         glClear(GL_COLOR_BUFFER_BIT);
 
 		glfwPollEvents();
@@ -264,8 +261,12 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+        player.update(window, deltaTime);
+
         auto projection = orthoMatrix.getProjectionMatrix();
-        orthoMatrix.updateUniformBuffer(projection.raw);
+        auto modelView = player.m_transform.getMatrix();
+        auto mvp = glms_mul(projection, modelView);
+        orthoMatrix.updateUniformBuffer(mvp.raw);
 
         level.draw(program.getHandle());
         sprites.bind(true);

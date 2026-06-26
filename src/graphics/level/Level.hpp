@@ -19,11 +19,11 @@ public:
 private:
     bool loadTextures(const class TileMap& tilemap) noexcept;
     void loadGraphics(const class TileMap& tilemap) noexcept;
-    bool loadShaders() noexcept;
+    // bool loadShaders() noexcept;
     void cleanup() noexcept;
 
     Transform2D m_transform;
-    std::unique_ptr<class ShaderProgram> m_program;
+    // std::unique_ptr<class ShaderProgram> m_program;
 
     struct
     {

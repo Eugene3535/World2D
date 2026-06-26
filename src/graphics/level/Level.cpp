@@ -171,23 +171,23 @@ void Level::loadGraphics(const class TileMap& tilemap) noexcept
 }
 
 
-bool Level::loadShaders() noexcept
-{
-    std::array<Shader, 2> shaders;
+// bool Level::loadShaders() noexcept
+// {
+//     std::array<Shader, 2> shaders;
 
-    if (shaders[0].loadFromFile("res/shaders/sprite.vert", GL_VERTEX_SHADER) == 0)
-        return false;
+//     if (shaders[0].loadFromFile("res/shaders/sprite.vert", GL_VERTEX_SHADER) == 0)
+//         return false;
 
-    if (shaders[1].loadFromFile("res/shaders/sprite.frag", GL_FRAGMENT_SHADER) == 0)
-        return false;
+//     if (shaders[1].loadFromFile("res/shaders/sprite.frag", GL_FRAGMENT_SHADER) == 0)
+//         return false;
 
-    m_program = std::make_unique<ShaderProgram>();
+//     m_program = std::make_unique<ShaderProgram>();
 
-    if (!m_program->link(shaders))
-        return false;
+//     if (!m_program->link(shaders))
+//         return false;
 
-    return true;
-}
+//     return true;
+// }
 
 
 void Level::cleanup() noexcept

@@ -18,7 +18,7 @@ set(GRAPHICS_SRC_FILES
 	src/graphics/texture/Texture2D.cpp
 	src/graphics/vao/VertexBufferLayout.cpp
 	src/graphics/transform/Transform2D.cpp
-	src/graphics/camera/OrthoMatrix.cpp
+	src/graphics/camera/View.cpp
 	src/graphics/sprites/SpriteManager.cpp
 	src/graphics/level/Level.cpp
 )
@@ -28,7 +28,7 @@ set(GRAPHICS_HDR_FILES
 	src/graphics/texture/Texture2D.hpp
 	src/graphics/vao/VertexBufferLayout.hpp
 	src/graphics/transform/Transform2D.hpp
-	src/graphics/camera/OrthoMatrix.hpp
+	src/graphics/camera/View.hpp
 	src/graphics/sprites/SpriteManager.hpp
 	src/graphics/level/Level.hpp
 )
