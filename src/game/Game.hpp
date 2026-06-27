@@ -2,21 +2,21 @@
 
 #include <memory>
 
-class Game final
+#include "game/window/Window.hpp"
+#include "game/context/Context.hpp"
+
+
+class Game final:
+    public Window,
+    public Context
 {
 public:
     Game() noexcept;
     ~Game();
 
-    bool setupContext() noexcept;
+    bool setup() noexcept;
     int play() noexcept;
 
-
 private:
-    struct GLFWwindow* openWindow(const char* title, int width, int height) noexcept;
-    bool initOpenGL() noexcept;
-    void initDebug() noexcept;
-
-    struct GLFWwindow* m_window;
     std::unique_ptr<class View> m_view;
 };

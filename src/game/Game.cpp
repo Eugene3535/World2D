@@ -16,34 +16,25 @@
 
 
 Game::Game() noexcept:
-	m_window(nullptr)
+	Window()
 {
 
 }
 
-Game::~Game()
-{
-    glfwDestroyWindow(m_window);
-	glfwTerminate();
-}
+Game::~Game() = default;
 
 
-bool Game::setupContext() noexcept
+bool Game::setup() noexcept
 {
 	int width = 800;
     int height = 600;
     const char* title = "Platformer 2D";
-    GLFWwindow* window = openWindow(title, width, height);
 
-    if (!window)
-        return false;
-
-	m_window = window;
+	if (!openWindow(title, width, height))
+		return false;
 
     if (!initOpenGL())
         return false;
-
-    initDebug();
 
 	m_view = std::make_unique<View>();
 	m_view->create(width, height);
@@ -139,103 +130,3 @@ int Game::play() noexcept
 }
 
 
-GLFWwindow* Game::openWindow(const char* title, int width, int height) noexcept
-{
-    GLFWwindow* window;
-
-    if (glfwInit() != GLFW_TRUE)
-        return nullptr;
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    if (window = glfwCreateWindow(width, height, title, nullptr, nullptr); !window)
-        return nullptr;
-    
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-
-    return window;
-}
-
-
-bool Game::initOpenGL() noexcept
-{
-    if (!gladLoadGL())
-        return false;
-
-    static_assert(std::is_same_v<GLbyte, int8_t>, "GLbyte mismatch");
-    static_assert(std::is_same_v<GLubyte, uint8_t>, "GLubyte mismatch");
-    static_assert(std::is_same_v<GLshort, int16_t>, "GLshort mismatch");
-    static_assert(std::is_same_v<GLushort, uint16_t>, "GLushort mismatch");
-    static_assert(std::is_same_v<GLint, int32_t>, "GLint mismatch");
-    static_assert(std::is_same_v<GLuint, uint32_t>, "GLuint mismatch");
-    static_assert(std::is_same_v<GLfloat, float>, "GLfloat mismatch");
-    static_assert(std::is_same_v<GLdouble, double>, "GLdouble mismatch");
-
-    return true;
-}
-
-
-void Game::initDebug() noexcept
-{
-#ifdef DEBUG
-	printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-	printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-	printf("Vendor: %s\n", glGetString(GL_VENDOR));
-	printf("Renderer: %s\n", glGetString(GL_RENDERER));
-
-	glEnable(GL_DEBUG_OUTPUT);
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-	glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* user_param)
-	{
-		auto source_str = [source]() -> const char*
-		{
-			switch (source)
-			{
-				case GL_DEBUG_SOURCE_API:             return "API";
-				case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   return "WINDOW SYSTEM";
-				case GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHADER COMPILER";
-				case GL_DEBUG_SOURCE_THIRD_PARTY:     return "THIRD PARTY";
-				case GL_DEBUG_SOURCE_APPLICATION:     return "APPLICATION";
-				case GL_DEBUG_SOURCE_OTHER:           return "OTHER";
-				
-				default: return "UNKNOWN";
-			}
-		}();
-
-		auto type_str = [type]() -> const char*
-		{
-			switch (type)
-			{
-				case GL_DEBUG_TYPE_ERROR:               return "ERROR";
-				case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
-				case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  return "UNDEFINED_BEHAVIOR";
-				case GL_DEBUG_TYPE_PORTABILITY:         return "PORTABILITY";
-				case GL_DEBUG_TYPE_PERFORMANCE:         return "PERFORMANCE";
-				case GL_DEBUG_TYPE_MARKER:              return "MARKER";
-				case GL_DEBUG_TYPE_OTHER:               return "OTHER";
-
-				default: return "UNKNOWN";
-			}
-		}();
-
-		auto severity_str = [severity]() -> const char*
-		{
-			switch (severity) 
-			{
-				case GL_DEBUG_SEVERITY_NOTIFICATION: return "NOTIFICATION";
-				case GL_DEBUG_SEVERITY_LOW:          return "LOW";
-				case GL_DEBUG_SEVERITY_MEDIUM:       return "MEDIUM";
-				case GL_DEBUG_SEVERITY_HIGH:         return "HIGH";
-
-				default: return "UNKNOWN";
-			}
-		}();
-
-		printf("%s, %s, %s, %u: %s\n", source_str, type_str, severity_str, id, message);
-	}, nullptr);
-#endif
-}
