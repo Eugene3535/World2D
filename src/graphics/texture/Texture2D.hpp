@@ -1,5 +1,4 @@
-#ifndef TEXTURE_HPP
-#define TEXTURE_HPP
+#pragma once
 
 #include <filesystem>
 
@@ -42,5 +41,3 @@ private:
 	bool m_isSmooth;
 	bool m_isRepeated;
 };
-
-#endif // !TEXTURE_HPP

@@ -1,5 +1,4 @@
-#ifndef VERTEX_BUFFER_LAYOUT_HPP
-#define VERTEX_BUFFER_LAYOUT_HPP
+#pragma once
 
 #include <span>
 #include <vector>
@@ -55,5 +54,3 @@ private:
     std::vector<Attribute> m_attributes;
     GLuint m_stride;
 };
-
-#endif // !VERTEX_BUFFER_LAYOUT_HPP

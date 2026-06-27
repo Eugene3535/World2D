@@ -36,6 +36,7 @@ set(GRAPHICS_HDR_FILES
 set(GAME_SRC_FILES
 	${FILE_SRC_FILES}
 	${GRAPHICS_SRC_FILES}
+	src/game/Game.cpp
 	src/main.cpp
 )
 
@@ -44,6 +45,7 @@ set(GAME_HDR_FILES
 	src/common/allocator/MemoryAllocator.inl
 	${FILE_HDR_FILES}
 	${GRAPHICS_HDR_FILES}
+	src/game/Game.hpp
 )
 
 

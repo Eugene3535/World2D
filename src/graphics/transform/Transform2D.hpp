@@ -1,5 +1,4 @@
-#ifndef TRANSFORM_2D_HPP
-#define TRANSFORM_2D_HPP
+#pragma once
 
 #include <cglm/struct/vec2.h>
 #include <cglm/struct/mat4.h>
@@ -41,5 +40,3 @@ private:
     float         m_rotation;
     mutable bool  m_transformNeedUpdate;
 };
-
-#endif 

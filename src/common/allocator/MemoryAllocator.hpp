@@ -1,5 +1,4 @@
-#ifndef MEMORY_ALLOCATOR_HPP
-#define MEMORY_ALLOCATOR_HPP
+#pragma once
 
 #include <cstdint>
 #include <array>
@@ -30,5 +29,3 @@ private:
 
 
 #include "common/MemoryAllocator.inl"
-
-#endif // !MEMORY_ALLOCATOR_HPP

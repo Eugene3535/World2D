@@ -1,5 +1,4 @@
-#ifndef ORTHO_MATRIX_HPP
-#define ORTHO_MATRIX_HPP
+#pragma once
 
 #include <cstdint>
 
@@ -11,7 +10,7 @@ public:
     View() noexcept;
     ~View();
 
-    void create() noexcept;
+    void create(int32_t width, int32_t height) noexcept;
 
     void resize(int32_t width, int32_t height) noexcept;
     void updateUniformBuffer(mat4 modelViewProjection) const noexcept;
@@ -26,5 +25,3 @@ private:
 
     bool m_flipVertically;
 };
-
-#endif // !ORTHO_MATRIX_HPP

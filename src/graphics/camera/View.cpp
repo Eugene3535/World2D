@@ -21,7 +21,7 @@ View::~View()
 }
 
 
-void View::create() noexcept
+void View::create(int32_t width, int32_t height) noexcept
 {
     if (!m_uniformBuffer)
     {
@@ -30,6 +30,8 @@ void View::create() noexcept
         glBindBufferRange(GL_UNIFORM_BUFFER, 0, m_uniformBuffer, 0, sizeof(mat4s));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
+
+    resize(width, height);
 }
 
 

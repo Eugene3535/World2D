@@ -1,5 +1,4 @@
-#ifndef SPRITE_MANAGER_HPP
-#define SPRITE_MANAGER_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -58,5 +57,3 @@ private:
 	std::vector<Sprite2D> m_sprites;
 	std::vector<float> m_vertices;
 };
-
-#endif // !SPRITE_MANAGER_HPP

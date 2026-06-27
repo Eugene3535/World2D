@@ -1,5 +1,4 @@
-#ifndef LEVEL_HPP
-#define LEVEL_HPP
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -7,23 +6,20 @@
 #include "graphics/transform/Transform2D.hpp"
 
 
-class Level
+class Level:
+    public Transform2D
 {
 public:
     Level() noexcept;
     ~Level();
 
     bool load(const class TileMap& tilemap) noexcept;
-    void draw(uint32_t program) const noexcept;
+    void draw() const noexcept;
 
 private:
     bool loadTextures(const class TileMap& tilemap) noexcept;
     void loadGraphics(const class TileMap& tilemap) noexcept;
-    // bool loadShaders() noexcept;
     void cleanup() noexcept;
-
-    Transform2D m_transform;
-    // std::unique_ptr<class ShaderProgram> m_program;
 
     struct
     {
@@ -43,5 +39,3 @@ private:
 		uint32_t indexCount;
     } m_foreground;
 };
-
-#endif // !LEVEL_HPP

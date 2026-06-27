@@ -1,5 +1,4 @@
-#ifndef SHADER_PROGRAM_HPP
-#define SHADER_PROGRAM_HPP
+#pragma once
 
 #include <cstdint>
 #include <span>
@@ -24,5 +23,3 @@ public:
 private:
     uint32_t m_handle;
 };
-
-#endif // !SHADER_PROGRAM_HPP

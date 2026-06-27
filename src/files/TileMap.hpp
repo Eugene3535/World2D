@@ -1,5 +1,4 @@
-#ifndef TILEMAP_HPP
-#define TILEMAP_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -77,5 +76,3 @@ private:
     ivec2s                  m_mapSize;
     ivec2s                  m_tileSize;
 };
-
-#endif // !TILEMAP_HPP

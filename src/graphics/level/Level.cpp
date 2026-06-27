@@ -9,12 +9,12 @@
 #include "files/Shader.hpp"
 #include "graphics/texture/Texture2D.hpp"
 #include "graphics/vao/VertexBufferLayout.hpp"
-#include "graphics/program/ShaderProgram.hpp"
 #include "graphics/level/Level.hpp"
 
 
 
 Level::Level() noexcept:
+    Transform2D(),
     m_background{},
     m_foreground{}
 {
@@ -37,18 +37,14 @@ bool Level::load(const TileMap& tilemap) noexcept
 
     loadGraphics(tilemap);
 
-    // if (!loadShaders())
-    //     return false;
-
     return true;
 }
 
 
-void Level::draw(uint32_t program) const noexcept
+void Level::draw() const noexcept
 {
     const bool needSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
 
-    //(*m_program)(true);
 	glBindTextureUnit(0, m_background.texture);
 
     if (needSecondSampler)
@@ -68,8 +64,6 @@ void Level::draw(uint32_t program) const noexcept
 
     if (needSecondSampler)
         glBindTextureUnit(1, 0);
-
-    //(*m_program)(false);
 }
 
 
@@ -169,25 +163,6 @@ void Level::loadGraphics(const class TileMap& tilemap) noexcept
     m_background.VAO = vertexArrays[0];
     m_foreground.VAO = vertexArrays[1];
 }
-
-
-// bool Level::loadShaders() noexcept
-// {
-//     std::array<Shader, 2> shaders;
-
-//     if (shaders[0].loadFromFile("res/shaders/sprite.vert", GL_VERTEX_SHADER) == 0)
-//         return false;
-
-//     if (shaders[1].loadFromFile("res/shaders/sprite.frag", GL_FRAGMENT_SHADER) == 0)
-//         return false;
-
-//     m_program = std::make_unique<ShaderProgram>();
-
-//     if (!m_program->link(shaders))
-//         return false;
-
-//     return true;
-// }
 
 
 void Level::cleanup() noexcept
