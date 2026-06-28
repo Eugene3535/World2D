@@ -4,13 +4,13 @@
 
 #include <cglm/struct/mat4.h>
 
-class View final
+class View
 {
 public:
     View() noexcept;
-    ~View();
+    virtual ~View();
 
-    void create(int32_t width, int32_t height) noexcept;
+    void initViewport(int32_t width, int32_t height) noexcept;
 
     void resize(int32_t width, int32_t height) noexcept;
     void updateUniformBuffer(mat4 modelViewProjection) const noexcept;

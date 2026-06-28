@@ -4,7 +4,7 @@
 
 
 Window::Window() noexcept:
-    m_window(nullptr)
+    m_glfwWindow(nullptr)
 {
 
 }
@@ -12,7 +12,7 @@ Window::Window() noexcept:
 
 Window::~Window()
 {
-    glfwDestroyWindow(m_window);
+    glfwDestroyWindow(m_glfwWindow);
 	glfwTerminate();
 }
 
@@ -26,11 +26,13 @@ bool Window::openWindow(const char* title, int width, int height) noexcept
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    if (m_window = glfwCreateWindow(width, height, title, nullptr, nullptr); !m_window)
+    if (m_glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr); !m_glfwWindow)
         return false;
     
-    glfwMakeContextCurrent(m_window);
+    glfwMakeContextCurrent(m_glfwWindow);
     glfwSwapInterval(1);
+
+    initViewport(width, height);
 
     return true;
 }

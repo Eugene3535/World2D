@@ -16,7 +16,4 @@ public:
 
     bool setup() noexcept;
     int play() noexcept;
-
-private:
-    std::unique_ptr<class View> m_view;
 };

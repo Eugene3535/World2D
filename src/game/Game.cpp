@@ -36,20 +36,17 @@ bool Game::setup() noexcept
     if (!initOpenGL())
         return false;
 
-	m_view = std::make_unique<View>();
-	m_view->create(width, height);
+	glfwSetWindowUserPointer(m_glfwWindow, this);
 
-	glfwSetWindowUserPointer(m_window, this);
-
-    glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
+    glfwSetFramebufferSizeCallback(m_glfwWindow, [](GLFWwindow* window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
 
 		if (auto game = static_cast<Game*>(glfwGetWindowUserPointer(window)); game)
-			game->m_view->resize(width, height);
+			game->resize(width, height);
 	});
 
-	glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+	glfwSetKeyCallback(m_glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         	glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -86,7 +83,7 @@ int Game::play() noexcept
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
 
-    while (!glfwWindowShouldClose(m_window))
+    while (!glfwWindowShouldClose(m_glfwWindow))
 	{
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -96,34 +93,34 @@ int Game::play() noexcept
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-        if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+        if (glfwGetKey(m_glfwWindow, GLFW_KEY_W) == GLFW_PRESS)
         {
             level.move({0, 5});
         }
 
-        if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
+        if (glfwGetKey(m_glfwWindow, GLFW_KEY_S) == GLFW_PRESS)
         {
             level.move({0, -5});
         }
 
-        if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
+        if (glfwGetKey(m_glfwWindow, GLFW_KEY_D) == GLFW_PRESS)
         {
             level.move({-5, 0});
         }
 
-        if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
+        if (glfwGetKey(m_glfwWindow, GLFW_KEY_A) == GLFW_PRESS)
         {
             level.move({5, 0});
         }
 
-        auto projection = m_view->getProjectionMatrix();
+        auto projection = getProjectionMatrix();
         auto modelView = level.getMatrix();
         auto mvp = glms_mul(projection, modelView);
-        m_view->updateUniformBuffer(mvp.raw);
+        updateUniformBuffer(mvp.raw);
 
         level.draw();
 
-		glfwSwapBuffers(m_window);
+		glfwSwapBuffers(m_glfwWindow);
 	}
 
 	return 0;

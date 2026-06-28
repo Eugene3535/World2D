@@ -16,12 +16,11 @@ View::View() noexcept:
 
 View::~View()
 {
-    if(m_uniformBuffer)
-        glDeleteBuffers(1, &m_uniformBuffer);
+    glDeleteBuffers(1, &m_uniformBuffer);
 }
 
 
-void View::create(int32_t width, int32_t height) noexcept
+void View::initViewport(int32_t width, int32_t height) noexcept
 {
     if (!m_uniformBuffer)
     {
