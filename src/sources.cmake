@@ -38,6 +38,7 @@ set(GAME_SRC_FILES
 	${GRAPHICS_SRC_FILES}
 	src/game/window/Window.cpp
 	src/game/context/Context.cpp
+	src/game/objects/GameObject.cpp
 	src/game/Game.cpp
 	src/main.cpp
 )
@@ -47,8 +48,10 @@ set(GAME_HDR_FILES
 	src/common/allocator/MemoryAllocator.inl
 	${FILE_HDR_FILES}
 	${GRAPHICS_HDR_FILES}
+	src/game/window/Viewport.hpp
 	src/game/window/Window.hpp
 	src/game/context/Context.hpp
+	src/game/objects/GameObject.hpp
 	src/game/Game.hpp
 )
 

@@ -20,7 +20,7 @@ View::~View()
 }
 
 
-void View::initViewport(int32_t width, int32_t height) noexcept
+void View::initialize(int32_t width, int32_t height) noexcept
 {
     if (!m_uniformBuffer)
     {

@@ -19,7 +19,7 @@ Context::Context() noexcept
 Context::~Context() = default;
 
 
-bool Context::initOpenGL() noexcept
+bool Context::initialize() noexcept
 {
     if (!gladLoadGL())
         return false;
@@ -33,13 +33,13 @@ bool Context::initOpenGL() noexcept
     static_assert(std::is_same_v<GLfloat, float>, "GLfloat mismatch");
     static_assert(std::is_same_v<GLdouble, double>, "GLdouble mismatch");
 
-    initDebug();
+    initializeDebug();
 
     return true;
 }
 
 
-void Context::initDebug() noexcept
+void Context::initializeDebug() noexcept
 {
 #ifdef DEBUG
 	printf("OpenGL Version: %s\n", glGetString(GL_VERSION));

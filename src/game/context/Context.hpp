@@ -6,8 +6,8 @@ public:
     Context() noexcept;
     virtual ~Context();
 
-    bool initOpenGL() noexcept;
+    bool initialize() noexcept;
 
 private:
-    void initDebug() noexcept;
+    void initializeDebug() noexcept;
 };

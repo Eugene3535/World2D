@@ -1,19 +1,26 @@
 #pragma once
 
-#include "graphics/camera/View.hpp"
+#include <cglm/struct/ivec2.h>
 
-
-class Window:
-    public View
+class Window final
 {
 public:
     Window() noexcept;
     ~Window();
 
-    bool openWindow(const char* title, int width, int height) noexcept;
+    bool open(struct Viewport* viewport) noexcept;
+    void close() const noexcept;
 
-    // добавить клавиши мб 
+    void pollEvents() const noexcept;
+    void display() const noexcept;
 
-protected:
+    float getElapsedTime() const noexcept;
+    ivec2s getSize() const noexcept;
+
+    bool isKeyPressed(char symbol) const noexcept;
+    bool isOpen() const noexcept;
+
+private:
     struct GLFWwindow* m_glfwWindow;
+    class Viewport* m_viewport;
 };

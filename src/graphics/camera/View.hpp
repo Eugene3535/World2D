@@ -10,7 +10,7 @@ public:
     View() noexcept;
     virtual ~View();
 
-    void initViewport(int32_t width, int32_t height) noexcept;
+    void initialize(int32_t width, int32_t height) noexcept;
 
     void resize(int32_t width, int32_t height) noexcept;
     void updateUniformBuffer(mat4 modelViewProjection) const noexcept;
