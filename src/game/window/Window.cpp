@@ -6,11 +6,8 @@
 
 
 
-
-
 Window::Window() noexcept:
-    m_glfwWindow(nullptr),
-    m_viewport(nullptr)
+    m_glfwWindow(nullptr)
 {
 
 }
@@ -41,9 +38,7 @@ bool Window::open(Viewport* viewport) noexcept
     glfwMakeContextCurrent(m_glfwWindow);
     glfwSwapInterval(1);
 
-    m_viewport = viewport;
-
-    glfwSetWindowUserPointer(m_glfwWindow, this);
+    glfwSetWindowUserPointer(m_glfwWindow, viewport);
 
     glfwSetFramebufferSizeCallback(m_glfwWindow, [](GLFWwindow* window, int width, int height)
 	{

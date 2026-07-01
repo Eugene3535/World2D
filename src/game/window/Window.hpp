@@ -22,5 +22,4 @@ public:
 
 private:
     struct GLFWwindow* m_glfwWindow;
-    class Viewport* m_viewport;
 };
