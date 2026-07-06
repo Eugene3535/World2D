@@ -6,13 +6,13 @@
 #include "graphics/camera/View.hpp"
 
 
-struct Viewport
+struct WindowData
 {
     std::string title;
     int32_t width;
     int32_t height;
 
-    View* view;
+    View view;
 
     struct
     {
@@ -21,12 +21,4 @@ struct Viewport
         bool isRepeated;
         bool isReleased;
     } key;
-
-    struct
-    {
-        int button;
-        bool isMoved;
-        bool isPressed;
-        bool isReleased;
-    } mouse;
 };

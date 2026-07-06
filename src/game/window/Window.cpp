@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "game/window/Viewport.hpp"
+#include "game/window/WindowData.hpp"
 #include "game/window/Window.hpp"
 
 
@@ -20,7 +20,7 @@ Window::~Window()
 }
 
 
-bool Window::open(Viewport* viewport) noexcept
+bool Window::open(WindowData* data) noexcept
 {
     if (glfwInit() != GLFW_TRUE)
         return false;
@@ -32,23 +32,23 @@ bool Window::open(Viewport* viewport) noexcept
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
-    if (m_glfwWindow = glfwCreateWindow(viewport->width, viewport->height, viewport->title.c_str(), nullptr, nullptr); !m_glfwWindow)
+    if (m_glfwWindow = glfwCreateWindow(data->width, data->height, data->title.c_str(), nullptr, nullptr); !m_glfwWindow)
         return false;
     
     glfwMakeContextCurrent(m_glfwWindow);
     glfwSwapInterval(1);
 
-    glfwSetWindowUserPointer(m_glfwWindow, viewport);
+    glfwSetWindowUserPointer(m_glfwWindow, &data);
 
     glfwSetFramebufferSizeCallback(m_glfwWindow, [](GLFWwindow* window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
 
-		if (auto viewport = static_cast<Viewport*>(glfwGetWindowUserPointer(window)); viewport)
+		if (auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window)); data)
         {
-			viewport->view->resize(width, height);
-            viewport->width = width;
-            viewport->height = height;
+			data->view.resize(width, height);
+            data->width = width;
+            data->height = height;
         }
 	});
 

@@ -23,7 +23,7 @@ public:
     int play() noexcept;
 
 private:
-    std::unique_ptr<class Viewport> m_viewport;
+    std::unique_ptr<class WindowData> m_windowData;
     Window m_window;
     Context m_context;
     View m_view;

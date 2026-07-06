@@ -48,7 +48,7 @@ set(GAME_HDR_FILES
 	src/common/allocator/MemoryAllocator.inl
 	${FILE_HDR_FILES}
 	${GRAPHICS_HDR_FILES}
-	src/game/window/Viewport.hpp
+	src/game/window/WindowData.hpp
 	src/game/window/Window.hpp
 	src/game/context/Context.hpp
 	src/game/objects/GameObject.hpp

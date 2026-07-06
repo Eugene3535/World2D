@@ -1,6 +1,7 @@
 #include <array>
 
 #include <glad/glad.h>
+#include <cglm/struct/vec2.h>
 #include <cglm/struct/cam.h>
 #include "cglm/struct/affine-mat.h"
 
@@ -11,7 +12,7 @@
 #include "graphics/sprites/SpriteManager.hpp"
 #include "graphics/camera/View.hpp"
 #include "graphics/level/Level.hpp"
-#include "game/window/Viewport.hpp"
+#include "game/window/WindowData.hpp"
 #include "game/Game.hpp"
 
 
@@ -27,19 +28,18 @@ Game::~Game() = default;
 
 bool Game::setup() noexcept
 {
-    m_viewport = std::make_unique<Viewport>();
-	m_viewport->width = 800;
-    m_viewport->height = 600;
-    m_viewport->title = "Platformer 2D";
-    m_viewport->view = &m_view;
+    m_windowData = std::make_unique<WindowData>();
+	m_windowData->width = 800;
+    m_windowData->height = 600;
+    m_windowData->title = "Platformer 2D";
 
-	if (!m_window.open(m_viewport.get()))
+	if (!m_window.open(m_windowData.get()))
 		return false;
 
     if (!m_context.initialize())
         return false;
 
-    m_view.initialize(m_viewport->width, m_viewport->height);
+    m_view.initialize(m_windowData->width, m_windowData->height);
 
 	return true;
 }
@@ -72,6 +72,16 @@ int Game::play() noexcept
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
 
+    vec2s startPosition = { 32, 10 };
+    vec2s finishPosition = startPosition;
+    {
+        level.setPosition(glms_vec2_negate(startPosition));
+        auto projection = m_view.getProjectionMatrix();
+        auto modelView = level.getMatrix();
+        auto mvp = glms_mul(projection, modelView);
+        m_view.updateUniformBuffer(mvp.raw);
+    }
+
     while (m_window.isOpen())
 	{
         glClear(GL_COLOR_BUFFER_BIT);
@@ -84,28 +94,34 @@ int Game::play() noexcept
 
         if (m_window.isKeyPressed('W'))
         {
-            level.move({0, 5});
+            startPosition.y -= 5;
         }
 
         if (m_window.isKeyPressed('S'))
         {
-            level.move({0, -5});
+            startPosition.y += 5;
         }
 
         if (m_window.isKeyPressed('D'))
         {
-            level.move({-5, 0});
+            startPosition.x += 5;
         }
 
         if (m_window.isKeyPressed('A'))
         {
-            level.move({5, 0});
+            startPosition.x -= 5;
         }
 
-        auto projection = m_view.getProjectionMatrix();
-        auto modelView = level.getMatrix();
-        auto mvp = glms_mul(projection, modelView);
-        m_view.updateUniformBuffer(mvp.raw);
+        if ( (finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y) )
+        {
+            level.setPosition(glms_vec2_negate(startPosition));
+            auto projection = m_view.getProjectionMatrix();
+            auto modelView = level.getMatrix();
+            auto mvp = glms_mul(projection, modelView);
+            m_view.updateUniformBuffer(mvp.raw);
+        }
+
+        vec2s finishPosition = startPosition;
 
         level.draw();
 

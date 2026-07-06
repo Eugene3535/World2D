@@ -8,7 +8,7 @@ public:
     Window() noexcept;
     ~Window();
 
-    bool open(struct Viewport* viewport) noexcept;
+    bool open(struct WindowData* data) noexcept;
     void close() const noexcept;
 
     void pollEvents() const noexcept;
