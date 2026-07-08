@@ -2,13 +2,14 @@
 
 #include <cglm/struct/ivec2.h>
 
-class Window final
+
+class MainWindow final
 {
 public:
-    Window() noexcept;
-    ~Window();
+    MainWindow() noexcept;
+    ~MainWindow();
 
-    bool open(struct WindowData* data) noexcept;
+    bool open(struct WindowData& data) noexcept;
     void close() const noexcept;
 
     void pollEvents() const noexcept;
@@ -21,5 +22,7 @@ public:
     bool isOpen() const noexcept;
 
 private:
+    void setupCallbacks(struct WindowData& data) noexcept;
+
     struct GLFWwindow* m_glfwWindow;
 };

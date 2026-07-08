@@ -12,7 +12,6 @@
 #include "graphics/sprites/SpriteManager.hpp"
 #include "graphics/camera/View.hpp"
 #include "graphics/level/Level.hpp"
-#include "game/window/WindowData.hpp"
 #include "game/Game.hpp"
 
 
@@ -26,20 +25,17 @@ Game::Game() noexcept
 Game::~Game() = default;
 
 
-bool Game::setup() noexcept
+bool Game::initialize() noexcept
 {
-    m_windowData = std::make_unique<WindowData>();
-	m_windowData->width = 800;
-    m_windowData->height = 600;
-    m_windowData->title = "Platformer 2D";
+	m_windowData.width = 800;
+    m_windowData.height = 600;
+    m_windowData.title = "Platformer 2D";
 
-	if (!m_window.open(m_windowData.get()))
+	if (!m_window.open(m_windowData))
 		return false;
 
-    if (!m_context.initialize())
-        return false;
-
-    m_view.initialize(m_windowData->width, m_windowData->height);
+    m_view.initialize(m_windowData.width, m_windowData.height);
+    m_windowData.view = &m_view;
 
 	return true;
 }
@@ -72,7 +68,7 @@ int Game::play() noexcept
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
 
-    vec2s startPosition = { 32, 10 };
+    vec2s startPosition = { 32, 0 };
     vec2s finishPosition = startPosition;
     {
         level.setPosition(glms_vec2_negate(startPosition));

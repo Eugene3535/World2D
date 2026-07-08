@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <string>
 
-#include "graphics/camera/View.hpp"
-
 
 struct WindowData
 {
@@ -12,7 +10,8 @@ struct WindowData
     int32_t width;
     int32_t height;
 
-    View view;
+    void* view;
+    void* ui;
 
     struct
     {

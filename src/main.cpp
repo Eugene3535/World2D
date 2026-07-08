@@ -14,7 +14,7 @@ int main()
 {
     Game game;
 
-    if (!game.setup())
+    if (!game.initialize())
         return 1;
 
     int returnCode = game.play();
