@@ -21,21 +21,15 @@ private:
     void loadGraphics(const class TileMap& tilemap) noexcept;
     void cleanup() noexcept;
 
-    struct
+    struct TilePlane
     {
 		uint32_t texture;
 		uint32_t VAO; // Vertex Array Object
 		uint32_t VBO; // Vertex Buffer Object
         uint32_t EBO; // Element Buffer Object
 		uint32_t indexCount;
-    } m_background;
+    };
 
-    struct
-    {
-		uint32_t texture;
-		uint32_t VAO; // Vertex Array Object
-		uint32_t VBO; // Vertex Buffer Object
-        uint32_t EBO; // Element Buffer Object
-		uint32_t indexCount;
-    } m_foreground;
+    TilePlane m_background;
+    TilePlane m_foreground;
 };

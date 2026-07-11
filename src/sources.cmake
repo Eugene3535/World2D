@@ -48,7 +48,6 @@ set(GAME_SRC_FILES
 	${SHADER_FILES}
 	src/game/window/MainWindow.cpp
 	src/game/window/MainWindow.hpp
-	src/game/window/WindowData.hpp
 	src/game/context/Context.cpp
 	src/game/context/Context.hpp
 	src/game/objects/GameObject.cpp

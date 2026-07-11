@@ -1,6 +1,7 @@
 #include <array>
 
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <cglm/struct/vec2.h>
 #include <cglm/struct/cam.h>
 #include "cglm/struct/affine-mat.h"
@@ -27,15 +28,10 @@ Game::~Game() = default;
 
 bool Game::initialize() noexcept
 {
-	m_windowData.width = 800;
-    m_windowData.height = 600;
-    m_windowData.title = "Platformer 2D";
-
-	if (!m_window.open(m_windowData))
+	if (!m_window.open("Platformer 2D", 800, 600, m_view))
 		return false;
 
-    m_view.initialize(m_windowData.width, m_windowData.height);
-    m_windowData.view = &m_view;
+    m_view.initialize(800, 600);
 
 	return true;
 }
@@ -63,20 +59,12 @@ int Game::play() noexcept
     }
     glUseProgram(program.getHandle());
 
-    float deltaTime = 0.f;
 	float lastFrame = 0.f;
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
 
-    vec2s startPosition = { 32, 0 };
-    vec2s finishPosition = startPosition;
-    {
-        level.setPosition(glms_vec2_negate(startPosition));
-        auto projection = m_view.getProjectionMatrix();
-        auto modelView = level.getMatrix();
-        auto mvp = glms_mul(projection, modelView);
-        m_view.updateUniformBuffer(mvp.raw);
-    }
+    ivec2s startPosition = { 32, 0 };
+    ivec2s finishPosition = { 0, 0 };
 
     while (m_window.isOpen())
 	{
@@ -85,39 +73,37 @@ int Game::play() noexcept
 		m_window.pollEvents();
 
 		float currentFrame = m_window.getElapsedTime();
-		deltaTime = currentFrame - lastFrame;
+		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-        if (m_window.isKeyPressed('W'))
+
+        if (m_window.isKeyPressed(GLFW_KEY_W))
         {
             startPosition.y -= 5;
         }
-
-        if (m_window.isKeyPressed('S'))
+        else if (m_window.isKeyPressed(GLFW_KEY_S))
         {
             startPosition.y += 5;
         }
-
-        if (m_window.isKeyPressed('D'))
+        else if (m_window.isKeyPressed(GLFW_KEY_D))
         {
             startPosition.x += 5;
         }
-
-        if (m_window.isKeyPressed('A'))
+        else if (m_window.isKeyPressed(GLFW_KEY_A))
         {
             startPosition.x -= 5;
         }
 
         if ( (finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y) )
         {
-            level.setPosition(glms_vec2_negate(startPosition));
+            vec2s position = { static_cast<float>(-startPosition.x), static_cast<float>(-startPosition.y) };
+            level.setPosition(position);
             auto projection = m_view.getProjectionMatrix();
             auto modelView = level.getMatrix();
             auto mvp = glms_mul(projection, modelView);
             m_view.updateUniformBuffer(mvp.raw);
         }
-
-        vec2s finishPosition = startPosition;
+        finishPosition = startPosition;
 
         level.draw();
 

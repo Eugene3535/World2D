@@ -1,6 +1,5 @@
 #pragma once
 
-#include "game/window/WindowData.hpp"
 #include "game/window/MainWindow.hpp"
 #include "graphics/camera/View.hpp"
 
@@ -21,7 +20,6 @@ public:
     int play() noexcept;
 
 private:
-    WindowData m_windowData;
     MainWindow m_window;
     View m_view;
 };

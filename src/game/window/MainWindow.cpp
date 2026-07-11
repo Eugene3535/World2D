@@ -3,7 +3,6 @@
 
 #include "graphics/camera/View.hpp"
 #include "game/context/Context.hpp"
-#include "game/window/WindowData.hpp"
 #include "game/window/MainWindow.hpp"
 
 
@@ -22,7 +21,7 @@ MainWindow::~MainWindow()
 }
 
 
-bool MainWindow::open(WindowData& data) noexcept
+bool MainWindow::open(const char* title, int width, int height, View& view) noexcept
 {
     if (glfwInit() != GLFW_TRUE)
         return false;
@@ -34,7 +33,7 @@ bool MainWindow::open(WindowData& data) noexcept
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
-    if (m_glfwWindow = glfwCreateWindow(data.width, data.height, data.title.c_str(), nullptr, nullptr); !m_glfwWindow)
+    if (m_glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr); !m_glfwWindow)
         return false;
     
     glfwMakeContextCurrent(m_glfwWindow);
@@ -43,7 +42,7 @@ bool MainWindow::open(WindowData& data) noexcept
     if (!Context().initialize())
         return false;
 
-    setupCallbacks(data);
+    setupCallbacks(view);
 
     return true;
 }
@@ -82,25 +81,9 @@ ivec2s MainWindow::getSize() const noexcept
 }
 
 
-bool MainWindow::isKeyPressed(char symbol) const noexcept
+bool MainWindow::isKeyPressed(int key) const noexcept
 {
-    auto char_to_glfw_key = [](char keyCode) -> int
-    {
-        switch (keyCode)
-        {
-            case ' ': return GLFW_KEY_SPACE;
-            case 'A': return GLFW_KEY_A;
-            case 'D': return GLFW_KEY_D;
-            case 'S': return GLFW_KEY_S;
-            case 'W': return GLFW_KEY_W;
-
-            default: return 0;
-        }
-    };
-
-    const int keyCode = char_to_glfw_key(symbol);
-
-    return keyCode ? (glfwGetKey(m_glfwWindow, keyCode) == GLFW_PRESS) : false;
+    return (glfwGetKey(m_glfwWindow, key) == GLFW_PRESS);
 }
 
 
@@ -110,27 +93,21 @@ bool MainWindow::isOpen() const noexcept
 }
 
 
-void MainWindow::setupCallbacks(WindowData& data) noexcept
+void MainWindow::setupCallbacks(View& view) noexcept
 {
-    glfwSetWindowUserPointer(m_glfwWindow, static_cast<void*>(&data));
+    glfwSetWindowUserPointer(m_glfwWindow, static_cast<void*>(&view));
 
     glfwSetFramebufferSizeCallback(m_glfwWindow, [](GLFWwindow* window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
 
-		if (auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window)); data)
-        {
-            if (auto* view = static_cast<View*>(data->view); view)
-                view->resize(width, height);
-
-            data->width = width;
-            data->height = height;
-        }
+		if (auto* view = static_cast<View*>(glfwGetWindowUserPointer(window)); view)
+            view->resize(width, height);
 	});
 
 	glfwSetKeyCallback(m_glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
-		if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         	glfwSetWindowShouldClose(window, GLFW_TRUE);
 	});
 }

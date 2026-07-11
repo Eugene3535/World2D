@@ -9,7 +9,7 @@ public:
     MainWindow() noexcept;
     ~MainWindow();
 
-    bool open(struct WindowData& data) noexcept;
+    bool open(const char* title, int width, int height, class View& view) noexcept;
     void close() const noexcept;
 
     void pollEvents() const noexcept;
@@ -18,11 +18,11 @@ public:
     float getElapsedTime() const noexcept;
     ivec2s getSize() const noexcept;
 
-    bool isKeyPressed(char symbol) const noexcept;
+    bool isKeyPressed(int key) const noexcept;
     bool isOpen() const noexcept;
 
 private:
-    void setupCallbacks(struct WindowData& data) noexcept;
+    void setupCallbacks(class View& view) noexcept;
 
     struct GLFWwindow* m_glfwWindow;
 };
