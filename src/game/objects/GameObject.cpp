@@ -3,30 +3,21 @@
 
 
 
-GameObject::GameObject(Game* game, Type type) noexcept:
+GameObject::GameObject(Game* game) noexcept:
 	m_game(game),
-	m_type(type)
+	m_position{ 0, 0 },
+	m_size{ 0, 0 }
 {
-
+	setType<GameObject>();
 }
 
 
 GameObject::~GameObject() = default;
 
 
-void GameObject::update(float dt) noexcept
+uint32_t GameObject::nextId() noexcept
 {
+	static uint32_t id = 0;
 
-}
-
-
-void GameObject::draw() noexcept
-{
-
-}
-
-
-GameObject::Type GameObject::getType() const noexcept
-{
-	return m_type;
+	return id++;
 }

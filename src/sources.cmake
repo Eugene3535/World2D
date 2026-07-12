@@ -31,6 +31,18 @@ set(GRAPHICS_SRC_FILES
 	src/graphics/sprites/SpriteManager.hpp
 	src/graphics/level/Level.cpp
 	src/graphics/level/Level.hpp
+	src/graphics/render/Drawable.hpp
+)
+
+
+set(GAMEOBJECT_SRC_FILES
+	src/game/animation/Animation.cpp
+	src/game/animation/Animation.hpp
+	src/game/objects/GameObject.cpp
+	src/game/objects/GameObject.hpp
+	src/game/objects/GameObjectData.hpp
+	src/game/objects/mobs/Goomba.cpp
+	src/game/objects/mobs/Goomba.hpp
 )
 
 
@@ -45,13 +57,12 @@ set(GAME_SRC_FILES
 	${FILE_SRC_FILES}
 	${COMMON_SRC_FILES}
 	${GRAPHICS_SRC_FILES}
+	${GAMEOBJECT_SRC_FILES}
 	${SHADER_FILES}
 	src/game/window/MainWindow.cpp
 	src/game/window/MainWindow.hpp
 	src/game/context/Context.cpp
 	src/game/context/Context.hpp
-	src/game/objects/GameObject.cpp
-	src/game/objects/GameObject.hpp
 	src/game/Game.cpp
 	src/game/Game.hpp
 	src/main.cpp

@@ -17,7 +17,8 @@
 
 
 
-Game::Game() noexcept
+Game::Game() noexcept:
+    m_level(nullptr)
 {
 
 }
@@ -44,10 +45,12 @@ int Game::play() noexcept
     if (!tilemap.loadFromFile("res/levels/Level-1.tmx"))
         return 1;
 
-    Level level;
+    Level level(tilemap);
 
-    if (!level.load(tilemap))
+    if (!level.load())
         return 1;
+
+    m_level = &level;
 
     ShaderProgram program;
     {
@@ -114,3 +117,19 @@ int Game::play() noexcept
 }
 
 
+const MainWindow& Game::getWindow() const noexcept
+{
+    return m_window;
+}
+
+
+const View& Game::getView() const noexcept
+{
+    return m_view;
+}
+
+
+Level* Game::getLevel() noexcept
+{
+    return m_level;
+}

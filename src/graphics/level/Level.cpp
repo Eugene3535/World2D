@@ -13,7 +13,8 @@
 
 
 
-Level::Level() noexcept:
+Level::Level(const TileMap& tilemap) noexcept:
+    m_tilemap(tilemap),
     Transform2D(),
     m_background{},
     m_foreground{}
@@ -28,14 +29,14 @@ Level::~Level()
 }
 
 
-bool Level::load(const TileMap& tilemap) noexcept
+bool Level::load() noexcept
 {
     cleanup();
 
-    if (!loadTextures(tilemap))
+    if (!loadTextures())
         return false;
 
-    loadGraphics(tilemap);
+    loadGraphics();
 
     return true;
 }
@@ -67,9 +68,9 @@ void Level::draw() const noexcept
 }
 
 
-bool Level::loadTextures(const TileMap& tilemap) noexcept
+bool Level::loadTextures() noexcept
 {
-    const auto& tilePlanes = tilemap.getPlanes();
+    const auto& tilePlanes = m_tilemap.getPlanes();
 
     auto planeB = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TileMap::Plane& plane) -> bool
     {
@@ -117,9 +118,9 @@ bool Level::loadTextures(const TileMap& tilemap) noexcept
 }
 
 
-void Level::loadGraphics(const class TileMap& tilemap) noexcept
+void Level::loadGraphics() noexcept
 {
-    const auto& tilePlanes = tilemap.getPlanes();
+    const auto& tilePlanes = m_tilemap.getPlanes();
     const auto tilePlaneCount = tilePlanes.size();
 
     std::array<GLuint, 4> buffers = {};
@@ -182,4 +183,10 @@ void Level::cleanup() noexcept
 
     memset(&m_background, 0, sizeof(m_background));
     memset(&m_foreground, 0, sizeof(m_foreground));
+}
+
+
+const TileMap& Level::getTileMap() const noexcept
+{
+    return m_tilemap;
 }

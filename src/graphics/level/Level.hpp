@@ -10,16 +10,20 @@ class Level:
     public Transform2D
 {
 public:
-    Level() noexcept;
+    Level(const class TileMap& tilemap) noexcept;
     ~Level();
 
-    bool load(const class TileMap& tilemap) noexcept;
+    bool load() noexcept;
     void draw() const noexcept;
 
+    const class TileMap& getTileMap() const noexcept;
+
 private:
-    bool loadTextures(const class TileMap& tilemap) noexcept;
-    void loadGraphics(const class TileMap& tilemap) noexcept;
+    bool loadTextures() noexcept;
+    void loadGraphics() noexcept;
     void cleanup() noexcept;
+
+    const class TileMap& m_tilemap;
 
     struct TilePlane
     {

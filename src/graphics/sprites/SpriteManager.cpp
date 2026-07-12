@@ -220,7 +220,7 @@ void SpriteManager::bind(bool toBind) const noexcept
 }
 
 
-void SpriteManager::pushVerticesOnGPU() noexcept
+void SpriteManager::finalize() noexcept
 {
 	if (m_vertices.empty())
 		return;

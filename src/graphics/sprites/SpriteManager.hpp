@@ -45,7 +45,7 @@ public:
 
 	void bind(bool toBind) const noexcept;
 
-	void pushVerticesOnGPU() noexcept;
+	void finalize() noexcept;
 
 private:
 	void addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept;
