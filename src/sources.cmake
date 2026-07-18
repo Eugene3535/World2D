@@ -25,6 +25,8 @@ set(GAME_SRC_FILES
 	# ${COMMON_SRC_FILES}
 	${GRAPHICS_SRC_FILES}
 	src/game/objects/GameObject.hpp
+	src/game/main_loop/MainLoop.cpp
+	src/game/main_loop/MainLoop.hpp
 	src/game/Game.cpp
 	src/game/Game.hpp
 	src/main.cpp

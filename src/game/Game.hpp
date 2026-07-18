@@ -1,6 +1,7 @@
 #pragma once
 
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/System/Time.hpp>
+#include <SFML/Graphics/View.hpp>
 
 
 class Game final
@@ -16,8 +17,8 @@ public:
     ~Game();
 
     bool initialize() noexcept;
-    int play() noexcept;
+    void update(const sf::Time deltaTime) noexcept;
 
-private:
-    sf::RenderWindow m_window;
+
+    sf::View view;
 };

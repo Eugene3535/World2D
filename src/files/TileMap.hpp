@@ -6,6 +6,7 @@
 #include <span>
 #include <memory>
 #include <filesystem>
+#include <variant>
 
 #include <SFML/Graphics/Vertex.hpp>
 #include <SFML/Graphics/Image.hpp>
@@ -19,8 +20,7 @@ public:
 		struct Property
 		{
 			std::string name;
-			std::string type;
-			std::string value;
+			std::variant<bool, int, float, std::string> value;
 		};
 
 		std::string  name;

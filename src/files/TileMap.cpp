@@ -119,7 +119,7 @@ bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
     m_planes.clear();
 
     if (loadTilePlanes(static_cast<const void*>(mapNode)))
-        // if (loadObjects(static_cast<const void*>(mapNode)))
+        if (loadObjects(static_cast<const void*>(mapNode)))
             return true;
 
     return false;
@@ -274,13 +274,41 @@ bool TileMap::loadObjects(const void* rootNode) noexcept
 					      propertyNode = propertyNode->next_sibling("property"))
 				{
 					auto& property = object.properties.emplace_back();
+                    std::string_view type;
+                    std::string_view value;
 
 					for (auto attribute = propertyNode->first_attribute(); attribute; attribute = attribute->next_attribute())
 					{
-						if (strcmp(attribute->name(), "name") == 0) { property.name  = { attribute->value(), attribute->value_size() }; continue; }
-						if (strcmp(attribute->name(), "type") == 0) { property.type  = { attribute->value(), attribute->value_size() }; continue; }
-						if (strcmp(attribute->name(), "value") == 0)  property.value = { attribute->value(), attribute->value_size() };
+						if (strcmp(attribute->name(), "name") == 0) 
+                            property.name = { attribute->value(), attribute->value_size() }; 
+                        
+						else if (strcmp(attribute->name(), "type") == 0)  
+                            type  = { attribute->value(), attribute->value_size() };
+
+						else if (strcmp(attribute->name(), "value") == 0) 
+                            value = { attribute->value(), attribute->value_size() };
 					}
+
+                    if (type == "bool")
+                    {
+                        property.value = (value == "true") ? true : false; 
+                    }
+                    else if (type == "int")
+                    {
+                        property.value = atoi(value.data()); 
+                    }
+                    else if (type == "float")
+                    {
+                        float result = 0.f;
+                        auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+                        
+                        if (ec == std::errc())
+                            property.value = result; 
+                    }
+                    else if (type == "string")
+                    {
+                        property.value = std::string(value); 
+                    }
 				}
 			}
 		}
