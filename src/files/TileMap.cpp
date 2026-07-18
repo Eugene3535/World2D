@@ -2,7 +2,9 @@
 #include <algorithm>
 #include <charconv>
 #include <cstring>
+#include <string_view>
 #include <unordered_map>
+#include <ranges>
 
 #include "RapidXML/rapidxml.hpp"
 #include "RapidXML/rapidxml_utils.hpp"
@@ -12,54 +14,12 @@
 
 struct Tileset
 {
-    StbImage image;
-    int32_t columns;
-    int32_t rows;
-    int32_t tileCount;
-    int32_t firstGID;
-    std::vector<TileMap::PackedTile> tiles;
+    std::unique_ptr<sf::Image> image;
+    int32_t                    columns;
+    int32_t                    rows;
+    int32_t                    tileCount;
+    int32_t                    firstGID;
 };
-
-
-static bool load_tiles(const void* node, std::vector<TileMap::PackedTile>& tiles) noexcept
-{
-    const auto tilesetNode = static_cast<const rapidxml::xml_node<char>*>(node); 
-    auto tileNode = tilesetNode->first_node("tile");
-
-    uint32_t tileCount = 0;
-    std::unordered_map<std::string, int> tileData;
-
-    while (tileNode)
-    {
-        ++tileCount;
-
-        const auto id = tileNode->first_attribute("id");
-        const int index = id ? atoi(id->value()) : 0;
-
-        if (const auto propertiesNode = tileNode->first_node("properties"))
-        {
-            auto propertyNode = propertiesNode->first_node("property");
-            auto& tile = tiles[static_cast<size_t>(index)];
-
-            while (propertyNode)
-            {
-                const std::string name = { propertyNode->first_attribute("name")->value(), propertyNode->first_attribute("name")->value_size() };
-                const int value = atoi(propertyNode->first_attribute("value")->value());
-                tileData[name] = value;
-                propertyNode = propertyNode->next_sibling("property");
-            }
-
-            tile.left  = tileData["Left"];
-            tile.quest = tileData["Quest"];
-            tile.right = tileData["Right"];
-            tile.type  = tileData["Type"];
-        }
-
-        tileNode = tileNode->next_sibling("tile");
-    }
-
-    return (tileCount > 0);
-}
 
 
 static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) noexcept
@@ -90,8 +50,9 @@ static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) no
         imagePaths.push_back(filepath);
 
         Tileset& tileset = tilesets.emplace_back();
+        tileset.image = std::make_unique<sf::Image>();
 
-        if (!tileset.image.loadFromFile(filepath))
+        if (!tileset.image->loadFromFile(filepath))
             return false;
 
         auto tileCount = tilesetNode->first_attribute("tilecount");
@@ -100,30 +61,20 @@ static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) no
 
         tileset.tileCount = tileCount ? atoi(tileCount->value()) : 0;
         tileset.columns   = columns ? atoi(columns->value()) : 0;
-        tileset.rows      = (!tileCount || !columns) ? 0 : tileset.tileCount / tileset.columns;
+        tileset.rows      = ((!tileCount) || (!columns)) ? 0 : tileset.tileCount / tileset.columns;
         tileset.firstGID  = firstGID ? atoi(firstGID->value()) : 0;
-
-        if (tileset.firstGID == 1) // The first tileset, so we use it for collision mask
-        {
-            tileset.tiles.resize(tileset.tileCount, { .type = 0, .left = 32, .right = 32, .quest = 0 });
-
-            if (!load_tiles(tilesetNode, tileset.tiles))
-                return false;
-        }
     }
 
     return (!tilesets.empty());
 }
 
 
-static std::vector<int32_t> parse_csv(const void* node) noexcept
+static std::vector<int32_t> parse_csv(const void* node, std::vector<int>& result) noexcept
 {
     const auto dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
     std::string csv(dataNode->value(), dataNode->value_size());
 
     const auto commaCount = std::count_if(csv.begin(), csv.end(), [](char c){ return c == ','; });
-
-    std::vector<int> result;
     result.reserve(commaCount + 1);
 
     const char* begin = csv.data();
@@ -168,7 +119,7 @@ bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
     m_planes.clear();
 
     if (loadTilePlanes(static_cast<const void*>(mapNode)))
-        if (loadObjects(static_cast<const void*>(mapNode)))
+        // if (loadObjects(static_cast<const void*>(mapNode)))
             return true;
 
     return false;
@@ -187,19 +138,13 @@ std::span<const TileMap::Object> TileMap::getObjects() const noexcept
 }
 
 
-std::span<const TileMap::PackedTile> TileMap::getTileMask() const noexcept
-{
-    return m_tileMask;
-}
-
-
-ivec2s TileMap::getMapSize() const noexcept
+const sf::Vector2i& TileMap::getMapSize() const noexcept
 {
     return m_mapSize;
 }
 
 
-ivec2s TileMap::getTileSize() const noexcept
+const sf::Vector2i& TileMap::getTileSize() const noexcept
 {
     return m_tileSize;
 }
@@ -224,6 +169,9 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 	const int32_t tileWidth  = tileW ? std::atoi(tileW->value()) : 0;
 	const int32_t tileHeight = tileH ? std::atoi(tileH->value()) : 0;
 
+    if (!(mapWidth && mapHeight && tileWidth && tileHeight))
+        return false;
+
 	m_mapSize  = { mapWidth,  mapHeight  };
 	m_tileSize = { tileWidth, tileHeight };
 
@@ -232,92 +180,55 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 
 	while (layerNode)
 	{
-        if (!tileset->tiles.empty())
-            m_tileMask.swap(tileset->tiles);
-
 		auto dataNode = layerNode->first_node("data");
-		auto parsedLayer = parse_csv(dataNode);
-        auto& tilePlane = m_planes.emplace_back();
+        std::vector<int> parsedLayer;
+		parse_csv(dataNode, parsedLayer);
+        auto& tilePlane  = m_planes.emplace_back();
 
         if (auto name = layerNode->first_attribute("name"); name)
             tilePlane.name = std::string(name->value(), name->value_size());
 
         auto& image = tilePlane.image;
 
-        if (tileset->image.pixels)
-        {
-            image.pixels.swap(tileset->image.pixels);
-            image.width = tileset->image.width;
-            image.height = tileset->image.height;
-            image.bytePerPixel = tileset->image.bytePerPixel;
-        }
+        if (tileset->image)
+            image.swap(tileset->image);
 
-		const vec2s ratio = { 1.f / (float)image.width, 1.f / (float)image.height };
-        size_t index = 0;
+        const size_t tileCount = std::ranges::count_if(parsedLayer, [](int n) { return n != 0; });
 
         auto& vertices = tilePlane.vertices;
-        vertices.reserve(tileset->tileCount * 4);
+        vertices.reserve(tileCount * 6);
 
-        auto& indices = tilePlane.indices;
-        indices.reserve(tileset->tileCount * 6);
+        const uint32_t rows = tileset->rows;
+        const uint32_t columns = tileset->columns;
+        size_t index = 0;
 
-        for (int32_t y = 0u; y < mapHeight; ++y)
+        for (uint32_t y = 0u; y < mapHeight; ++y)
         {
-            for (int32_t x = 0u; x < mapWidth; ++x)
+            for (uint32_t x = 0u; x < mapWidth; ++x)
             {
-                const int32_t tileId = parsedLayer[index++];
+                const int32_t tile_id = parsedLayer[index++];
 
-                if (tileId)
+                if(tile_id)
                 {
-//  Positions
-                    const vec2s leftBottom  = { static_cast<float>(x * tileWidth),             static_cast<float>(y * tileHeight + tileHeight) };
-                    const vec2s rightBottom = { static_cast<float>(x * tileWidth + tileWidth), static_cast<float>(y * tileHeight + tileHeight) };
-                    const vec2s rightTop    = { static_cast<float>(x * tileWidth + tileWidth), static_cast<float>(y * tileHeight) };
-                    const vec2s leftTop     = { static_cast<float>(x * tileWidth),             static_cast<float>(y * tileHeight) };
+//  Vertex XY coords				
+                    const float vx = static_cast<float>(x * tileWidth);
+                    const float vy = static_cast<float>(y * tileHeight);
 
-//  UV
-                    const int32_t tileNum = tileId - tileset->firstGID;
+//  Left-top coords of the tile in texture grid
+                    const int32_t tileNum = tile_id - 1;
+                    const int32_t top = (tileNum >= columns) ? tileNum / columns : 0;
+                    const int32_t left = tileNum % columns;
+                    const auto uv = sf::Vector2f(left * tileWidth, top * tileHeight);
 
-                    const int32_t vY = (tileNum >= tileset->columns) ? tileNum / tileset->columns : 0;
-                    const int32_t vX = tileNum % tileset->columns;
+//  First triangle
+                    vertices.emplace_back(sf::Vector2f(vx, vy), sf::Color::White, uv);
+                    vertices.emplace_back(sf::Vector2f(vx + tileWidth, vy), sf::Color::White, sf::Vector2f(uv.x + tileWidth, uv.y));
+                    vertices.emplace_back(sf::Vector2f(vx + tileWidth, vy + tileHeight), sf::Color::White, sf::Vector2f(uv.x + tileWidth, uv.y + tileHeight));
 
-                    const int32_t offsetX = vX * tileWidth;
-                    const int32_t offsetY = vY * tileHeight;
-
-                    const float left   = offsetX * ratio.x;
-                    const float top    = offsetY * ratio.y;
-                    const float right  = (offsetX + tileWidth) * ratio.x;
-                    const float bottom = (offsetY + tileHeight) * ratio.y;
-
-                    const uint32_t cell = static_cast<uint32_t>(vertices.size() >> 2);
-
-                    vertices.push_back(leftBottom.x);
-                    vertices.push_back(leftBottom.y);
-                    vertices.push_back(left);
-                    vertices.push_back(bottom);
-
-                    vertices.push_back(rightBottom.x);
-                    vertices.push_back(rightBottom.y);
-                    vertices.push_back(right);
-                    vertices.push_back(bottom);
-
-                    vertices.push_back(rightTop.x);
-                    vertices.push_back(rightTop.y);
-                    vertices.push_back(right);
-                    vertices.push_back(top);
-
-                    vertices.push_back(leftTop.x);
-                    vertices.push_back(leftTop.y);
-                    vertices.push_back(left);
-                    vertices.push_back(top);
-
-                    indices.push_back(cell);
-                    indices.push_back(cell + 1u);
-                    indices.push_back(cell + 2u);
-
-                    indices.push_back(cell);
-                    indices.push_back(cell + 2u);
-                    indices.push_back(cell + 3u);
+//  Second triangle
+                    vertices.emplace_back(sf::Vector2f(vx, vy), sf::Color::White, uv);
+                    vertices.emplace_back(sf::Vector2f(vx + tileWidth, vy + tileHeight), sf::Color::White, sf::Vector2f(uv.x + tileWidth, uv.y + tileHeight));
+                    vertices.emplace_back(sf::Vector2f(vx, vy + tileHeight), sf::Color::White, sf::Vector2f(uv.x, uv.y + tileHeight));
                 }
             }
         }

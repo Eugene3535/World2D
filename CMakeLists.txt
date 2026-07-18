@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.31.10 FATAL_ERROR)
 
 project(Platformer2D LANGUAGES C CXX)
 
-set(BUILD_SHARED_LIBS ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
@@ -26,32 +25,25 @@ else()
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 endif()
 
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-set(CGLM_USE_TESTS OFF CACHE BOOL "Enable tests" FORCE)
+set(BUILD_SHARED_LIBS OFF)
+set(SFML_BUILD_NETWORK OFF CACHE BOOL "OFF to build SFML's Network module." FORCE)
 
 include(src/sources.cmake)
 
 add_executable(${PROJECT_NAME} ${GAME_SRC_FILES})
-add_subdirectory(${EXTERNAL_SOURCE_DIR}/glfw glfw)
-add_subdirectory(${EXTERNAL_SOURCE_DIR}/glad/core glad)
-add_subdirectory(${EXTERNAL_SOURCE_DIR}/cglm cglm)
-add_subdirectory(${EXTERNAL_SOURCE_DIR}/magic_enum magic_enum)
-
-target_sources(${PROJECT_NAME} PRIVATE ${SHADER_FILES})
+add_subdirectory(${EXTERNAL_SOURCE_DIR}/sfml sfml)
+# add_subdirectory(${EXTERNAL_SOURCE_DIR}/magic_enum magic_enum)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-	${PROJECT_SOURCE_DIR}/src
 	${EXTERNAL_SOURCE_DIR}/rapidxml
-	${EXTERNAL_SOURCE_DIR}/stb
+	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-	glfw
-	glad
-	cglm
+	SFML::Main
+	SFML::Window
+	SFML::Graphics
+	SFML::Audio
 )
 
 if(MSVC)
@@ -76,7 +68,6 @@ if(MSVC)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/res"         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res"
-	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/src/shaders" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res/shaders"
+	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/res" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res"
 	VERBATIM
 )

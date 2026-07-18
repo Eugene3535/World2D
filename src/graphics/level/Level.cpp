@@ -1,21 +1,15 @@
-#include <array>
 #include <algorithm>
-#include <cstring>
 #include <span>
 
-#include <glad/glad.h>
+#include <SFML/Graphics/RenderTarget.hpp>
 
 #include "files/TileMap.hpp"
-#include "files/Shader.hpp"
-#include "graphics/texture/Texture2D.hpp"
-#include "graphics/vao/VertexBufferLayout.hpp"
 #include "graphics/level/Level.hpp"
 
 
 
 Level::Level(const TileMap& tilemap) noexcept:
     m_tilemap(tilemap),
-    Transform2D(),
     m_background{},
     m_foreground{}
 {
@@ -23,15 +17,13 @@ Level::Level(const TileMap& tilemap) noexcept:
 }
 
 
-Level::~Level() 
-{
-    cleanup();
-}
+Level::~Level() = default;
 
 
 bool Level::load() noexcept
 {
-    cleanup();
+    m_background.isEnabled = false;
+    m_foreground.isEnabled = false;
 
     if (!loadTextures())
         return false;
@@ -42,29 +34,18 @@ bool Level::load() noexcept
 }
 
 
-void Level::draw() const noexcept
+void Level::draw(sf::RenderTarget& target, sf::RenderStates states) const noexcept
 {
-    const bool needSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
+    states.texture = m_background.texture.get();
+    target.draw(m_background.vertexBuffer, states);
 
-	glBindTextureUnit(0, m_background.texture);
+    // draw sprites
 
-    if (needSecondSampler)
-        glBindTextureUnit(1, m_foreground.texture);
-
-	glBindVertexArray(m_background.VAO);
-	glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
-
-    if (m_foreground.VAO)
+    if (m_foreground.isEnabled)
     {
-        glBindVertexArray(m_foreground.VAO);
-	    glDrawElements(GL_TRIANGLES, m_foreground.indexCount, GL_UNSIGNED_INT, nullptr);
+        states.texture = m_foreground.texture.get();
+        target.draw(m_foreground.vertexBuffer, states);
     }
-
-    glBindVertexArray(0);
-	glBindTextureUnit(0, 0);
-
-    if (needSecondSampler)
-        glBindTextureUnit(1, 0);
 }
 
 
@@ -87,102 +68,66 @@ bool Level::loadTextures() noexcept
 
     const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TileMap::Plane& plane) -> size_t
     {
-        return (plane.image.pixels != nullptr);
+        return (plane.image.operator bool());
     });
 
     if (textureCount == 0)
         return false;
 
-    std::array<GLuint, 2> textures = { 0, 0 };
-    glCreateTextures(GL_TEXTURE_2D, static_cast<GLsizei>(textureCount), textures.data());
-    Texture2D background(textures[0]);
-    Texture2D foreground(textures[1]);
+    m_background.texture = std::make_shared<sf::Texture>();
 
-    if (!background.loadFromImage(planeB->image))
+    if (!m_background.texture->loadFromImage(*planeB->image))
         return false;
+
+    m_background.isEnabled = true;
 
     if (textureCount > 1)
     {
-        if (!foreground.loadFromImage(planeA->image))
+        m_foreground.texture = std::make_shared<sf::Texture>();
+
+        if (!m_foreground.texture->loadFromImage(*planeA->image))
             return false;
     }
     else
     {
-        foreground = background;
+        m_foreground.texture = m_background.texture;
     }
-
-    m_background.texture = background.getHandle();
-    m_foreground.texture = foreground.getHandle();
 
     return true;
 }
 
 
-void Level::loadGraphics() noexcept
+bool Level::loadGraphics() noexcept
 {
     const auto& tilePlanes = m_tilemap.getPlanes();
     const auto tilePlaneCount = tilePlanes.size();
 
-    std::array<GLuint, 4> buffers = {};
-    glCreateBuffers(static_cast<GLsizei>(tilePlaneCount << 1), buffers.data());
+    auto createVertexBuffer = [](std::span<const sf::Vertex> vertices, TilePlane& plane) -> bool
+    {
+        if (!plane.vertexBuffer.create(vertices.size()))
+            return false;
 
-    m_background.VBO = buffers[0];
-    m_background.EBO = buffers[1];
-    m_foreground.VBO = buffers[2];
-    m_foreground.EBO = buffers[3];
+        plane.vertexBuffer.setUsage(sf::VertexBuffer::Usage::Static);
+        plane.vertexBuffer.setPrimitiveType(sf::PrimitiveType::Triangles);
+        plane.isEnabled = plane.vertexBuffer.update(vertices.data());
 
-    std::span<const float> vertices = tilePlanes.front().vertices;
-    std::span<const uint32_t> indices = tilePlanes.front().indices;
-    glNamedBufferStorage(m_background.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), 0);
-    glNamedBufferStorage(m_background.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), 0);
-    m_background.indexCount = indices.size(); 
+        return plane.isEnabled;
+    };
+
+    std::span<const sf::Vertex> vertices = tilePlanes.front().vertices;
+
+    if (!createVertexBuffer(vertices, m_background))
+        return false;
 
     if (tilePlaneCount > 1)
     {
         vertices = tilePlanes.back().vertices;
-        indices = tilePlanes.back().indices;
-        glNamedBufferStorage(m_foreground.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), 0);
-        glNamedBufferStorage(m_foreground.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), 0);
-        m_foreground.indexCount = indices.size(); 
+
+        if (!createVertexBuffer(vertices, m_foreground))
+            return false;
     }
 
-    std::array<GLuint, 2> vertexArrays = {};
-    glGenVertexArrays(static_cast<GLsizei>(tilePlaneCount), vertexArrays.data());
-
-    const std::array<VertexBufferLayout::Attribute, 1> attributes = { VertexBufferLayout::Attribute::Float4 };
-	VertexBufferLayout layout(attributes);
-
-	layout.createVertexInputState(vertexArrays[0], m_background.VBO);
-    glVertexArrayElementBuffer(vertexArrays[0], m_background.EBO);
-
-    if (tilePlaneCount > 1)
-    {
-        layout.createVertexInputState(vertexArrays[1], m_foreground.VBO);
-        glVertexArrayElementBuffer(vertexArrays[1], m_foreground.EBO);
-    }
-
-    m_background.VAO = vertexArrays[0];
-    m_foreground.VAO = vertexArrays[1];
-}
-
-
-void Level::cleanup() noexcept
-{
-    const std::array<GLuint, 2> vertexArrays = { m_background.VAO, m_foreground.VAO };
-    glDeleteVertexArrays(static_cast<GLsizei>(vertexArrays.size()), vertexArrays.data());
-
-    const std::array<GLuint, 4> buffers = 
-    { 
-        m_background.VBO, m_background.EBO,
-        m_foreground.VBO, m_foreground.EBO 
-    };
-    glDeleteBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
-
-    const std::array<GLuint, 2> textures = { m_background.texture, m_foreground.texture };
-    glDeleteTextures(static_cast<GLsizei>(textures.size()), textures.data());
-
-    memset(&m_background, 0, sizeof(m_background));
-    memset(&m_foreground, 0, sizeof(m_foreground));
+    return true;
 }
 
 
