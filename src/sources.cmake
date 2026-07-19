@@ -5,8 +5,14 @@ set(FILE_SRC_FILES
 
 
 set(COMMON_SRC_FILES
+	src/common/Defines.hpp
 	src/common/allocator/MemoryAllocator.hpp
 	src/common/allocator/MemoryAllocator.inl
+	src/common/action/Action.cpp
+	src/common/action/Action.hpp
+	src/common/action/ActionData.hpp
+	src/common/action/ActionManager.cpp
+	src/common/action/ActionManager.hpp
 )
 
 

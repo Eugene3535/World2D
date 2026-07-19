@@ -8,8 +8,8 @@
 
 
 
-MainLoop::MainLoop(sf::RenderWindow& rw) noexcept:
-    m_window(rw)
+MainLoop::MainLoop(Game& game) noexcept:
+    m_game(game)
 {
 
 }
@@ -18,7 +18,7 @@ MainLoop::MainLoop(sf::RenderWindow& rw) noexcept:
 MainLoop::~MainLoop() = default;
 
 
-bool MainLoop::operator()(Game& game) noexcept
+bool MainLoop::operator()() noexcept
 {
     TileMap tilemap;
 
@@ -33,37 +33,36 @@ bool MainLoop::operator()(Game& game) noexcept
     sf::Time timestamp;
     sf::Clock clock;
 
-    while (m_window.isOpen())
+    while (m_game.window.isOpen())
 	{
         const sf::Time elapsed = clock.getElapsedTime();
         const sf::Time deltaTime = elapsed - timestamp;
         timestamp = elapsed;
 
-        while (const auto event = m_window.pollEvent())
+        while (const auto event = m_game.window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
             {
-                m_window.close();
+                m_game.window.close();
             }
             else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
             {
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
-                    m_window.close();
+                    m_game.window.close();
             }
 
             if (const auto* resized = event->getIf<sf::Event::Resized>())
             {
-                game.view.setSize(sf::Vector2f(resized->size));
+                m_game.view.setSize(sf::Vector2f(resized->size));
             }
         }
 
+        m_game.update(deltaTime);
 
-        game.update(deltaTime);
-
-        m_window.setView(game.view);
-        m_window.clear();
-        m_window.draw(level);
-		m_window.display();
+        m_game.window.setView(m_game.view);
+        m_game.window.clear();
+        m_game.window.draw(level);
+		m_game.window.display();
 	}
 
     return true;

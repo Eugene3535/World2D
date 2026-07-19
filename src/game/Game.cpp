@@ -10,6 +10,8 @@ Game::~Game() = default;
 
 bool Game::initialize() noexcept
 {
+    window.create(sf::VideoMode({800, 600}), "Platformer 2D");
+    window.setVerticalSyncEnabled(true);
     view = sf::View({{ 0.f, 0.f }, { 800.f, 600.f }});
 
 	return true;
