@@ -3,8 +3,6 @@
 #include <charconv>
 #include <cstring>
 #include <string_view>
-#include <unordered_map>
-#include <ranges>
 
 #include "RapidXML/rapidxml.hpp"
 #include "RapidXML/rapidxml_utils.hpp"
@@ -198,7 +196,6 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
         auto& vertices = tilePlane.vertices;
         vertices.reserve(tileCount * 6);
 
-        const uint32_t rows = tileset->rows;
         const uint32_t columns = tileset->columns;
         size_t index = 0;
 
