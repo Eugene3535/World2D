@@ -1,42 +1,37 @@
 #pragma once
 
-#include <vector>
-#include <utility>
-
 #include <SFML/System/Time.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/View.hpp>
 
+#include "files/assets/AssetManager.hpp"
 #include "common/action/ActionManager.hpp"
 
 
 struct System
 {
     void (*execute)(void* /* Scene* */, const sf::Time) = nullptr;
-    uint32_t frequency = 0;
-    bool isEnabled = false;
+    uint32_t frequency = 1;
+    bool isEnabled = true;
 };
 
 
-class Game final
+struct Game
 {
-public:
     enum State
     {
         TitleScreen,
         Stage
     };
 
-    Game() noexcept;
-    ~Game();
-
-    bool initialize() noexcept; // заменить на Context.load(game); Context - состояние всего приложения
     void update(const sf::Time deltaTime) noexcept; // вынести в UiController
+
+    AssetManager assets;
 
     std::vector<std::pair<size_t(*)(void*, const sf::Time), void*>> m_longActions; // { .first = action, .second = data }
 
-    std::vector<System> systems; // функции для обновления сцен, каждая сцена через свап вставляет свои системы
+    std::vector<System> systems;
 
-    sf::RenderWindow window;
+
     sf::View view;
 };
 

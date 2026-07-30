@@ -1,19 +1,25 @@
-﻿#include "game/main_loop/MainLoop.hpp"
-#include "game/Game.hpp"
+﻿#include <SFML/Graphics/RenderWindow.hpp>
+
+#include "app/context/Context.hpp"
+#include "app/loop/MainLoop.hpp"
+#include "app/game/Game.hpp"
 
 
 int main()
 {
+    sf::RenderWindow window(sf::VideoMode({800, 600}), "Platformer 2D");
+    window.setVerticalSyncEnabled(true);
+
+    Context context(window);
     Game game;
 
-    // Context context;
-    // if (!context.load(game) { ... }
+    if (!context.load(game))
+        return -1;
 
-    if (!game.initialize())
-        return 1;
+    MainLoop loop(window);
+    loop(game);
 
-    MainLoop loop(game);
-    loop();
+    context.save(game);
 
 	return 0;
 }

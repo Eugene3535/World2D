@@ -1,6 +1,10 @@
 set(FILE_SRC_FILES
-	src/files/TileMap.cpp
-	src/files/TileMap.hpp
+	src/files/provider/FileProvider.cpp
+	src/files/provider/FileProvider.hpp
+	src/files/tilemap/TileMap.cpp
+	src/files/tilemap/TileMap.hpp
+	src/files/assets/AssetManager.hpp
+	src/files/assets/AssetManager.inl
 )
 
 
@@ -28,12 +32,14 @@ set(GRAPHICS_SRC_FILES
 
 set(GAME_SRC_FILES
 	${FILE_SRC_FILES}
-	# ${COMMON_SRC_FILES}
+	${COMMON_SRC_FILES}
 	${GRAPHICS_SRC_FILES}
-	src/game/objects/GameObject.hpp
-	src/game/main_loop/MainLoop.cpp
-	src/game/main_loop/MainLoop.hpp
-	src/game/Game.cpp
-	src/game/Game.hpp
+	src/app/objects/GameObject.hpp
+	src/app/context/Context.cpp
+	src/app/context/Context.hpp
+	src/app/loop/MainLoop.cpp
+	src/app/loop/MainLoop.hpp
+	src/app/game/Game.cpp
+	src/app/game/Game.hpp
 	src/main.cpp
 )

@@ -7,7 +7,7 @@
 #include "RapidXML/rapidxml.hpp"
 #include "RapidXML/rapidxml_utils.hpp"
 
-#include "files/TileMap.hpp"
+#include "files/tilemap/TileMap.hpp"
 
 
 struct Tileset
@@ -67,7 +67,7 @@ static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) no
 }
 
 
-static std::vector<int32_t> parse_csv(const void* node, std::vector<int>& result) noexcept
+static void parse_csv(const void* node, std::vector<int>& result) noexcept
 {
     const auto dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
     std::string csv(dataNode->value(), dataNode->value_size());
@@ -78,14 +78,14 @@ static std::vector<int32_t> parse_csv(const void* node, std::vector<int>& result
     const char* begin = csv.data();
     const char* end = begin + csv.size();
 
-    while (begin < end) 
+    while (begin < end)
     {
         while (begin < end && *begin == ' ') ++begin;
 
         int value = 0;
         auto [p, ec] = std::from_chars(begin, end, value);
 
-        if (ec == std::errc()) 
+        if (ec == std::errc())
         {
             result.push_back(value);
             begin = p;
@@ -94,8 +94,6 @@ static std::vector<int32_t> parse_csv(const void* node, std::vector<int>& result
 
         while (begin < end && (*begin == ',' || *begin == ' ')) ++begin;
     }
-
-    return result;
 }
 
 
@@ -207,7 +205,7 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 
                 if(tile_id)
                 {
-//  Vertex XY coords				
+//  Vertex XY coords
                     const float vx = static_cast<float>(x * tileWidth);
                     const float vy = static_cast<float>(y * tileHeight);
 
@@ -276,35 +274,35 @@ bool TileMap::loadObjects(const void* rootNode) noexcept
 
 					for (auto attribute = propertyNode->first_attribute(); attribute; attribute = attribute->next_attribute())
 					{
-						if (strcmp(attribute->name(), "name") == 0) 
-                            property.name = { attribute->value(), attribute->value_size() }; 
-                        
-						else if (strcmp(attribute->name(), "type") == 0)  
+						if (strcmp(attribute->name(), "name") == 0)
+                            property.name = { attribute->value(), attribute->value_size() };
+
+						else if (strcmp(attribute->name(), "type") == 0)
                             type  = { attribute->value(), attribute->value_size() };
 
-						else if (strcmp(attribute->name(), "value") == 0) 
+						else if (strcmp(attribute->name(), "value") == 0)
                             value = { attribute->value(), attribute->value_size() };
 					}
 
                     if (type == "bool")
                     {
-                        property.value = (value == "true") ? true : false; 
+                        property.value = (value == "true") ? true : false;
                     }
                     else if (type == "int")
                     {
-                        property.value = atoi(value.data()); 
+                        property.value = atoi(value.data());
                     }
                     else if (type == "float")
                     {
                         float result = 0.f;
                         auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
-                        
+
                         if (ec == std::errc())
-                            property.value = result; 
+                            property.value = result;
                     }
                     else if (type == "string")
                     {
-                        property.value = std::string(value); 
+                        property.value = std::string(value);
                     }
 				}
 			}

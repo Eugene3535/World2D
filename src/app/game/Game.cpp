@@ -1,21 +1,6 @@
 #include <SFML/Window/Keyboard.hpp>
 
-#include "game/Game.hpp"
-
-
-
-Game::Game() noexcept = default;
-Game::~Game() = default;
-
-
-bool Game::initialize() noexcept
-{
-    window.create(sf::VideoMode({800, 600}), "Platformer 2D");
-    window.setVerticalSyncEnabled(true);
-    view = sf::View(sf::FloatRect({ 0.f, 0.f }, { 800.f, 600.f }));
-
-	return true;
-}
+#include "app/game/Game.hpp"
 
 
 void Game::update(const sf::Time deltaTime) noexcept

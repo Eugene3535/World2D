@@ -1,15 +1,15 @@
 #include <SFML/System/Clock.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "files/TileMap.hpp"
+#include "files/tilemap/TileMap.hpp"
 #include "graphics/level/Level.hpp"
-#include "game/Game.hpp"
-#include "game/main_loop/MainLoop.hpp"
+#include "app/game/Game.hpp"
+#include "app/loop/MainLoop.hpp"
 
 
 
-MainLoop::MainLoop(Game& game) noexcept:
-    m_game(game)
+MainLoop::MainLoop(sf::RenderWindow& rw) noexcept:
+    m_window(rw)
 {
 
 }
@@ -18,7 +18,7 @@ MainLoop::MainLoop(Game& game) noexcept:
 MainLoop::~MainLoop() = default;
 
 
-bool MainLoop::operator()() noexcept
+bool MainLoop::operator()(Game& game) noexcept
 {
     TileMap tilemap;
 
@@ -33,36 +33,36 @@ bool MainLoop::operator()() noexcept
     sf::Time timestamp;
     sf::Clock clock;
 
-    while (m_game.window.isOpen())
+    while (m_window.isOpen())
 	{
         const sf::Time elapsed = clock.getElapsedTime();
         const sf::Time deltaTime = elapsed - timestamp;
         timestamp = elapsed;
 
-        while (const auto event = m_game.window.pollEvent())
+        while (const auto event = m_window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
             {
-                m_game.window.close();
+                m_window.close();
             }
-            else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+            else if (const auto keyPressed = event->getIf<sf::Event::KeyPressed>())
             {
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
-                    m_game.window.close();
+                    m_window.close();
             }
 
-            if (const auto* resized = event->getIf<sf::Event::Resized>())
+            if (const auto resized = event->getIf<sf::Event::Resized>())
             {
-                m_game.view.setSize(sf::Vector2f(resized->size));
+                game.view.setSize(sf::Vector2f(resized->size));
             }
         }
 
-        m_game.update(deltaTime);
+        game.update(deltaTime);
 
-        m_game.window.setView(m_game.view);
-        m_game.window.clear();
-        m_game.window.draw(level);
-		m_game.window.display();
+        m_window.setView(game.view);
+        m_window.clear();
+        m_window.draw(level);
+		m_window.display();
 	}
 
     return true;

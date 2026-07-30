@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics/RenderTarget.hpp>
 
-#include "files/TileMap.hpp"
+#include "files/tilemap/TileMap.hpp"
 #include "graphics/level/Level.hpp"
 
 
