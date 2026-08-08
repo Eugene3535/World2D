@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.31.10 FATAL_ERROR)
 
 project(Platformer2D LANGUAGES C CXX)
 
+set(BUILD_SHARED_LIBS ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
@@ -25,25 +26,44 @@ else()
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 endif()
 
-set(BUILD_SHARED_LIBS OFF)
-set(SFML_BUILD_NETWORK OFF CACHE BOOL "OFF to build SFML's Network module." FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+set(CGLM_USE_TESTS OFF CACHE BOOL "Enable tests" FORCE)
 
-include(src/sources.cmake)
+file(GLOB_RECURSE GAME_SRC_FILES CONFIGURE_DEPENDS
+	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
+)
+
+file(GLOB SHADER_FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.vert
+	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.frag
+	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.geom
+	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.comp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.tess
+)
 
 add_executable(${PROJECT_NAME} ${GAME_SRC_FILES})
-add_subdirectory(${EXTERNAL_SOURCE_DIR}/sfml sfml)
-# add_subdirectory(${EXTERNAL_SOURCE_DIR}/magic_enum magic_enum)
+add_subdirectory(${EXTERNAL_SOURCE_DIR}/glfw glfw)
+add_subdirectory(${EXTERNAL_SOURCE_DIR}/glad/core glad)
+add_subdirectory(${EXTERNAL_SOURCE_DIR}/cglm cglm)
+add_subdirectory(${EXTERNAL_SOURCE_DIR}/magic_enum magic_enum)
+
+target_sources(${PROJECT_NAME} PRIVATE ${SHADER_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${GAME_SRC_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
+	${PROJECT_SOURCE_DIR}/src
 	${EXTERNAL_SOURCE_DIR}/rapidxml
-	${CMAKE_CURRENT_SOURCE_DIR}/src
+	${EXTERNAL_SOURCE_DIR}/stb
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-	SFML::Main
-	SFML::Window
-	SFML::Graphics
-	SFML::Audio
+	glfw
+	glad
+	cglm
 )
 
 if(MSVC)
@@ -68,6 +88,7 @@ if(MSVC)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/res" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res"
+	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/res"         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res"
+	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/src/shaders" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res/shaders"
 	VERBATIM
 )

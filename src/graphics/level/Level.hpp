@@ -1,38 +1,39 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/VertexBuffer.hpp>
-#include <SFML/Graphics/Texture.hpp>
+#include "graphics/transform/Transform2D.hpp"
+
 
 class Level:
-    public sf::Drawable
+    public Transform2D
 {
 public:
     Level(const class TileMap& tilemap) noexcept;
     ~Level();
 
     bool load() noexcept;
+    void draw() const noexcept;
 
     const class TileMap& getTileMap() const noexcept;
 
 private:
-    void draw(sf::RenderTarget& target, sf::RenderStates states) const noexcept override;
-
     bool loadTextures() noexcept;
-    bool loadGraphics() noexcept;
+    void loadGraphics() noexcept;
+    void cleanup() noexcept;
 
     const class TileMap& m_tilemap;
 
     struct TilePlane
     {
-        sf::VertexBuffer vertexBuffer;
-        std::shared_ptr<sf::Texture> texture;
-        bool isEnabled;
+		uint32_t texture;
+		uint32_t VAO; // Vertex Array Object
+		uint32_t VBO; // Vertex Buffer Object
+        uint32_t EBO; // Element Buffer Object
+		uint32_t indexCount;
     };
 
     TilePlane m_background;
-    // Sprite plane as middleground
     TilePlane m_foreground;
 };

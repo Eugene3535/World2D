@@ -1,15 +1,18 @@
-#include <SFML/System/Clock.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "cglm/struct/affine-mat.h"
 
-#include "files/tilemap/TileMap.hpp"
+#include "files/TileMap.hpp"
+#include "graphics/camera/View.hpp"
 #include "graphics/level/Level.hpp"
-#include "app/game/Game.hpp"
+#include "app/window/MainWindow.hpp"
+#include "app/Game.hpp"
 #include "app/loop/MainLoop.hpp"
 
 
 
-MainLoop::MainLoop(sf::RenderWindow& rw) noexcept:
-    m_window(rw)
+MainLoop::MainLoop(MainWindow& window) noexcept:
+    m_window(window)
 {
 
 }
@@ -18,52 +21,71 @@ MainLoop::MainLoop(sf::RenderWindow& rw) noexcept:
 MainLoop::~MainLoop() = default;
 
 
-bool MainLoop::operator()(Game& game) noexcept
+void MainLoop::operator()(Game& game) noexcept
 {
     TileMap tilemap;
 
     if (!tilemap.loadFromFile("res/levels/Level-1.tmx"))
-        return 1;
+        return;
 
     Level level(tilemap);
 
     if (!level.load())
-        return 1;
+        return;
 
-    sf::Time timestamp;
-    sf::Clock clock;
+    GLuint program = game.programs["sprite"];
+    glUseProgram(program);
+
+	float lastFrame = 0.f;
+
+    glClearColor(0.f, 0.f, 0.f, 1.f);
+
+    ivec2s startPosition = { 32, 0 };
+    ivec2s finishPosition = { 0, 0 };
 
     while (m_window.isOpen())
 	{
-        const sf::Time elapsed = clock.getElapsedTime();
-        const sf::Time deltaTime = elapsed - timestamp;
-        timestamp = elapsed;
+        glClear(GL_COLOR_BUFFER_BIT);
 
-        while (const auto event = m_window.pollEvent())
+		m_window.pollEvents();
+
+		float currentFrame = m_window.getElapsedTime();
+		float deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+
+        if (m_window.isKeyPressed(GLFW_KEY_W))
         {
-            if (event->is<sf::Event::Closed>())
-            {
-                m_window.close();
-            }
-            else if (const auto keyPressed = event->getIf<sf::Event::KeyPressed>())
-            {
-                if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
-                    m_window.close();
-            }
-
-            if (const auto resized = event->getIf<sf::Event::Resized>())
-            {
-                game.view.setSize(sf::Vector2f(resized->size));
-            }
+            startPosition.y -= 5;
+        }
+        else if (m_window.isKeyPressed(GLFW_KEY_S))
+        {
+            startPosition.y += 5;
+        }
+        else if (m_window.isKeyPressed(GLFW_KEY_D))
+        {
+            startPosition.x += 5;
+        }
+        else if (m_window.isKeyPressed(GLFW_KEY_A))
+        {
+            startPosition.x -= 5;
         }
 
-        game.update(deltaTime);
+        if ( (finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y) )
+        {
+			auto view = game.windowData.view;
 
-        m_window.setView(game.view);
-        m_window.clear();
-        m_window.draw(level);
+            vec2s position = { static_cast<float>(-startPosition.x), static_cast<float>(-startPosition.y) };
+            level.setPosition(position);
+            auto projection = view->getProjectionMatrix();
+            auto modelView = level.getMatrix();
+            auto mvp = glms_mul(projection, modelView);
+            view->updateUniformBuffer(mvp.raw);
+        }
+        finishPosition = startPosition;
+
+        level.draw();
+
 		m_window.display();
 	}
-
-    return true;
 }

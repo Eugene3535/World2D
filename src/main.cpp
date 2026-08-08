@@ -1,26 +1,39 @@
-﻿#include <SFML/Graphics/RenderWindow.hpp>
+﻿#ifdef _WIN32
+#include <windows.h>
+extern "C"
+{
+    __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
 
+#include "files/FileProvider.hpp"
+#include "app/window/WindowData.hpp"
+#include "app/window/MainWindow.hpp"
 #include "app/context/Context.hpp"
 #include "app/loop/MainLoop.hpp"
-#include "app/game/Game.hpp"
+#include "app/Game.hpp"
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "Platformer 2D");
-    window.setVerticalSyncEnabled(true);
+    FileProvider provider(argv[0]);
 
-    Context context(window);
     Game game;
+    MainWindow window(game.windowData);
 
-    if (!context.load(game))
-        return -1;
+    if (!window.open("Platformer 2D", 800, 600))
+        return 1;
+
+    Context context;
+
+	if (!context.load(game))
+		return false;
 
     MainLoop loop(window);
     loop(game);
 
     context.save(game);
 
-	return 0;
+    return 0;
 }
-
