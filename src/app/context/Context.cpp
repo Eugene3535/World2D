@@ -99,7 +99,7 @@ bool Context::load(Game& game) noexcept
             programs.emplace("sprite", program); 
     }
 
-    game.programs.swap(programs);
+    game.glResources.appendPrograms(programs);
 
     return true;
 }
@@ -107,6 +107,5 @@ bool Context::load(Game& game) noexcept
 
 void Context::save(Game& game) noexcept
 {
-    for (const auto& [key, program] : game.programs)
-        glDeleteProgram(program);
+    game.glResources.reset();
 }

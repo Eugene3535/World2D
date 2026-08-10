@@ -1,25 +1,13 @@
 #include <array>
 
+#include <glad/glad.h>
 #include "RapidXML/rapidxml_utils.hpp"
 
-#include "graphics/vao/VertexBufferLayout.hpp"
-#include "graphics/texture/Texture2D.hpp"
 #include "graphics/sprites/SpriteManager.hpp"
 
 
-SpriteManager::SpriteManager() noexcept:
-	m_vbo(0),
-	m_vao(0)
-{
-
-}
-
-
-SpriteManager::~SpriteManager()
-{
-	glDeleteBuffers(1, &m_vbo);
-	glDeleteVertexArrays(1, &m_vao);
-}
+SpriteManager::SpriteManager() noexcept = default;
+SpriteManager::~SpriteManager() = default;
 
 
 void SpriteManager::createSprite(const std::string& name, uint32_t texture) noexcept
@@ -214,33 +202,19 @@ std::span<const Sprite2D> SpriteManager::getAnimation(const std::string& name) c
 }
 
 
-void SpriteManager::bind(bool toBind) const noexcept
-{
-	glBindVertexArray(toBind ? m_vao : 0);
-}
-
-
-void SpriteManager::finalize() noexcept
+void SpriteManager::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
 {
 	if (m_vertices.empty())
 		return;
 
-	glDeleteBuffers(1, &m_vbo);
-	glDeleteVertexArrays(1, &m_vao);
+	glNamedBufferStorage(
+		vertexBuffer,
+		std::span<float>(m_vertices).size_bytes(),
+		static_cast<const void*>(m_vertices.data()),
+		0
+	);
 
-	glCreateBuffers(1, &m_vbo);
-	glNamedBufferData(m_vbo, 0, nullptr, GL_STATIC_DRAW);
-
-	glGenVertexArrays(1, &m_vao);
-    const std::array<VertexBufferLayout::Attribute, 1> attributes{ VertexBufferLayout::Attribute::Float4 };
-	VertexBufferLayout layout(attributes);
-	layout.createVertexInputState(m_vao, m_vbo);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(float), static_cast<const void*>(m_vertices.data()), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	std::vector<float>().swap(m_vertices); 
+	std::vector<float>().swap(m_vertices);
 }
 
 

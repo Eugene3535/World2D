@@ -17,49 +17,8 @@ struct Tileset
     int32_t rows;
     int32_t tileCount;
     int32_t firstGID;
-    std::vector<TileMap::PackedTile> tiles;
 };
 
-
-static bool load_tiles(const void* node, std::vector<TileMap::PackedTile>& tiles) noexcept
-{
-    const auto tilesetNode = static_cast<const rapidxml::xml_node<char>*>(node); 
-    auto tileNode = tilesetNode->first_node("tile");
-
-    uint32_t tileCount = 0;
-    std::unordered_map<std::string, int> tileData;
-
-    while (tileNode)
-    {
-        ++tileCount;
-
-        const auto id = tileNode->first_attribute("id");
-        const int index = id ? atoi(id->value()) : 0;
-
-        if (const auto propertiesNode = tileNode->first_node("properties"))
-        {
-            auto propertyNode = propertiesNode->first_node("property");
-            auto& tile = tiles[static_cast<size_t>(index)];
-
-            while (propertyNode)
-            {
-                const std::string name = { propertyNode->first_attribute("name")->value(), propertyNode->first_attribute("name")->value_size() };
-                const int value = atoi(propertyNode->first_attribute("value")->value());
-                tileData[name] = value;
-                propertyNode = propertyNode->next_sibling("property");
-            }
-
-            tile.left  = tileData["Left"];
-            tile.quest = tileData["Quest"];
-            tile.right = tileData["Right"];
-            tile.type  = tileData["Type"];
-        }
-
-        tileNode = tileNode->next_sibling("tile");
-    }
-
-    return (tileCount > 0);
-}
 
 
 static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) noexcept
@@ -102,14 +61,6 @@ static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) no
         tileset.columns   = columns ? atoi(columns->value()) : 0;
         tileset.rows      = (!tileCount || !columns) ? 0 : tileset.tileCount / tileset.columns;
         tileset.firstGID  = firstGID ? atoi(firstGID->value()) : 0;
-
-        if (tileset.firstGID == 1) // The first tileset, so we use it for collision mask
-        {
-            tileset.tiles.resize(tileset.tileCount, { .type = 0, .left = 32, .right = 32, .quest = 0 });
-
-            if (!load_tiles(tilesetNode, tileset.tiles))
-                return false;
-        }
     }
 
     return (!tilesets.empty());
@@ -187,12 +138,6 @@ std::span<const TileMap::Object> TileMap::getObjects() const noexcept
 }
 
 
-std::span<const TileMap::PackedTile> TileMap::getTileMask() const noexcept
-{
-    return m_tileMask;
-}
-
-
 ivec2s TileMap::getMapSize() const noexcept
 {
     return m_mapSize;
@@ -232,9 +177,6 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 
 	while (layerNode)
 	{
-        if (!tileset->tiles.empty())
-            m_tileMask.swap(tileset->tiles);
-
 		auto dataNode = layerNode->first_node("data");
 		auto parsedLayer = parse_csv(dataNode);
         auto& tilePlane = m_planes.emplace_back();

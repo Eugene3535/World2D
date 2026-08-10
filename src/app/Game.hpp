@@ -1,8 +1,6 @@
 #pragma once
 
-#include <unordered_map>
-#include <string>
-
+#include "graphics/resources/GlResourceManager.hpp"
 #include "app/window/WindowData.hpp"
 
 
@@ -15,6 +13,5 @@ struct Game final
     };
 
     WindowData windowData;
-
-    std::unordered_map<std::string, uint32_t> programs;
+    GlResourceManager glResources;
 };

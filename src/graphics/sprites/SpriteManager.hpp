@@ -21,8 +21,6 @@ struct Sprite2D
 
 class SpriteManager final
 {
-	using sprite_range = std::pair<uint32_t, uint32_t>; // start sprite number, count ( single = 1, animation = n )
-
 public:
 	SpriteManager() noexcept;
 	SpriteManager(const SpriteManager&)              noexcept = delete;
@@ -43,17 +41,14 @@ public:
 	std::optional<Sprite2D>   getSprite(const std::string& name) const noexcept;
 	std::span<const Sprite2D> getAnimation(const std::string& name) const noexcept;
 
-	void bind(bool toBind) const noexcept;
-
-	void finalize() noexcept;
+	void pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept;
 
 private:
 	void addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept;
 
-	uint32_t m_vao;
-	uint32_t m_vbo;
-
+	using sprite_range = std::pair<uint32_t, uint32_t>; // start sprite number, count ( single = 1, animation = n )
 	std::unordered_map<std::string, sprite_range> m_animations;
+	
 	std::vector<Sprite2D> m_sprites;
 	std::vector<float> m_vertices;
 };

@@ -33,7 +33,7 @@ void MainLoop::operator()(Game& game) noexcept
     if (!level.load())
         return;
 
-    GLuint program = game.programs["sprite"];
+    GLuint program = game.glResources.getProgram("sprite");
     glUseProgram(program);
 
 	float lastFrame = 0.f;
