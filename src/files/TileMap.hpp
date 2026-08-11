@@ -47,8 +47,8 @@ public:
 
 	const std::list<Plane>& getPlanes()   const noexcept;
 	std::span<const Object> getObjects()  const noexcept;
-	ivec2s                  getMapSize()  const noexcept;
-	ivec2s                  getTileSize() const noexcept;
+	const ivec2s&           getMapSize()  const noexcept;
+	const ivec2s&           getTileSize() const noexcept;
 
 private:
     bool loadTilePlanes(const void* rootNode) noexcept;

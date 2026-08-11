@@ -49,7 +49,6 @@ add_executable(${PROJECT_NAME} ${GAME_SRC_FILES})
 add_subdirectory(${EXTERNAL_SOURCE_DIR}/glfw glfw)
 add_subdirectory(${EXTERNAL_SOURCE_DIR}/glad/core glad)
 add_subdirectory(${EXTERNAL_SOURCE_DIR}/cglm cglm)
-add_subdirectory(${EXTERNAL_SOURCE_DIR}/magic_enum magic_enum)
 
 target_sources(${PROJECT_NAME} PRIVATE ${SHADER_FILES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${GAME_SRC_FILES})

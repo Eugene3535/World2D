@@ -72,7 +72,7 @@ static std::vector<int32_t> parse_csv(const void* node) noexcept
     const auto dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
     std::string csv(dataNode->value(), dataNode->value_size());
 
-    const auto commaCount = std::count_if(csv.begin(), csv.end(), [](char c){ return c == ','; });
+    const auto commaCount = std::count_if(csv.begin(), csv.end(), [](const char c){ return c == ','; });
 
     std::vector<int> result;
     result.reserve(commaCount + 1);
@@ -119,7 +119,7 @@ bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
     m_planes.clear();
 
     if (loadTilePlanes(static_cast<const void*>(mapNode)))
-        // if (loadObjects(static_cast<const void*>(mapNode)))
+        if (loadObjects(static_cast<const void*>(mapNode)))
             return true;
 
     return false;
@@ -138,13 +138,13 @@ std::span<const TileMap::Object> TileMap::getObjects() const noexcept
 }
 
 
-ivec2s TileMap::getMapSize() const noexcept
+const ivec2s& TileMap::getMapSize() const noexcept
 {
     return m_mapSize;
 }
 
 
-ivec2s TileMap::getTileSize() const noexcept
+const ivec2s& TileMap::getTileSize() const noexcept
 {
     return m_tileSize;
 }
