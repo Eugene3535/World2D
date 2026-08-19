@@ -1,105 +1,12 @@
-#include <list>
 #include <algorithm>
 #include <charconv>
 #include <cstring>
-#include <unordered_map>
 
 #include "RapidXML/rapidxml.hpp"
 #include "RapidXML/rapidxml_utils.hpp"
 
+#include "files/FileProvider.hpp"
 #include "files/TileMap.hpp"
-
-
-struct Tileset
-{
-    StbImage image;
-    int32_t columns;
-    int32_t rows;
-    int32_t tileCount;
-    int32_t firstGID;
-};
-
-
-
-static bool load_tilesets(const void* rootNode, std::list<Tileset>& tilesets) noexcept
-{
-    const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
-    std::vector<std::filesystem::path> imagePaths;
-
-    for (auto tilesetNode = mapNode->first_node("tileset"); tilesetNode; tilesetNode = tilesetNode->next_sibling("tileset"))
-    {
-        auto imageNode = tilesetNode->first_node("image");
-
-        if (!imageNode)
-            continue;
-
-        auto source = imageNode->first_attribute("source");
-
-        if (!source)
-            continue;
-
-        const auto filename = std::filesystem::path(source->value()).filename().string();
-        const auto filepath = std::filesystem::path("res/textures") / filename;
-
-        auto alreadyExists = std::find(imagePaths.begin(), imagePaths.end(), filepath);
-
-        if (alreadyExists != imagePaths.end())
-            continue; // Uploading for the first time only
-
-        imagePaths.push_back(filepath);
-
-        Tileset& tileset = tilesets.emplace_back();
-
-        if (!tileset.image.loadFromFile(filepath))
-            return false;
-
-        auto tileCount = tilesetNode->first_attribute("tilecount");
-        auto columns   = tilesetNode->first_attribute("columns");
-        auto firstGID  = tilesetNode->first_attribute("firstgid");
-
-        tileset.tileCount = tileCount ? atoi(tileCount->value()) : 0;
-        tileset.columns   = columns ? atoi(columns->value()) : 0;
-        tileset.rows      = (!tileCount || !columns) ? 0 : tileset.tileCount / tileset.columns;
-        tileset.firstGID  = firstGID ? atoi(firstGID->value()) : 0;
-    }
-
-    return (!tilesets.empty());
-}
-
-
-static std::vector<int32_t> parse_csv(const void* node) noexcept
-{
-    const auto dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
-    std::string csv(dataNode->value(), dataNode->value_size());
-
-    const auto commaCount = std::count_if(csv.begin(), csv.end(), [](const char c){ return c == ','; });
-
-    std::vector<int> result;
-    result.reserve(commaCount + 1);
-
-    const char* begin = csv.data();
-    const char* end = begin + csv.size();
-
-    while (begin < end) 
-    {
-        while (begin < end && *begin == ' ') ++begin;
-
-        int value = 0;
-        auto [p, ec] = std::from_chars(begin, end, value);
-
-        if (ec == std::errc()) 
-        {
-            result.push_back(value);
-            begin = p;
-        }
-        else ++begin;
-
-        while (begin < end && (*begin == ',' || *begin == ' ')) ++begin;
-    }
-
-    return result;
-}
-
 
 
 TileMap::TileMap() noexcept = default;
@@ -150,19 +57,64 @@ const ivec2s& TileMap::getTileSize() const noexcept
 }
 
 
+bool TileMap::loadTilesets(const void* rootNode) noexcept
+{
+    const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
+
+    for (auto tilesetNode = mapNode->first_node("tileset"); tilesetNode; tilesetNode = tilesetNode->next_sibling("tileset"))
+    {
+        auto imageNode = tilesetNode->first_node("image");
+
+        if (!imageNode)
+            continue;
+
+        auto source = imageNode->first_attribute("source");
+
+        if (!source)
+            continue;
+
+        const auto filename = std::filesystem::path(source->value()).filename().string();
+        const auto filepath = FileProvider::findPathToFile(filename);
+
+        auto alreadyExists = std::find_if(m_tilesets.begin(), m_tilesets.end(), [&filename](const Tileset& ts)
+        {
+            return ts.name == filename;
+        });
+
+        if (alreadyExists != m_tilesets.end())
+            continue; // Already exists
+
+        auto& tileset = m_tilesets.emplace_back();
+
+        if (!tileset.image.loadFromFile(filepath))
+            return false;
+
+        tileset.name   = filename;
+        auto tileCount = tilesetNode->first_attribute("tilecount");
+        auto columns   = tilesetNode->first_attribute("columns");
+        auto firstGID  = tilesetNode->first_attribute("firstgid");
+
+        tileset.tileCount = tileCount ? atoi(tileCount->value()) : 0;
+        tileset.columns   = columns ? atoi(columns->value()) : 0;
+        tileset.rows      = (!tileCount || !columns) ? 0 : tileset.tileCount / tileset.columns;
+        tileset.firstGID  = firstGID ? atoi(firstGID->value()) : 0;
+    }
+
+    return (!m_tilesets.empty());
+}
+
+
 bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 {
 	const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
-    std::list<Tileset> tilesets;
-
-	if (!load_tilesets(rootNode, tilesets))
+	if (!loadTilesets(rootNode))
 		return false;
 
-	auto mapW  = mapNode->first_attribute("width");
-	auto mapH  = mapNode->first_attribute("height");
-	auto tileW = mapNode->first_attribute("tilewidth");
-	auto tileH = mapNode->first_attribute("tileheight");
+	const auto mapW  = mapNode->first_attribute("width");
+	const auto mapH  = mapNode->first_attribute("height");
+	const auto tileW = mapNode->first_attribute("tilewidth");
+	const auto tileH = mapNode->first_attribute("tileheight");
 
 	const int32_t mapWidth   = mapW  ? std::atoi(mapW->value())  : 0;
 	const int32_t mapHeight  = mapH  ? std::atoi(mapH->value())  : 0;
@@ -173,28 +125,41 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 	m_tileSize = { tileWidth, tileHeight };
 
 	auto layerNode = mapNode->first_node("layer");
-    auto tileset = tilesets.begin();
+    auto tileset = m_tilesets.begin();
 
 	while (layerNode)
 	{
 		auto dataNode = layerNode->first_node("data");
-		auto parsedLayer = parse_csv(dataNode);
+		const auto parsedLayer = parseCSV(dataNode);
+
+        if (parsedLayer.empty())
+            return false;
+
         auto& tilePlane = m_planes.emplace_back();
 
         if (auto name = layerNode->first_attribute("name"); name)
             tilePlane.name = std::string(name->value(), name->value_size());
 
+        const auto tileRange = std::minmax_element(parsedLayer.begin(), parsedLayer.end());
+        const int32_t minTile = *tileRange.first;
+        const int32_t maxTile = *tileRange.second;
+
+        if (minTile == maxTile)
+            return false;
+
+		auto currentTileset = std::find_if(m_tilesets.begin(), m_tilesets.end(),
+		[minTile, maxTile](const TileMap::Tileset& ts)
+		{
+			return minTile <= ts.firstGID && maxTile <= (ts.firstGID + ts.tileCount);
+		});
+
+        if (currentTileset == m_tilesets.end())
+            return false;
+
         auto& image = tilePlane.image;
+        image = &currentTileset->image; 
 
-        if (tileset->image.pixels)
-        {
-            image.pixels.swap(tileset->image.pixels);
-            image.width = tileset->image.width;
-            image.height = tileset->image.height;
-            image.bytePerPixel = tileset->image.bytePerPixel;
-        }
-
-		const vec2s ratio = { 1.f / (float)image.width, 1.f / (float)image.height };
+		const vec2s ratio = { 1.f / static_cast<float>(image->width), 1.f / static_cast<float>(image->height) };
         size_t index = 0;
 
         auto& vertices = tilePlane.vertices;
@@ -203,9 +168,9 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
         auto& indices = tilePlane.indices;
         indices.reserve(tileset->tileCount * 6);
 
-        for (int32_t y = 0u; y < mapHeight; ++y)
+        for (int32_t y = 0; y < mapHeight; ++y)
         {
-            for (int32_t x = 0u; x < mapWidth; ++x)
+            for (int32_t x = 0; x < mapWidth; ++x)
             {
                 const int32_t tileId = parsedLayer[index++];
 
@@ -266,7 +231,7 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 
         layerNode = layerNode->next_sibling("layer");
 
-        if (std::next(tileset) != tilesets.end())
+        if (std::next(tileset) != m_tilesets.end())
             tileset++;
 	}
 
@@ -318,4 +283,38 @@ bool TileMap::loadObjects(const void* rootNode) noexcept
 	}
 
 	return ( ! m_objects.empty() );
+}
+
+
+std::vector<int32_t> TileMap::parseCSV(const void* node) noexcept
+{
+    const auto dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
+    std::string csv(dataNode->value(), dataNode->value_size());
+
+    const auto commaCount = std::count_if(csv.begin(), csv.end(), [](const char c){ return c == ','; });
+
+    std::vector<int> result;
+    result.reserve(commaCount + 1);
+
+    const char* begin = csv.data();
+    const char* end = begin + csv.size();
+
+    while (begin < end) 
+    {
+        while (begin < end && *begin == ' ') ++begin;
+
+        int value = 0;
+        auto [p, ec] = std::from_chars(begin, end, value);
+
+        if (ec == std::errc()) 
+        {
+            result.push_back(value);
+            begin = p;
+        }
+        else ++begin;
+
+        while (begin < end && (*begin == ',' || *begin == ' ')) ++begin;
+    }
+
+    return result;
 }

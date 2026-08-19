@@ -87,7 +87,7 @@ bool Level::loadTextures() noexcept
 
     const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TileMap::Plane& plane) -> size_t
     {
-        return (plane.image.pixels != nullptr);
+        return (plane.image->pixels != nullptr);
     });
 
     if (textureCount == 0)
@@ -98,12 +98,12 @@ bool Level::loadTextures() noexcept
     Texture2D background(textures[0]);
     Texture2D foreground(textures[1]);
 
-    if (!background.loadFromImage(planeB->image))
+    if (!background.loadFromImage(*planeB->image))
         return false;
 
     if (textureCount > 1)
     {
-        if (!foreground.loadFromImage(planeA->image))
+        if (!foreground.loadFromImage(*planeA->image))
             return false;
     }
     else

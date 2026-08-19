@@ -32,13 +32,24 @@ public:
 		std::vector<Property> properties;
 	};
 
+	struct Tileset
+	{
+		std::string name;
+		StbImage image;
+		int32_t columns;
+		int32_t rows;
+		int32_t tileCount;
+		int32_t firstGID;
+	};
+
 	struct Plane
 	{
 		std::string           name;
-		StbImage              image;
+		StbImage*             image;
 		std::vector<float>    vertices;
 		std::vector<uint32_t> indices;
 	};
+
 
 	TileMap() noexcept;
 	~TileMap();
@@ -51,11 +62,15 @@ public:
 	const ivec2s&           getTileSize() const noexcept;
 
 private:
-    bool loadTilePlanes(const void* rootNode) noexcept;
-    bool loadObjects(const void* rootNode)    noexcept;
+	bool loadTilesets(const void* rootNode)         noexcept;
+    bool loadTilePlanes(const void* rootNode)       noexcept;
+    bool loadObjects(const void* rootNode)          noexcept;
+	std::vector<int32_t> parseCSV(const void* node) noexcept;
 
 	std::list<Plane>    m_planes;
+	std::list<Tileset>  m_tilesets;
     std::vector<Object> m_objects;
-    ivec2s              m_mapSize;
-    ivec2s              m_tileSize;
+
+    ivec2s m_mapSize;
+    ivec2s m_tileSize;
 };
