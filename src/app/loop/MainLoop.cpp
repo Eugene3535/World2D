@@ -28,7 +28,7 @@ void MainLoop::operator()(Game& game) noexcept
     if (!tilemap.loadFromFile("res/levels/Level-1-1.tmx"))
         return;
 
-    Level level(tilemap);
+    Level level(tilemap, game.glResources);
 
     if (!level.load())
         return;

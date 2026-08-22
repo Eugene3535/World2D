@@ -5,19 +5,22 @@
 
 #include <glad/glad.h>
 
-#include "files/TileMap.hpp"
 #include "files/Shader.hpp"
+#include "files/TileMap.hpp"
 #include "graphics/texture/Texture2D.hpp"
 #include "graphics/vao/VertexBufferLayout.hpp"
+#include "graphics/resources/GlResourceManager.hpp"
 #include "graphics/level/Level.hpp"
 
 
 
-Level::Level(const TileMap& tilemap) noexcept:
+Level::Level(const TileMap& tilemap, GlResourceManager& resources) noexcept:
     m_tilemap(tilemap),
+    m_glResources(resources),
     Transform2D(),
     m_background{},
-    m_foreground{}
+    m_foreground{},
+    m_isLoaded(false)
 {
 
 }
@@ -93,26 +96,31 @@ bool Level::loadTextures() noexcept
     if (textureCount == 0)
         return false;
 
-    std::array<GLuint, 2> textures = { 0, 0 };
-    glCreateTextures(GL_TEXTURE_2D, static_cast<GLsizei>(textureCount), textures.data());
+    auto textures = m_glResources.getHandles(GlResourceManager::GLTexture2D, textureCount);
+
+    if (textures.empty())
+        return false;
+
     Texture2D background(textures[0]);
-    Texture2D foreground(textures[1]);
 
     if (!background.loadFromImage(*planeB->image))
         return false;
 
-    if (textureCount > 1)
+    if (textures.size() > 1)
     {
+        Texture2D foreground(textures[0]);
+
         if (!foreground.loadFromImage(*planeA->image))
             return false;
+
+        m_foreground.texture = foreground.getHandle();
     }
     else
     {
-        foreground = background;
+        m_foreground.texture = background.getHandle();
     }
 
     m_background.texture = background.getHandle();
-    m_foreground.texture = foreground.getHandle();
 
     return true;
 }
@@ -123,8 +131,7 @@ void Level::loadGraphics() noexcept
     const auto& tilePlanes = m_tilemap.getPlanes();
     const auto tilePlaneCount = tilePlanes.size();
 
-    std::array<GLuint, 4> buffers = {};
-    glCreateBuffers(static_cast<GLsizei>(tilePlaneCount << 1), buffers.data());
+    auto buffers = m_glResources.getHandles(GlResourceManager::GLBuffer, 4);
 
     m_background.VBO = buffers[0];
     m_background.EBO = buffers[1];
@@ -146,8 +153,7 @@ void Level::loadGraphics() noexcept
         m_foreground.indexCount = indices.size(); 
     }
 
-    std::array<GLuint, 2> vertexArrays = {};
-    glGenVertexArrays(static_cast<GLsizei>(tilePlaneCount), vertexArrays.data());
+    auto vertexArrays = m_glResources.getHandles(GlResourceManager::GLVertexArray, 2);
 
     const std::array<VertexBufferLayout::Attribute, 1> attributes = { VertexBufferLayout::Attribute::Float4 };
 	VertexBufferLayout layout(attributes);
@@ -163,26 +169,32 @@ void Level::loadGraphics() noexcept
 
     m_background.VAO = vertexArrays[0];
     m_foreground.VAO = vertexArrays[1];
+
+    m_isLoaded = true;
 }
 
 
 void Level::cleanup() noexcept
 {
+    if (!m_isLoaded)
+        return;
+
     const std::array<GLuint, 2> vertexArrays = { m_background.VAO, m_foreground.VAO };
-    glDeleteVertexArrays(static_cast<GLsizei>(vertexArrays.size()), vertexArrays.data());
+    m_glResources.destroyHandles(GlResourceManager::GLVertexArray, vertexArrays);
 
     const std::array<GLuint, 4> buffers = 
     { 
         m_background.VBO, m_background.EBO,
         m_foreground.VBO, m_foreground.EBO 
     };
-    glDeleteBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
+    m_glResources.destroyHandles(GlResourceManager::GLBuffer, buffers);
 
     const std::array<GLuint, 2> textures = { m_background.texture, m_foreground.texture };
-    glDeleteTextures(static_cast<GLsizei>(textures.size()), textures.data());
+    m_glResources.destroyHandles(GlResourceManager::GLTexture2D, textures);
 
     memset(&m_background, 0, sizeof(m_background));
     memset(&m_foreground, 0, sizeof(m_foreground));
+    m_isLoaded = false;
 }
 
 

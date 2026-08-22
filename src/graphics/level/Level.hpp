@@ -10,7 +10,7 @@ class Level:
     public Transform2D
 {
 public:
-    Level(const class TileMap& tilemap) noexcept;
+    Level(const class TileMap& tilemap, class GlResourceManager& resources) noexcept;
     ~Level();
 
     bool load() noexcept;
@@ -23,7 +23,8 @@ private:
     void loadGraphics() noexcept;
     void cleanup() noexcept;
 
-    const class TileMap& m_tilemap;
+    const class TileMap&     m_tilemap;
+    class GlResourceManager& m_glResources;
 
     struct TilePlane
     {
@@ -36,4 +37,5 @@ private:
 
     TilePlane m_background;
     TilePlane m_foreground;
+    bool m_isLoaded;
 };
