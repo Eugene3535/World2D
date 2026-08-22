@@ -26,7 +26,7 @@ bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
     m_planes.clear();
 
     if (loadTilePlanes(static_cast<const void*>(mapNode)))
-        if (loadObjects(static_cast<const void*>(mapNode)))
+        // if (loadObjects(static_cast<const void*>(mapNode)))
             return true;
 
     return false;

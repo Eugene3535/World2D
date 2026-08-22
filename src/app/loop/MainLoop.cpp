@@ -25,7 +25,7 @@ void MainLoop::operator()(Game& game) noexcept
 {
     TileMap tilemap;
 
-    if (!tilemap.loadFromFile("res/levels/Level-1.tmx"))
+    if (!tilemap.loadFromFile("res/levels/Level-1-1.tmx"))
         return;
 
     Level level(tilemap);

@@ -1,6 +1,6 @@
 .vscode
 .vs
 .cache
-/build
-/out
-/tmp
+build
+out
+tmp
