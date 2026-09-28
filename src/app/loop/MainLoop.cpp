@@ -3,6 +3,7 @@
 #include "cglm/struct/affine-mat.h"
 
 #include "files/TileMap.hpp"
+#include "files/FileProvider.hpp"
 #include "graphics/camera/View.hpp"
 #include "graphics/level/Level.hpp"
 #include "app/window/MainWindow.hpp"
@@ -25,7 +26,12 @@ void MainLoop::operator()(Game& game) noexcept
 {
     TileMap tilemap;
 
-    if (!tilemap.loadFromFile("res/levels/Level-1-1.tmx"))
+    const auto filepath = FileProvider::findPathToFile("Level-1.tmx");
+
+    if (filepath.empty())
+        return;
+
+    if (!tilemap.loadFromFile(filepath))
         return;
 
     Level level(tilemap, game.glResources);
