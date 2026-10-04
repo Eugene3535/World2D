@@ -42,9 +42,9 @@ void View::resize(int32_t width, int32_t height) noexcept
 }
 
 
-void View::updateUniformBuffer(mat4 modelViewProjection) const noexcept
+void View::updateUniformBuffer(const void* matrix) const noexcept
 {
-    glNamedBufferSubData(m_uniformBuffer, 0, sizeof(mat4s), static_cast<const void*>(modelViewProjection));
+    glNamedBufferSubData(m_uniformBuffer, 0, sizeof(mat4s), matrix);
 }
 
 

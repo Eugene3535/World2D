@@ -20,19 +20,25 @@ bool TmxLoader::loadFromFile(const std::filesystem::path& filepath) noexcept
     document->parse<0>(xmlFile.data());
     const auto mapNode = document->first_node("map");
 
-    m_planes.clear();
+    m_layers.clear();
+    m_objects.clear();
 
-    if (loadTilePlanes(static_cast<const void*>(mapNode)))
-        // if (loadObjects(static_cast<const void*>(mapNode)))
-            return true;
+    if (!loadTilesets(static_cast<const void*>(mapNode)))
+        return false;
 
-    return false;
+    if (!loadTileLayers(static_cast<const void*>(mapNode)))
+        return false;
+
+    if (!loadObjects(static_cast<const void*>(mapNode)))
+        return false;
+
+    return true;
 }
 
 
-const std::list<TmxLoader::Plane>& TmxLoader::getPlanes() const noexcept
+const std::list<TmxLoader::Layer>& TmxLoader::getLayers() const noexcept
 {
-    return m_planes;
+    return m_layers;
 }
 
 
@@ -101,12 +107,9 @@ bool TmxLoader::loadTilesets(const void* rootNode) noexcept
 }
 
 
-bool TmxLoader::loadTilePlanes(const void* rootNode) noexcept
+bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
 {
 	const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
-
-	if (!loadTilesets(rootNode))
-		return false;
 
 	const auto mapW  = mapNode->first_attribute("width");
 	const auto mapH  = mapNode->first_attribute("height");
@@ -132,7 +135,7 @@ bool TmxLoader::loadTilePlanes(const void* rootNode) noexcept
         if (parsedLayer.empty())
             return false;
 
-        auto& tilePlane = m_planes.emplace_back();
+        auto& tilePlane = m_layers.emplace_back();
 
         if (auto name = layerNode->first_attribute("name"); name)
             tilePlane.name = std::string(name->value(), name->value_size());
@@ -232,7 +235,7 @@ bool TmxLoader::loadTilePlanes(const void* rootNode) noexcept
             tileset++;
 	}
 
-	return (!m_planes.empty());
+	return (!m_layers.empty());
 }
 
 

@@ -46,6 +46,9 @@ void MainLoop::operator()(Game& game) noexcept
     ivec2s startPosition = { 32, 0 };
     ivec2s finishPosition = { 0, 0 };
 
+    const auto* view = game.windowData.view;
+    const auto& projection = view->getProjectionMatrix();
+
     while (m_window.isOpen())
 	{
         glClear(GL_COLOR_BUFFER_BIT);
@@ -76,15 +79,14 @@ void MainLoop::operator()(Game& game) noexcept
 
         if ( (finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y) )
         {
-			auto view = game.windowData.view;
-
             vec2s position = { static_cast<float>(-startPosition.x), static_cast<float>(-startPosition.y) };
             tilemap.setPosition(position);
-            auto projection = view->getProjectionMatrix();
-            auto modelView = tilemap.getMatrix();
-            auto mvp = glms_mul(projection, modelView);
+
+            const auto modelView = tilemap.getMatrix();
+            const auto mvp = glms_mul(projection, modelView);
             view->updateUniformBuffer(mvp.raw);
         }
+        
         finishPosition = startPosition;
 
         tilemap.draw();

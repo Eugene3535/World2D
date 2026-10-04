@@ -73,14 +73,14 @@ void TileMap::draw() const noexcept
 
 bool TileMap::loadTextures() noexcept
 {
-    const auto& tilePlanes = m_loader->getPlanes();
+    const auto& tilePlanes = m_loader->getLayers();
 
-    auto planeB = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Plane& plane) -> bool
+    auto planeB = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Layer& plane) -> bool
     {
         return plane.name == "Background";
     });
 
-    auto planeA = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Plane& plane) -> bool
+    auto planeA = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Layer& plane) -> bool
     {
         return plane.name == "Foreground";
     });
@@ -88,7 +88,7 @@ bool TileMap::loadTextures() noexcept
     if (planeB == tilePlanes.end()) // At least one tile layer must exist.
         return false;
 
-    const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Plane& plane) -> size_t
+    const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Layer& plane) -> size_t
     {
         return (plane.image->pixels != nullptr);
     });
@@ -128,7 +128,7 @@ bool TileMap::loadTextures() noexcept
 
 void TileMap::loadGraphics() noexcept
 {
-    const auto& tilePlanes = m_loader->getPlanes();
+    const auto& tilePlanes = m_loader->getLayers();
     const auto tilePlaneCount = tilePlanes.size();
 
     auto buffers = m_glResources->getHandles(GlResourceManager::GLBuffer, 4);

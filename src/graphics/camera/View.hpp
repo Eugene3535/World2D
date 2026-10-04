@@ -10,7 +10,7 @@ public:
 
     void create(int32_t width, int32_t height) noexcept;
     void resize(int32_t width, int32_t height) noexcept;
-    void updateUniformBuffer(mat4 modelViewProjection) const noexcept;
+    void updateUniformBuffer(const void* matrix) const noexcept;
     void flipVertically(bool flip) noexcept; // If false, the coordinates are counted in OpenGL space - (0, 0) in the lower left corner
 
     const mat4s& getProjectionMatrix() const noexcept;

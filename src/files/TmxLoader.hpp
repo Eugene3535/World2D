@@ -16,6 +16,24 @@
 class TmxLoader final
 {
 public:
+	struct Tileset
+	{
+		std::string name;
+		StbImage image;
+		int32_t columns;
+		int32_t rows;
+		int32_t tileCount;
+		int32_t firstGID;
+	};
+
+	struct Layer
+	{
+		std::string           name;
+		StbImage*             image;
+		std::vector<float>    vertices;
+		std::vector<uint32_t> indices;
+	};
+
 	struct Object
 	{
 		struct Property
@@ -32,42 +50,24 @@ public:
 		std::vector<Property> properties;
 	};
 
-	struct Tileset
-	{
-		std::string name;
-		StbImage image;
-		int32_t columns;
-		int32_t rows;
-		int32_t tileCount;
-		int32_t firstGID;
-	};
-
-	struct Plane
-	{
-		std::string           name;
-		StbImage*             image;
-		std::vector<float>    vertices;
-		std::vector<uint32_t> indices;
-	};
-
 
 	TmxLoader() noexcept;
 	~TmxLoader();
 
 	bool loadFromFile(const std::filesystem::path& filepath) noexcept;
 
-	const std::list<Plane>& getPlanes()   const noexcept;
+	const std::list<Layer>& getLayers()   const noexcept;
 	std::span<const Object> getObjects()  const noexcept;
 	const ivec2s&           getMapSize()  const noexcept;
 	const ivec2s&           getTileSize() const noexcept;
 
 private:
 	bool loadTilesets(const void* rootNode)         noexcept;
-    bool loadTilePlanes(const void* rootNode)       noexcept;
+    bool loadTileLayers(const void* rootNode)       noexcept;
     bool loadObjects(const void* rootNode)          noexcept;
 	std::vector<int32_t> parseCSV(const void* node) noexcept;
 
-	std::list<Plane>    m_planes;
+	std::list<Layer>    m_layers;
 	std::list<Tileset>  m_tilesets;
     std::vector<Object> m_objects;
 
