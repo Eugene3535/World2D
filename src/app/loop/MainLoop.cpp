@@ -26,9 +26,7 @@ void MainLoop::operator()(Game& game) noexcept
 {
     TmxLoader loader;
 
-    const auto filepath = FileProvider::findPathToFile("Level-1.tmx");
-
-    if (!loader.loadFromFile(filepath))
+    if (!loader.loadFromFile("Level-1.tmx"))
         return;
 
     TileMap tilemap(loader, game.glResources);
@@ -86,7 +84,7 @@ void MainLoop::operator()(Game& game) noexcept
             const auto mvp = glms_mul(projection, modelView);
             view->updateUniformBuffer(mvp.raw);
         }
-        
+
         finishPosition = startPosition;
 
         tilemap.draw();

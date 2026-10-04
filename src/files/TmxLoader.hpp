@@ -5,7 +5,6 @@
 #include <list>
 #include <span>
 #include <memory>
-#include <filesystem>
 #include <variant>
 
 #include <cglm/struct/vec2.h>
@@ -54,7 +53,7 @@ public:
 	TmxLoader() noexcept;
 	~TmxLoader();
 
-	bool loadFromFile(const std::filesystem::path& filepath) noexcept;
+	bool loadFromFile(const std::string& filename) noexcept;
 
 	const std::list<Layer>& getLayers()   const noexcept;
 	std::span<const Object> getObjects()  const noexcept;

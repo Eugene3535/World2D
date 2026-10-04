@@ -13,8 +13,13 @@ TmxLoader::TmxLoader() noexcept = default;
 TmxLoader::~TmxLoader() = default;
 
 
-bool TmxLoader::loadFromFile(const std::filesystem::path& filepath) noexcept
+bool TmxLoader::loadFromFile(const std::string& filename) noexcept
 {
+    const auto filepath = FileProvider::findPathToFile(filename);
+
+    if (!std::filesystem::exists(filepath))
+        return false;
+
     auto document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filepath.string().c_str());
     document->parse<0>(xmlFile.data());
@@ -144,13 +149,10 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
         const int32_t minTile = *tileRange.first;
         const int32_t maxTile = *tileRange.second;
 
-        // if (minTile == maxTile)
-        //     return false;
-
 		auto currentTileset = std::find_if(m_tilesets.begin(), m_tilesets.end(),
 		[minTile, maxTile](const TmxLoader::Tileset& ts)
 		{
-			return minTile >= ts.firstGID && maxTile <= (ts.firstGID + ts.tileCount);
+			return minTile >= (ts.firstGID - 1) && maxTile <= (ts.firstGID + ts.tileCount);
 		});
 
         if (currentTileset == m_tilesets.end())
