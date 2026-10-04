@@ -23,7 +23,7 @@ bool TmxLoader::loadFromFile(const std::string& filename) noexcept
     auto document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filepath.string().c_str());
     document->parse<0>(xmlFile.data());
-    const auto mapNode = document->first_node("map");
+    const auto* mapNode = document->first_node("map");
 
     m_layers.clear();
     m_objects.clear();
@@ -67,16 +67,16 @@ const ivec2s& TmxLoader::getTileSize() const noexcept
 
 bool TmxLoader::loadTilesets(const void* rootNode) noexcept
 {
-    const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
+    const auto* mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
-    for (auto tilesetNode = mapNode->first_node("tileset"); tilesetNode; tilesetNode = tilesetNode->next_sibling("tileset"))
+    for (auto* tilesetNode = mapNode->first_node("tileset"); tilesetNode; tilesetNode = tilesetNode->next_sibling("tileset"))
     {
-        auto imageNode = tilesetNode->first_node("image");
+        auto* imageNode = tilesetNode->first_node("image");
 
         if (!imageNode)
             continue;
 
-        auto source = imageNode->first_attribute("source");
+        auto* source = imageNode->first_attribute("source");
 
         if (!source)
             continue;
@@ -98,9 +98,9 @@ bool TmxLoader::loadTilesets(const void* rootNode) noexcept
             return false;
 
         tileset.name   = filename;
-        auto tileCount = tilesetNode->first_attribute("tilecount");
-        auto columns   = tilesetNode->first_attribute("columns");
-        auto firstGID  = tilesetNode->first_attribute("firstgid");
+        auto* tileCount = tilesetNode->first_attribute("tilecount");
+        auto* columns   = tilesetNode->first_attribute("columns");
+        auto* firstGID  = tilesetNode->first_attribute("firstgid");
 
         tileset.tileCount = tileCount ? atoi(tileCount->value()) : 0;
         tileset.columns   = columns ? atoi(columns->value()) : 0;
@@ -114,12 +114,12 @@ bool TmxLoader::loadTilesets(const void* rootNode) noexcept
 
 bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
 {
-	const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
+	const auto* mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
-	const auto mapW  = mapNode->first_attribute("width");
-	const auto mapH  = mapNode->first_attribute("height");
-	const auto tileW = mapNode->first_attribute("tilewidth");
-	const auto tileH = mapNode->first_attribute("tileheight");
+	const auto* mapW  = mapNode->first_attribute("width");
+	const auto* mapH  = mapNode->first_attribute("height");
+	const auto* tileW = mapNode->first_attribute("tilewidth");
+	const auto* tileH = mapNode->first_attribute("tileheight");
 
 	const int32_t mapWidth   = mapW  ? std::atoi(mapW->value())  : 0;
 	const int32_t mapHeight  = mapH  ? std::atoi(mapH->value())  : 0;
@@ -129,12 +129,12 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
 	m_mapSize  = { mapWidth,  mapHeight  };
 	m_tileSize = { tileWidth, tileHeight };
 
-	auto layerNode = mapNode->first_node("layer");
+	auto* layerNode = mapNode->first_node("layer");
     auto tileset = m_tilesets.begin();
 
 	while (layerNode)
 	{
-		auto dataNode = layerNode->first_node("data");
+		auto* dataNode = layerNode->first_node("data");
 		const auto parsedLayer = parseCSV(dataNode);
 
         if (parsedLayer.empty())
@@ -142,7 +142,7 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
 
         auto& tilePlane = m_layers.emplace_back();
 
-        if (auto name = layerNode->first_attribute("name"); name)
+        if (auto* name = layerNode->first_attribute("name"); name)
             tilePlane.name = std::string(name->value(), name->value_size());
 
         const auto tileRange = std::minmax_element(parsedLayer.begin(), parsedLayer.end());
@@ -243,15 +243,15 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
 
 bool TmxLoader::loadObjects(const void* rootNode) noexcept
 {
-	const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
+	const auto* mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
-	for (auto objectGroupNode = mapNode->first_node("objectgroup");
-		      objectGroupNode != nullptr;
-		      objectGroupNode = objectGroupNode->next_sibling("objectgroup"))
+	for (auto* objectGroupNode = mapNode->first_node("objectgroup");
+		       objectGroupNode != nullptr;
+		       objectGroupNode = objectGroupNode->next_sibling("objectgroup"))
 	{
-		for (auto objectNode = objectGroupNode->first_node("object");
-			      objectNode != nullptr;
-			      objectNode = objectNode->next_sibling("object"))
+		for (auto* objectNode = objectGroupNode->first_node("object");
+			       objectNode != nullptr;
+			       objectNode = objectNode->next_sibling("object"))
 		{
 			auto& object = m_objects.emplace_back();
 
@@ -265,18 +265,18 @@ bool TmxLoader::loadObjects(const void* rootNode) noexcept
 				if (strcmp(attribute->name(), "class")  == 0)   object.type       = { attribute->value(), attribute->value_size() };
 			}
 
-			if (const auto propertiesNode = objectNode->first_node("properties"); propertiesNode != nullptr)
+			if (const auto* propertiesNode = objectNode->first_node("properties"); propertiesNode != nullptr)
 			{
-				for (auto propertyNode = propertiesNode->first_node("property");
-					      propertyNode != nullptr;
-					      propertyNode = propertyNode->next_sibling("property"))
+				for (auto* propertyNode = propertiesNode->first_node("property");
+					       propertyNode != nullptr;
+					       propertyNode = propertyNode->next_sibling("property"))
 				{
 					auto& property = object.properties.emplace_back();
 
                     std::string_view type;
                     std::string_view value;
 
-					for (auto attribute = propertyNode->first_attribute(); attribute; attribute = attribute->next_attribute())
+					for (auto* attribute = propertyNode->first_attribute(); attribute; attribute = attribute->next_attribute())
 					{
 						if (strcmp(attribute->name(), "name") == 0) 
                             property.name = { attribute->value(), attribute->value_size() }; 
@@ -319,7 +319,7 @@ bool TmxLoader::loadObjects(const void* rootNode) noexcept
 
 std::vector<int32_t> TmxLoader::parseCSV(const void* node) noexcept
 {
-    const auto dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
+    const auto* dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
     std::string csv(dataNode->value(), dataNode->value_size());
 
     const auto commaCount = std::count_if(csv.begin(), csv.end(), [](const char c){ return c == ','; });
