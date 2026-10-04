@@ -1,0 +1,143 @@
+﻿{
+    "version": 3,
+    "cmakeMinimumRequired": 
+    {
+        "major": 3,
+        "minor": 31,
+        "patch": 5
+    },
+    "configurePresets": 
+    [
+        {
+            "name": "windows-msvc",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": 
+            {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            },
+            "condition": 
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "debug-msvc",
+            "displayName": "Debug (Windows/MSVC)",
+            "inherits": "windows-msvc",
+            "architecture": 
+            {
+                "value": "x64"
+            },
+            "cacheVariables": 
+            {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release-msvc",
+            "displayName": "Release (Windows/MSVC)",
+            "inherits": "windows-msvc",
+            "architecture": 
+            {
+                "value": "x64"
+            },
+            "cacheVariables": 
+            {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "windows-mingw",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": 
+            {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            },
+            "condition": 
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "debug-mingw",
+            "displayName": "Debug (Windows/MinGW)",
+            "inherits": "windows-mingw",
+            "architecture": 
+            {
+                "value": "x64"
+            },
+            "cacheVariables": 
+            {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-g -O0 -Wall -Wextra"
+            }
+        },
+        {
+            "name": "release-mingw",
+            "displayName": "Release (Windows/MinGW)",
+            "inherits": "windows-mingw",
+            "architecture": 
+            {
+                "value": "x64"
+            },
+            "cacheVariables": 
+            {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "linux-base",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": 
+            {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            },
+            "condition": 
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+            "name": "debug-linux",
+            "displayName": "Debug (Linux)",
+            "inherits": "linux-base",
+            "architecture": 
+            {
+                "value": "x64"
+            },
+            "cacheVariables": 
+            {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-g -O0 -Wall -Wextra"
+            }
+        },
+        {
+            "name": "release-linux",
+            "displayName": "Release (Linux)",
+            "inherits": "linux-base",
+            "architecture": 
+            {
+                "value": "x64"
+            },
+            "cacheVariables": 
+            {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "-O3 -DNDEBUG -Wall -Wextra"
+            }
+        }
+    ]
+}

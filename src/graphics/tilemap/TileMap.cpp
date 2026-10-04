@@ -6,17 +6,17 @@
 #include <glad/glad.h>
 
 #include "files/Shader.hpp"
-#include "files/TileMap.hpp"
+#include "files/TmxLoader.hpp"
 #include "graphics/texture/Texture2D.hpp"
 #include "graphics/vao/VertexBufferLayout.hpp"
 #include "graphics/resources/GlResourceManager.hpp"
-#include "graphics/level/Level.hpp"
+#include "graphics/tilemap/TileMap.hpp"
 
 
 
-Level::Level(const TileMap& tilemap, GlResourceManager& resources) noexcept:
-    m_tilemap(tilemap),
-    m_glResources(resources),
+TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept:
+    m_loader(&loader),
+    m_glResources(&resources),
     Transform2D(),
     m_background{},
     m_foreground{},
@@ -26,13 +26,13 @@ Level::Level(const TileMap& tilemap, GlResourceManager& resources) noexcept:
 }
 
 
-Level::~Level() 
+TileMap::~TileMap() 
 {
     cleanup();
 }
 
 
-bool Level::load() noexcept
+bool TileMap::create() noexcept
 {
     cleanup();
 
@@ -45,7 +45,7 @@ bool Level::load() noexcept
 }
 
 
-void Level::draw() const noexcept
+void TileMap::draw() const noexcept
 {
     const bool needSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
 
@@ -71,16 +71,16 @@ void Level::draw() const noexcept
 }
 
 
-bool Level::loadTextures() noexcept
+bool TileMap::loadTextures() noexcept
 {
-    const auto& tilePlanes = m_tilemap.getPlanes();
+    const auto& tilePlanes = m_loader->getPlanes();
 
-    auto planeB = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TileMap::Plane& plane) -> bool
+    auto planeB = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Plane& plane) -> bool
     {
         return plane.name == "Background";
     });
 
-    auto planeA = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TileMap::Plane& plane) -> bool
+    auto planeA = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Plane& plane) -> bool
     {
         return plane.name == "Foreground";
     });
@@ -88,7 +88,7 @@ bool Level::loadTextures() noexcept
     if (planeB == tilePlanes.end()) // At least one tile layer must exist.
         return false;
 
-    const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TileMap::Plane& plane) -> size_t
+    const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Plane& plane) -> size_t
     {
         return (plane.image->pixels != nullptr);
     });
@@ -96,7 +96,7 @@ bool Level::loadTextures() noexcept
     if (textureCount == 0)
         return false;
 
-    auto textures = m_glResources.getHandles(GlResourceManager::GLTexture2D, textureCount);
+    auto textures = m_glResources->getHandles(GlResourceManager::GLTexture2D, textureCount);
 
     if (textures.empty())
         return false;
@@ -126,12 +126,12 @@ bool Level::loadTextures() noexcept
 }
 
 
-void Level::loadGraphics() noexcept
+void TileMap::loadGraphics() noexcept
 {
-    const auto& tilePlanes = m_tilemap.getPlanes();
+    const auto& tilePlanes = m_loader->getPlanes();
     const auto tilePlaneCount = tilePlanes.size();
 
-    auto buffers = m_glResources.getHandles(GlResourceManager::GLBuffer, 4);
+    auto buffers = m_glResources->getHandles(GlResourceManager::GLBuffer, 4);
 
     m_background.VBO = buffers[0];
     m_background.EBO = buffers[1];
@@ -153,7 +153,7 @@ void Level::loadGraphics() noexcept
         m_foreground.indexCount = indices.size(); 
     }
 
-    auto vertexArrays = m_glResources.getHandles(GlResourceManager::GLVertexArray, 2);
+    auto vertexArrays = m_glResources->getHandles(GlResourceManager::GLVertexArray, 2);
 
     const std::array<VertexBufferLayout::Attribute, 1> attributes = { VertexBufferLayout::Attribute::Float4 };
 	VertexBufferLayout layout(attributes);
@@ -174,31 +174,32 @@ void Level::loadGraphics() noexcept
 }
 
 
-void Level::cleanup() noexcept
+void TileMap::cleanup() noexcept
 {
     if (!m_isLoaded)
         return;
 
     const std::array<GLuint, 2> vertexArrays = { m_background.VAO, m_foreground.VAO };
-    m_glResources.destroyHandles(GlResourceManager::GLVertexArray, vertexArrays);
+    m_glResources->destroyHandles(GlResourceManager::GLVertexArray, vertexArrays);
 
     const std::array<GLuint, 4> buffers = 
     { 
         m_background.VBO, m_background.EBO,
         m_foreground.VBO, m_foreground.EBO 
     };
-    m_glResources.destroyHandles(GlResourceManager::GLBuffer, buffers);
+    m_glResources->destroyHandles(GlResourceManager::GLBuffer, buffers);
 
     const std::array<GLuint, 2> textures = { m_background.texture, m_foreground.texture };
-    m_glResources.destroyHandles(GlResourceManager::GLTexture2D, textures);
+    m_glResources->destroyHandles(GlResourceManager::GLTexture2D, textures);
 
     memset(&m_background, 0, sizeof(m_background));
     memset(&m_foreground, 0, sizeof(m_foreground));
+
     m_isLoaded = false;
 }
 
 
-const TileMap& Level::getTileMap() const noexcept
+const TmxLoader& TileMap::getLoader() const noexcept
 {
-    return m_tilemap;
+    return *m_loader;
 }

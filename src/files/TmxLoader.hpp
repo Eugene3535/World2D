@@ -6,13 +6,14 @@
 #include <span>
 #include <memory>
 #include <filesystem>
+#include <variant>
 
 #include <cglm/struct/vec2.h>
 
 #include "files/StbImage.hpp"
 
 
-class TileMap final
+class TmxLoader final
 {
 public:
 	struct Object
@@ -20,8 +21,7 @@ public:
 		struct Property
 		{
 			std::string name;
-			std::string type;
-			std::string value;
+			std::variant<bool, int, float, std::string> value;
 		};
 
 		std::string name;
@@ -51,8 +51,8 @@ public:
 	};
 
 
-	TileMap() noexcept;
-	~TileMap();
+	TmxLoader() noexcept;
+	~TmxLoader();
 
 	bool loadFromFile(const std::filesystem::path& filepath) noexcept;
 

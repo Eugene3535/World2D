@@ -6,14 +6,14 @@
 #include "RapidXML/rapidxml_utils.hpp"
 
 #include "files/FileProvider.hpp"
-#include "files/TileMap.hpp"
+#include "files/TmxLoader.hpp"
 
 
-TileMap::TileMap() noexcept = default;
-TileMap::~TileMap() = default;
+TmxLoader::TmxLoader() noexcept = default;
+TmxLoader::~TmxLoader() = default;
 
 
-bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
+bool TmxLoader::loadFromFile(const std::filesystem::path& filepath) noexcept
 {
     auto document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filepath.string().c_str());
@@ -30,31 +30,31 @@ bool TileMap::loadFromFile(const std::filesystem::path& filepath) noexcept
 }
 
 
-const std::list<TileMap::Plane>& TileMap::getPlanes() const noexcept
+const std::list<TmxLoader::Plane>& TmxLoader::getPlanes() const noexcept
 {
     return m_planes;
 }
 
 
-std::span<const TileMap::Object> TileMap::getObjects() const noexcept
+std::span<const TmxLoader::Object> TmxLoader::getObjects() const noexcept
 {
     return m_objects;
 }
 
 
-const ivec2s& TileMap::getMapSize() const noexcept
+const ivec2s& TmxLoader::getMapSize() const noexcept
 {
     return m_mapSize;
 }
 
 
-const ivec2s& TileMap::getTileSize() const noexcept
+const ivec2s& TmxLoader::getTileSize() const noexcept
 {
     return m_tileSize;
 }
 
 
-bool TileMap::loadTilesets(const void* rootNode) noexcept
+bool TmxLoader::loadTilesets(const void* rootNode) noexcept
 {
     const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
@@ -101,7 +101,7 @@ bool TileMap::loadTilesets(const void* rootNode) noexcept
 }
 
 
-bool TileMap::loadTilePlanes(const void* rootNode) noexcept
+bool TmxLoader::loadTilePlanes(const void* rootNode) noexcept
 {
 	const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
@@ -145,7 +145,7 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
         //     return false;
 
 		auto currentTileset = std::find_if(m_tilesets.begin(), m_tilesets.end(),
-		[minTile, maxTile](const TileMap::Tileset& ts)
+		[minTile, maxTile](const TmxLoader::Tileset& ts)
 		{
 			return minTile >= ts.firstGID && maxTile <= (ts.firstGID + ts.tileCount);
 		});
@@ -236,21 +236,21 @@ bool TileMap::loadTilePlanes(const void* rootNode) noexcept
 }
 
 
-bool TileMap::loadObjects(const void* rootNode) noexcept
+bool TmxLoader::loadObjects(const void* rootNode) noexcept
 {
 	const auto mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
 
 	for (auto objectGroupNode = mapNode->first_node("objectgroup");
-		      objectGroupNode;
+		      objectGroupNode != nullptr;
 		      objectGroupNode = objectGroupNode->next_sibling("objectgroup"))
 	{
 		for (auto objectNode = objectGroupNode->first_node("object");
-			      objectNode;
+			      objectNode != nullptr;
 			      objectNode = objectNode->next_sibling("object"))
 		{
 			auto& object = m_objects.emplace_back();
 
-			for (auto attribute = objectNode->first_attribute(); attribute; attribute = attribute->next_attribute())
+			for (auto attribute = objectNode->first_attribute(); attribute != nullptr; attribute = attribute->next_attribute())
 			{
 				if (strcmp(attribute->name(), "x") == 0)      { object.position.x = atoi(attribute->value()); continue; }
 				if (strcmp(attribute->name(), "y") == 0)      { object.position.y = atoi(attribute->value()); continue; }
@@ -260,20 +260,49 @@ bool TileMap::loadObjects(const void* rootNode) noexcept
 				if (strcmp(attribute->name(), "class")  == 0)   object.type       = { attribute->value(), attribute->value_size() };
 			}
 
-			if (const auto propertiesNode = objectNode->first_node("properties"))
+			if (const auto propertiesNode = objectNode->first_node("properties"); propertiesNode != nullptr)
 			{
 				for (auto propertyNode = propertiesNode->first_node("property");
-					      propertyNode;
+					      propertyNode != nullptr;
 					      propertyNode = propertyNode->next_sibling("property"))
 				{
 					auto& property = object.properties.emplace_back();
 
+                    std::string_view type;
+                    std::string_view value;
+
 					for (auto attribute = propertyNode->first_attribute(); attribute; attribute = attribute->next_attribute())
 					{
-						if (strcmp(attribute->name(), "name") == 0) { property.name  = { attribute->value(), attribute->value_size() }; continue; }
-						if (strcmp(attribute->name(), "type") == 0) { property.type  = { attribute->value(), attribute->value_size() }; continue; }
-						if (strcmp(attribute->name(), "value") == 0)  property.value = { attribute->value(), attribute->value_size() };
+						if (strcmp(attribute->name(), "name") == 0) 
+                            property.name = { attribute->value(), attribute->value_size() }; 
+                        
+						else if (strcmp(attribute->name(), "type") == 0)  
+                            type  = { attribute->value(), attribute->value_size() };
+
+						else if (strcmp(attribute->name(), "value") == 0) 
+                            value = { attribute->value(), attribute->value_size() };
 					}
+
+                    if (type == "bool")
+                    {
+                        property.value = (value == "true") ? true : false; 
+                    }
+                    else if (type == "int")
+                    {
+                        property.value = atoi(value.data()); 
+                    }
+                    else if (type == "float")
+                    {
+                        float result = 0.f;
+                        auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+                        
+                        if (ec == std::errc())
+                            property.value = result; 
+                    }
+                    else if (type == "string")
+                    {
+                        property.value = std::string(value); 
+                    }
 				}
 			}
 		}
@@ -283,7 +312,7 @@ bool TileMap::loadObjects(const void* rootNode) noexcept
 }
 
 
-std::vector<int32_t> TileMap::parseCSV(const void* node) noexcept
+std::vector<int32_t> TmxLoader::parseCSV(const void* node) noexcept
 {
     const auto dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
     std::string csv(dataNode->value(), dataNode->value_size());

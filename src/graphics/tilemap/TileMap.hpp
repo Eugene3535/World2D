@@ -6,25 +6,25 @@
 #include "graphics/transform/Transform2D.hpp"
 
 
-class Level:
+class TileMap:
     public Transform2D
 {
 public:
-    Level(const class TileMap& tilemap, class GlResourceManager& resources) noexcept;
-    ~Level();
+    TileMap(const class TmxLoader& loader, class GlResourceManager& resources) noexcept;
+    ~TileMap();
 
-    bool load() noexcept;
+    bool create() noexcept;
     void draw() const noexcept;
 
-    const class TileMap& getTileMap() const noexcept;
+    const class TmxLoader& getLoader() const noexcept;
 
 private:
     bool loadTextures() noexcept;
     void loadGraphics() noexcept;
     void cleanup() noexcept;
 
-    const class TileMap&     m_tilemap;
-    class GlResourceManager& m_glResources;
+    const class TmxLoader*   m_loader;
+    class GlResourceManager* m_glResources;
 
     struct TilePlane
     {

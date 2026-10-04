@@ -2,10 +2,10 @@
 #include <GLFW/glfw3.h>
 #include "cglm/struct/affine-mat.h"
 
-#include "files/TileMap.hpp"
+#include "files/TmxLoader.hpp"
 #include "files/FileProvider.hpp"
 #include "graphics/camera/View.hpp"
-#include "graphics/level/Level.hpp"
+#include "graphics/tilemap/TileMap.hpp"
 #include "app/window/MainWindow.hpp"
 #include "app/Game.hpp"
 #include "app/loop/MainLoop.hpp"
@@ -24,22 +24,19 @@ MainLoop::~MainLoop() = default;
 
 void MainLoop::operator()(Game& game) noexcept
 {
-    TileMap tilemap;
+    TmxLoader loader;
 
     const auto filepath = FileProvider::findPathToFile("Level-1.tmx");
 
-    if (filepath.empty())
+    if (!loader.loadFromFile(filepath))
         return;
 
-    if (!tilemap.loadFromFile(filepath))
+    TileMap tilemap(loader, game.glResources);
+
+    if (!tilemap.create())
         return;
 
-    Level level(tilemap, game.glResources);
-
-    if (!level.load())
-        return;
-
-    GLuint program = game.glResources.getProgram("sprite");
+    const GLuint program = game.glResources.getProgram("sprite");
     glUseProgram(program);
 
 	float lastFrame = 0.f;
@@ -82,15 +79,15 @@ void MainLoop::operator()(Game& game) noexcept
 			auto view = game.windowData.view;
 
             vec2s position = { static_cast<float>(-startPosition.x), static_cast<float>(-startPosition.y) };
-            level.setPosition(position);
+            tilemap.setPosition(position);
             auto projection = view->getProjectionMatrix();
-            auto modelView = level.getMatrix();
+            auto modelView = tilemap.getMatrix();
             auto mvp = glms_mul(projection, modelView);
             view->updateUniformBuffer(mvp.raw);
         }
         finishPosition = startPosition;
 
-        level.draw();
+        tilemap.draw();
 
 		m_window.display();
 	}
