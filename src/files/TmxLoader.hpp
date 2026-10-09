@@ -4,7 +4,6 @@
 #include <vector>
 #include <list>
 #include <span>
-#include <memory>
 #include <variant>
 
 #include <cglm/struct/vec2.h>
@@ -28,9 +27,8 @@ public:
 	struct Layer
 	{
 		std::string           name;
-		StbImage*             image;
-		std::vector<float>    vertices;
-		std::vector<uint32_t> indices;
+		const Tileset*        tileset;
+		std::vector<uint32_t> tiles;
 	};
 
 	struct Object
@@ -57,14 +55,14 @@ public:
 
 	const std::list<Layer>& getLayers()   const noexcept;
 	std::span<const Object> getObjects()  const noexcept;
-	const ivec2s&           getMapSize()  const noexcept;
-	const ivec2s&           getTileSize() const noexcept;
+	ivec2s getMapSize()  const noexcept;
+	ivec2s getTileSize() const noexcept;
 
 private:
-	bool loadTilesets(const void* rootNode)         noexcept;
-    bool loadTileLayers(const void* rootNode)       noexcept;
-    bool loadObjects(const void* rootNode)          noexcept;
-	std::vector<int32_t> parseCSV(const void* node) noexcept;
+	bool loadTilesets(const void* rootNode)          noexcept;
+    bool loadTileLayers(const void* rootNode)        noexcept;
+    bool loadObjects(const void* rootNode)           noexcept;
+	std::vector<uint32_t> parseCSV(const void* node) noexcept;
 
 	std::list<Layer>    m_layers;
 	std::list<Tileset>  m_tilesets;

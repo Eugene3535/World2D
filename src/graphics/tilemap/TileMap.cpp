@@ -90,7 +90,7 @@ bool TileMap::loadTextures() noexcept
 
     const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Layer& plane) -> size_t
     {
-        return (plane.image->pixels != nullptr);
+        return (plane.tileset->image.pixels != nullptr);
     });
 
     if (textureCount == 0)
@@ -103,14 +103,14 @@ bool TileMap::loadTextures() noexcept
 
     Texture2D background(textures[0]);
 
-    if (!background.loadFromImage(*planeB->image))
+    if (!background.loadFromImage(planeB->tileset->image))
         return false;
 
     if (textures.size() > 1)
     {
         Texture2D foreground(textures[0]);
 
-        if (!foreground.loadFromImage(*planeA->image))
+        if (!foreground.loadFromImage(planeA->tileset->image))
             return false;
 
         m_foreground.texture = foreground.getHandle();
@@ -126,11 +126,94 @@ bool TileMap::loadTextures() noexcept
 }
 
 
+void TileMap::createBufferData(BufferData& data) noexcept
+{
+    const auto* layer = static_cast<const TmxLoader::Layer*>(data.tileLayer);
+    
+    std::span<const uint32_t> tiles = layer->tiles;
+    const auto* tileset = layer->tileset;
+
+    auto& vertices = data.vertices;
+    auto& indices = data.indices;
+
+    vertices.reserve(tiles.size() * 4);
+    indices.reserve(tiles.size() * 6);
+
+    const vec2s ratio = 
+    { 
+        1.f / static_cast<float>(tileset->image.width), 
+        1.f / static_cast<float>(tileset->image.height)
+    };
+
+    const auto mapSize  = m_loader->getMapSize();
+    const auto tileSize = m_loader->getTileSize();
+    size_t index = 0;
+
+    for (int32_t y = 0; y < mapSize.y; ++y)
+    {
+        for (int32_t x = 0; x < mapSize.x; ++x)
+        {
+            const int32_t tileId = tiles[index++];
+
+            if (tileId)
+            {
+//  Positions
+                const vec2s leftBottom  = { static_cast<float>(x * tileSize.x),              static_cast<float>(y * tileSize.y + tileSize.y) };
+                const vec2s rightBottom = { static_cast<float>(x * tileSize.x + tileSize.x), static_cast<float>(y * tileSize.y + tileSize.y) };
+                const vec2s rightTop    = { static_cast<float>(x * tileSize.x + tileSize.x), static_cast<float>(y * tileSize.y) };
+                const vec2s leftTop     = { static_cast<float>(x * tileSize.x),              static_cast<float>(y * tileSize.y) };
+//  UV
+                const int32_t tileNum = tileId - tileset->firstGID;
+
+                const int32_t vY = (tileNum >= tileset->columns) ? tileNum / tileset->columns : 0;
+                const int32_t vX = tileNum % tileset->columns;
+
+                const int32_t offsetX = vX * tileSize.x;
+                const int32_t offsetY = vY * tileSize.y;
+
+                const float left   = offsetX * ratio.x;
+                const float top    = offsetY * ratio.y;
+                const float right  = (offsetX + tileSize.x) * ratio.x;
+                const float bottom = (offsetY + tileSize.y) * ratio.y;
+
+                const uint32_t cell = static_cast<uint32_t>(vertices.size() >> 2);
+
+                vertices.push_back(leftBottom.x);
+                vertices.push_back(leftBottom.y);
+                vertices.push_back(left);
+                vertices.push_back(bottom);
+
+                vertices.push_back(rightBottom.x);
+                vertices.push_back(rightBottom.y);
+                vertices.push_back(right);
+                vertices.push_back(bottom);
+
+                vertices.push_back(rightTop.x);
+                vertices.push_back(rightTop.y);
+                vertices.push_back(right);
+                vertices.push_back(top);
+
+                vertices.push_back(leftTop.x);
+                vertices.push_back(leftTop.y);
+                vertices.push_back(left);
+                vertices.push_back(top);
+
+                indices.push_back(cell);
+                indices.push_back(cell + 1u);
+                indices.push_back(cell + 2u);
+
+                indices.push_back(cell);
+                indices.push_back(cell + 2u);
+                indices.push_back(cell + 3u);
+            }
+        }
+    }
+}
+
+
 void TileMap::loadGraphics() noexcept
 {
-    const auto& tilePlanes = m_loader->getLayers();
-    const auto tilePlaneCount = tilePlanes.size();
-
+    const auto& layers = m_loader->getLayers();
     auto buffers = m_glResources->getHandles(GlResourceManager::GLBuffer, 4);
 
     m_background.VBO = buffers[0];
@@ -138,16 +221,26 @@ void TileMap::loadGraphics() noexcept
     m_foreground.VBO = buffers[2];
     m_foreground.EBO = buffers[3];
 
-    std::span<const float> vertices = tilePlanes.front().vertices;
-    std::span<const uint32_t> indices = tilePlanes.front().indices;
-    glNamedBufferStorage(m_background.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), 0);
-    glNamedBufferStorage(m_background.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), 0);
-    m_background.indexCount = indices.size(); 
+    {// Background tile plane
+        BufferData data;
+        data.tileLayer = static_cast<const void*>(&layers.front());
+        createBufferData(data);
 
-    if (tilePlaneCount > 1)
+        std::span<const float> vertices = data.vertices;
+        std::span<const uint32_t> indices = data.indices;
+        glNamedBufferStorage(m_background.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), 0);
+        glNamedBufferStorage(m_background.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), 0);
+        m_background.indexCount = indices.size(); 
+    }
+
+    if (layers.size() > 1) // Foreground tile plane
     {
-        vertices = tilePlanes.back().vertices;
-        indices = tilePlanes.back().indices;
+        BufferData data;
+        data.tileLayer = static_cast<const void*>(&layers.back());
+        createBufferData(data);
+
+        std::span<const float> vertices = data.vertices;
+        std::span<const uint32_t> indices = data.indices;
         glNamedBufferStorage(m_foreground.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), 0);
         glNamedBufferStorage(m_foreground.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), 0);
         m_foreground.indexCount = indices.size(); 
@@ -161,7 +254,7 @@ void TileMap::loadGraphics() noexcept
 	layout.createVertexInputState(vertexArrays[0], m_background.VBO);
     glVertexArrayElementBuffer(vertexArrays[0], m_background.EBO);
 
-    if (tilePlaneCount > 1)
+    if (layers.size() > 1)
     {
         layout.createVertexInputState(vertexArrays[1], m_foreground.VBO);
         glVertexArrayElementBuffer(vertexArrays[1], m_foreground.EBO);

@@ -53,13 +53,13 @@ std::span<const TmxLoader::Object> TmxLoader::getObjects() const noexcept
 }
 
 
-const ivec2s& TmxLoader::getMapSize() const noexcept
+ivec2s TmxLoader::getMapSize() const noexcept
 {
     return m_mapSize;
 }
 
 
-const ivec2s& TmxLoader::getTileSize() const noexcept
+ivec2s TmxLoader::getTileSize() const noexcept
 {
     return m_tileSize;
 }
@@ -130,22 +130,21 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
 	m_tileSize = { tileWidth, tileHeight };
 
 	auto* layerNode = mapNode->first_node("layer");
-    auto tileset = m_tilesets.begin();
 
 	while (layerNode)
 	{
 		auto* dataNode = layerNode->first_node("data");
-		const auto parsedLayer = parseCSV(dataNode);
+		auto tileNums = parseCSV(dataNode);
 
-        if (parsedLayer.empty())
+        if (tileNums.empty())
             return false;
 
-        auto& tilePlane = m_layers.emplace_back();
+        auto& layer = m_layers.emplace_back();
 
         if (auto* name = layerNode->first_attribute("name"); name)
-            tilePlane.name = std::string(name->value(), name->value_size());
+            layer.name = std::string(name->value(), name->value_size());
 
-        const auto tileRange = std::minmax_element(parsedLayer.begin(), parsedLayer.end());
+        const auto tileRange = std::minmax_element(tileNums.begin(), tileNums.end());
         const int32_t minTile = *tileRange.first;
         const int32_t maxTile = *tileRange.second;
 
@@ -158,83 +157,10 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
         if (currentTileset == m_tilesets.end())
             return false;
 
-        auto& image = tilePlane.image;
-        image = &currentTileset->image; 
-
-		const vec2s ratio = { 1.f / static_cast<float>(image->width), 1.f / static_cast<float>(image->height) };
-        size_t index = 0;
-
-        auto& vertices = tilePlane.vertices;
-        vertices.reserve(tileset->tileCount * 4);
-
-        auto& indices = tilePlane.indices;
-        indices.reserve(tileset->tileCount * 6);
-
-        for (int32_t y = 0; y < mapHeight; ++y)
-        {
-            for (int32_t x = 0; x < mapWidth; ++x)
-            {
-                const int32_t tileId = parsedLayer[index++];
-
-                if (tileId)
-                {
-//  Positions
-                    const vec2s leftBottom  = { static_cast<float>(x * tileWidth),             static_cast<float>(y * tileHeight + tileHeight) };
-                    const vec2s rightBottom = { static_cast<float>(x * tileWidth + tileWidth), static_cast<float>(y * tileHeight + tileHeight) };
-                    const vec2s rightTop    = { static_cast<float>(x * tileWidth + tileWidth), static_cast<float>(y * tileHeight) };
-                    const vec2s leftTop     = { static_cast<float>(x * tileWidth),             static_cast<float>(y * tileHeight) };
-
-//  UV
-                    const int32_t tileNum = tileId - tileset->firstGID;
-
-                    const int32_t vY = (tileNum >= tileset->columns) ? tileNum / tileset->columns : 0;
-                    const int32_t vX = tileNum % tileset->columns;
-
-                    const int32_t offsetX = vX * tileWidth;
-                    const int32_t offsetY = vY * tileHeight;
-
-                    const float left   = offsetX * ratio.x;
-                    const float top    = offsetY * ratio.y;
-                    const float right  = (offsetX + tileWidth) * ratio.x;
-                    const float bottom = (offsetY + tileHeight) * ratio.y;
-
-                    const uint32_t cell = static_cast<uint32_t>(vertices.size() >> 2);
-
-                    vertices.push_back(leftBottom.x);
-                    vertices.push_back(leftBottom.y);
-                    vertices.push_back(left);
-                    vertices.push_back(bottom);
-
-                    vertices.push_back(rightBottom.x);
-                    vertices.push_back(rightBottom.y);
-                    vertices.push_back(right);
-                    vertices.push_back(bottom);
-
-                    vertices.push_back(rightTop.x);
-                    vertices.push_back(rightTop.y);
-                    vertices.push_back(right);
-                    vertices.push_back(top);
-
-                    vertices.push_back(leftTop.x);
-                    vertices.push_back(leftTop.y);
-                    vertices.push_back(left);
-                    vertices.push_back(top);
-
-                    indices.push_back(cell);
-                    indices.push_back(cell + 1u);
-                    indices.push_back(cell + 2u);
-
-                    indices.push_back(cell);
-                    indices.push_back(cell + 2u);
-                    indices.push_back(cell + 3u);
-                }
-            }
-        }
+        layer.tileset = &*currentTileset; 
+        layer.tiles.swap(tileNums);
 
         layerNode = layerNode->next_sibling("layer");
-
-        if (std::next(tileset) != m_tilesets.end())
-            tileset++;
 	}
 
 	return (!m_layers.empty());
@@ -317,14 +243,14 @@ bool TmxLoader::loadObjects(const void* rootNode) noexcept
 }
 
 
-std::vector<int32_t> TmxLoader::parseCSV(const void* node) noexcept
+std::vector<uint32_t> TmxLoader::parseCSV(const void* node) noexcept
 {
     const auto* dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
     std::string csv(dataNode->value(), dataNode->value_size());
 
     const auto commaCount = std::count_if(csv.begin(), csv.end(), [](const char c){ return c == ','; });
 
-    std::vector<int> result;
+    std::vector<uint32_t> result;
     result.reserve(commaCount + 1);
 
     const char* begin = csv.data();
@@ -334,7 +260,7 @@ std::vector<int32_t> TmxLoader::parseCSV(const void* node) noexcept
     {
         while (begin < end && *begin == ' ') ++begin;
 
-        int value = 0;
+        uint32_t value = 0;
         auto [p, ec] = std::from_chars(begin, end, value);
 
         if (ec == std::errc()) 

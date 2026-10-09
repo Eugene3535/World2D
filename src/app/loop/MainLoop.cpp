@@ -53,26 +53,26 @@ void MainLoop::operator()(Game& game) noexcept
 
 		m_window.pollEvents();
 
-		float currentFrame = m_window.getElapsedTime();
-		float deltaTime = currentFrame - lastFrame;
+		const float currentFrame = m_window.getElapsedTime();
+		const float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
 
         if (m_window.isKeyPressed(GLFW_KEY_W))
         {
-            startPosition.y -= 5;
+            startPosition.y -= 600 * deltaTime;
         }
         else if (m_window.isKeyPressed(GLFW_KEY_S))
         {
-            startPosition.y += 5;
+            startPosition.y += 600 * deltaTime;
         }
         else if (m_window.isKeyPressed(GLFW_KEY_D))
         {
-            startPosition.x += 5;
+            startPosition.x += 600 * deltaTime;
         }
         else if (m_window.isKeyPressed(GLFW_KEY_A))
         {
-            startPosition.x -= 5;
+            startPosition.x -= 600 * deltaTime;
         }
 
         if ( (finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y) )
