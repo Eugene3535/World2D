@@ -45,7 +45,7 @@ bool TileMap::create() noexcept
 }
 
 
-void TileMap::draw() const noexcept
+void TileMap::draw(const ivec4s& viewport) const noexcept
 {
     const bool needSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
 
@@ -55,7 +55,36 @@ void TileMap::draw() const noexcept
         glBindTextureUnit(1, m_foreground.texture);
 
 	glBindVertexArray(m_background.VAO);
-	glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
+	// glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
+
+    const auto mapSize = m_loader->getMapSize();
+    const auto tileSize = m_loader->getTileSize();
+    const auto mapSizeInPixels = glms_ivec2_mul(mapSize, tileSize);
+
+    uint32_t left   = (viewport.x < 1) ? 0 : viewport.x;
+    uint32_t top    = (viewport.y < 1) ? 0 : viewport.y;
+    uint32_t width  = left + viewport.z + tileSize.x;
+    uint32_t height = top + viewport.w + tileSize.y;
+
+    if (width >= mapSizeInPixels.x)  width = mapSizeInPixels.x;
+    if (height >= mapSizeInPixels.y) height = mapSizeInPixels.y;
+
+    const uint32_t x = left / tileSize.x;
+    const uint32_t y = top / tileSize.y;
+
+    const uint32_t tile = x + y * mapSize.x;
+    const GLsizei lines = (height - top) / tileSize.y;
+    const GLsizei length = (width - left) / tileSize.x;
+
+    std::array<GLsizei, 64> counts; // TODO: dynamic count (using "lines" variable)
+    counts.fill(length * 6);
+
+    std::array<const void*, 64> offsets; // TODO: dynamic count (using "lines" variable)
+
+    for (GLsizei i = 0; i < lines; ++i)
+        offsets[i] = (const void*)((tile + i * mapSize.x) * 6 * sizeof(GLuint));
+    
+    glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), lines);
 
     if (m_foreground.VAO)
     {

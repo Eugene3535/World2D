@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
 
 #include "graphics/transform/Transform2D.hpp"
@@ -14,7 +13,7 @@ public:
     ~TileMap();
 
     bool create() noexcept;
-    void draw() const noexcept;
+    void draw(const ivec4s& viewport) const noexcept;
 
     const class TmxLoader& getLoader() const noexcept;
 

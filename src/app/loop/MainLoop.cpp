@@ -87,7 +87,10 @@ void MainLoop::operator()(Game& game) noexcept
 
         finishPosition = startPosition;
 
-        tilemap.draw();
+        const ivec2s windowSize = m_window.getSize();
+        const ivec4s viewport = { startPosition.x, startPosition.y, windowSize.x, windowSize.y };
+
+        tilemap.draw(viewport);
 
 		m_window.display();
 	}
