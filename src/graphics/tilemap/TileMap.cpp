@@ -64,7 +64,7 @@ void TileMap::draw(const ivec4s& viewport) const noexcept
     uint32_t left   = (viewport.x < 1) ? 0 : viewport.x;
     uint32_t top    = (viewport.y < 1) ? 0 : viewport.y;
     uint32_t width  = left + viewport.z + tileSize.x;
-    uint32_t height = top + viewport.w + tileSize.y;
+    uint32_t height = top + viewport.w + tileSize.y + (tileSize.y >> 1);
 
     if (width >= mapSizeInPixels.x)  width = mapSizeInPixels.x;
     if (height >= mapSizeInPixels.y) height = mapSizeInPixels.y;

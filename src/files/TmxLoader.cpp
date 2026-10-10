@@ -246,7 +246,7 @@ bool TmxLoader::loadObjects(const void* rootNode) noexcept
 std::vector<uint32_t> TmxLoader::parseCSV(const void* node) noexcept
 {
     const auto* dataNode = static_cast<const rapidxml::xml_node<char>*>(node);
-    std::string csv(dataNode->value(), dataNode->value_size());
+    std::string_view csv(dataNode->value(), dataNode->value_size());
 
     const auto commaCount = std::count_if(csv.begin(), csv.end(), [](const char c){ return c == ','; });
 
