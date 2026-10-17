@@ -4,23 +4,23 @@
 
 #include <array>
 #include <span>
-#include <type_traits>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 
-#include "files/FileProvider.hpp"
-#include "files/Shader.hpp"
 #include "app/Game.hpp"
 #include "app/context/Context.hpp"
+#include "files/FileProvider.hpp"
+#include "files/Shader.hpp"
 
 
 static GLuint create_program(std::span<const GLuint> shaders) noexcept
 {
     GLint program = glCreateProgram();
 
-    for(const auto& shader : shaders)
+    for (const auto& shader : shaders)
         glAttachShader(program, shader);
-    
+
     glLinkProgram(program);
 
     int32_t success = GL_FALSE;
@@ -45,13 +45,11 @@ static GLuint create_program(std::span<const GLuint> shaders) noexcept
             glUniformBlockBinding(program, uniformBlockIndex, 0);
     }
 
-    for(const auto& shader : shaders)
+    for (const auto& shader : shaders)
         glDetachShader(program, shader);
 
     return program;
 }
-
-
 
 
 bool Context::load(Game& game) noexcept
@@ -67,11 +65,8 @@ bool Context::load(Game& game) noexcept
 
     std::unordered_map<std::string, Shader> shaderMap;
 
-    for (const auto filename : 
-    {
-        "sprite.frag",
-        "sprite.vert"
-    }) shaderMap[filename] = Shader();
+    for (const auto filename : {"sprite.frag", "sprite.vert"})
+        shaderMap[filename] = Shader();
 
     for (auto& [filename, shader] : shaderMap)
     {
@@ -90,13 +85,13 @@ bool Context::load(Game& game) noexcept
 
     std::unordered_map<std::string, uint32_t> programs;
 
-    {// Sprite
+    { // Sprite
         std::array<GLuint, 2> shaders;
         shaders[0] = shaderMap["sprite.vert"].getHandle();
         shaders[1] = shaderMap["sprite.frag"].getHandle();
 
         if (const GLuint program = create_program(shaders))
-            programs.emplace("sprite", program); 
+            programs.emplace("sprite", program);
     }
 
     game.glResources.appendPrograms(programs);

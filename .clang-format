@@ -92,20 +92,6 @@ EmptyLineBeforeAccessModifier: Always
 KeepEmptyLinesAtTheStartOfBlocks: true
 MaxEmptyLinesToKeep: 2
 
-# Sorting
-SortIncludes: true
-IncludeBlocks: Regroup
-
-IncludeCategories:
-  - Regex:    '^<.*'
-    Priority: 1
-
-  - Regex:    '^"(glfw3|cglm|freetype|stb_image|glad).*'
-    Priority: 2
-
-  - Regex:    '^".*'
-    Priority: 3
-
 # Penalties
 PenaltyBreakAssignment: 1000
 PenaltyBreakBeforeFirstCallParameter: 1000

@@ -1,21 +1,20 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include "cglm/struct/affine-mat.h"
+#define GLFW_INCLUDE_NONE
 
-#include "files/TmxLoader.hpp"
-#include "files/FileProvider.hpp"
-#include "graphics/camera/View.hpp"
-#include "graphics/tilemap/TileMap.hpp"
-#include "app/window/MainWindow.hpp"
+#include "cglm/struct/affine-mat.h"
+#include <GLFW/glfw3.h>
+#include <glad/glad.h>
+
 #include "app/Game.hpp"
 #include "app/loop/MainLoop.hpp"
+#include "app/window/MainWindow.hpp"
+#include "files/FileProvider.hpp"
+#include "files/TmxLoader.hpp"
+#include "graphics/camera/View.hpp"
+#include "graphics/tilemap/TileMap.hpp"
 
 
-
-MainLoop::MainLoop(MainWindow& window) noexcept:
-    m_window(window)
+MainLoop::MainLoop(MainWindow& window) noexcept : m_window(window)
 {
-
 }
 
 
@@ -37,25 +36,25 @@ void MainLoop::operator()(Game& game) noexcept
     const GLuint program = game.glResources.getProgram("sprite");
     glUseProgram(program);
 
-	float lastFrame = 0.f;
+    float lastFrame = 0.f;
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
 
-    ivec2s startPosition = { 32, 0 };
-    ivec2s finishPosition = { 0, 0 };
+    ivec2s startPosition  = {32, 0};
+    ivec2s finishPosition = {0, 0};
 
-    const auto* view = game.windowData.view;
+    const auto* view       = game.windowData.view;
     const auto& projection = view->getProjectionMatrix();
 
     while (m_window.isOpen())
-	{
+    {
         glClear(GL_COLOR_BUFFER_BIT);
 
-		m_window.pollEvents();
+        m_window.pollEvents();
 
-		const float currentFrame = m_window.getElapsedTime();
-		const float deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+        const float currentFrame = m_window.getElapsedTime();
+        const float deltaTime    = currentFrame - lastFrame;
+        lastFrame                = currentFrame;
 
 
         if (m_window.isKeyPressed(GLFW_KEY_W))
@@ -75,23 +74,23 @@ void MainLoop::operator()(Game& game) noexcept
             startPosition.x -= 600 * deltaTime;
         }
 
-        if ( (finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y) )
+        if ((finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y))
         {
-            vec2s position = { static_cast<float>(-startPosition.x), static_cast<float>(-startPosition.y) };
+            vec2s position = {static_cast<float>(-startPosition.x), static_cast<float>(-startPosition.y)};
             tilemap.setPosition(position);
 
             const auto modelView = tilemap.getMatrix();
-            const auto mvp = glms_mul(projection, modelView);
+            const auto mvp       = glms_mul(projection, modelView);
             view->updateUniformBuffer(mvp.raw);
         }
 
         finishPosition = startPosition;
 
         const ivec2s windowSize = m_window.getSize();
-        const ivec4s viewport = { startPosition.x, startPosition.y, windowSize.x, windowSize.y };
+        const ivec4s viewport   = {startPosition.x, startPosition.y, windowSize.x, windowSize.y};
 
         tilemap.draw(viewport);
 
-		m_window.display();
-	}
+        m_window.display();
+    }
 }

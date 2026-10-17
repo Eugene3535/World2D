@@ -6,17 +6,12 @@
 #include "files/Shader.hpp"
 
 
-Shader::Shader() noexcept:
-    m_handle(0),
-    m_type(GL_VERTEX_SHADER)
+Shader::Shader() noexcept : m_handle(0), m_type(GL_VERTEX_SHADER)
 {
-    
 }
 
 
-Shader::Shader(Shader&& other) noexcept:
-    m_handle(other.m_handle),
-    m_type(other.m_type)
+Shader::Shader(Shader&& other) noexcept : m_handle(other.m_handle), m_type(other.m_type)
 {
     other.m_handle = 0;
 }
@@ -26,8 +21,8 @@ Shader& Shader::operator=(Shader&& other) noexcept
 {
     if (this != &other)
     {
-        m_handle = other.m_handle;
-        m_type = other.m_type;
+        m_handle       = other.m_handle;
+        m_type         = other.m_type;
         other.m_handle = 0;
     }
 
@@ -46,14 +41,11 @@ GLuint Shader::loadFromFile(const std::filesystem::path& filepath, GLenum shader
     glDeleteShader(m_handle);
     m_handle = 0;
 
-    bool type_is_valid = (shaderType == GL_COMPUTE_SHADER)         ||
-                         (shaderType == GL_VERTEX_SHADER)          ||
-                         (shaderType == GL_TESS_CONTROL_SHADER)    ||
-                         (shaderType == GL_TESS_EVALUATION_SHADER) ||
-                         (shaderType == GL_GEOMETRY_SHADER)        ||
-                         (shaderType == GL_FRAGMENT_SHADER);
+    bool type_is_valid = (shaderType == GL_COMPUTE_SHADER) || (shaderType == GL_VERTEX_SHADER) ||
+                         (shaderType == GL_TESS_CONTROL_SHADER) || (shaderType == GL_TESS_EVALUATION_SHADER) ||
+                         (shaderType == GL_GEOMETRY_SHADER) || (shaderType == GL_FRAGMENT_SHADER);
 
-    if(type_is_valid)
+    if (type_is_valid)
     {
         m_type = shaderType;
         std::string source;
@@ -68,10 +60,10 @@ GLuint Shader::loadFromFile(const std::filesystem::path& filepath, GLenum shader
             fclose(f);
         }
 
-        if(!source.empty())
+        if (!source.empty())
         {
-            uint32_t shader = glCreateShader(shaderType);
-            const char* c_str = source.c_str();
+            uint32_t    shader = glCreateShader(shaderType);
+            const char* c_str  = source.c_str();
 
             glShaderSource(shader, 1, &c_str, 0);
             glCompileShader(shader);
@@ -83,7 +75,9 @@ GLuint Shader::loadFromFile(const std::filesystem::path& filepath, GLenum shader
             {
                 char info_log[1024]{};
                 glGetShaderInfoLog(shader, sizeof(info_log), nullptr, info_log);
-                printf("Error: shader compilation error\n%s\n ------------------------------------------------------- \n", info_log);
+                printf(
+                    "Error: shader compilation error\n%s\n ------------------------------------------------------- \n",
+                    info_log);
             }
             else
             {

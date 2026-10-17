@@ -5,8 +5,7 @@
 #include "graphics/transform/Transform2D.hpp"
 
 
-class TileMap:
-    public Transform2D
+class TileMap : public Transform2D
 {
 public:
     TileMap(const class TmxLoader& loader, class GlResourceManager& resources) noexcept;
@@ -28,14 +27,14 @@ private:
 
     struct TilePlane
     {
-		uint32_t texture;
-		uint32_t VAO; // Vertex Array Object
-		uint32_t VBO; // Vertex Buffer Object
+        uint32_t texture;
+        uint32_t VAO; // Vertex Array Object
+        uint32_t VBO; // Vertex Buffer Object
         uint32_t EBO; // Element Buffer Object
-		uint32_t indexCount;
+        uint32_t indexCount;
     };
 
     TilePlane m_background;
     TilePlane m_foreground;
-    bool m_isLoaded;
+    bool      m_isLoaded;
 };

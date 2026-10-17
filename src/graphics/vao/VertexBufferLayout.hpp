@@ -35,11 +35,11 @@ public:
 
         Attribute(Type type, GLboolean normalized = GL_FALSE) noexcept;
 
-        Type   type;
-        GLuint componentType;
-        GLuint componentsCount;
-        GLuint sizeInBytes;
-        GLuint offset;
+        Type      type;
+        GLuint    componentType;
+        GLuint    componentsCount;
+        GLuint    sizeInBytes;
+        GLuint    offset;
         GLboolean isNormalized;
     };
 
@@ -48,9 +48,9 @@ public:
     void createVertexInputState(GLuint vao, GLuint vbo) const noexcept;
 
     std::span<const Attribute> getAttributes() const noexcept;
-    GLuint getStride() const noexcept;
+    GLuint                     getStride() const noexcept;
 
 private:
     std::vector<Attribute> m_attributes;
-    GLuint m_stride;
+    GLuint                 m_stride;
 };

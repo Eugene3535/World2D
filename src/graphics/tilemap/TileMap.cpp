@@ -1,5 +1,5 @@
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <span>
 
@@ -7,22 +7,21 @@
 
 #include "files/Shader.hpp"
 #include "files/TmxLoader.hpp"
-#include "graphics/texture/Texture2D.hpp"
-#include "graphics/vao/VertexBufferLayout.hpp"
 #include "graphics/resources/GlResourceManager.hpp"
+#include "graphics/texture/Texture2D.hpp"
 #include "graphics/tilemap/TileMap.hpp"
+#include "graphics/vao/VertexBufferLayout.hpp"
 
 
 struct BufferData
 {
-    std::vector<float> vertices;
+    std::vector<float>    vertices;
     std::vector<uint32_t> indices;
-    const void* tileLayer;
+    const void*           tileLayer;
 };
 
 
-
-TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept:
+TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept :
     m_loader(&loader),
     m_glResources(&resources),
     Transform2D(),
@@ -30,11 +29,10 @@ TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept
     m_foreground{},
     m_isLoaded(false)
 {
-
 }
 
 
-TileMap::~TileMap() 
+TileMap::~TileMap()
 {
     cleanup();
 }
@@ -57,15 +55,15 @@ void TileMap::draw(const ivec4s& viewport) const noexcept
 {
     const bool needSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
 
-	glBindTextureUnit(0, m_background.texture);
+    glBindTextureUnit(0, m_background.texture);
 
     if (needSecondSampler)
         glBindTextureUnit(1, m_foreground.texture);
 
-	glBindVertexArray(m_background.VAO);
+    glBindVertexArray(m_background.VAO);
 
-    const auto mapSize = m_loader->getMapSize();
-    const auto tileSize = m_loader->getTileSize();
+    const auto mapSize         = m_loader->getMapSize();
+    const auto tileSize        = m_loader->getTileSize();
     const auto mapSizeInPixels = glms_ivec2_mul(mapSize, tileSize);
 
     if (mapSizeInPixels.x < (viewport.z + tileSize.x) || mapSizeInPixels.y < (viewport.w + tileSize.y))
@@ -79,15 +77,17 @@ void TileMap::draw(const ivec4s& viewport) const noexcept
         uint32_t width  = left + viewport.z + tileSize.x;
         uint32_t height = top + viewport.w + tileSize.y + (tileSize.y >> 1);
 
-        if (width >= mapSizeInPixels.x)  width = mapSizeInPixels.x;
-        if (height >= mapSizeInPixels.y) height = mapSizeInPixels.y;
+        if (width >= mapSizeInPixels.x)
+            width = mapSizeInPixels.x;
+        if (height >= mapSizeInPixels.y)
+            height = mapSizeInPixels.y;
 
         const uint32_t x = left / tileSize.x;
         const uint32_t y = top / tileSize.y;
 
-        const uint32_t tile = x + y * mapSize.x;
-        const GLsizei lineCount = (height - top) / tileSize.y;
-        const GLsizei length = (width - left) / tileSize.x;
+        const uint32_t tile      = x + y * mapSize.x;
+        const GLsizei  lineCount = (height - top) / tileSize.y;
+        const GLsizei  length    = (width - left) / tileSize.x;
 
         std::array<GLsizei, 64> counts; // TODO: dynamic count (using "lines" variable)
         counts.fill(length * 6);
@@ -96,7 +96,7 @@ void TileMap::draw(const ivec4s& viewport) const noexcept
 
         for (GLsizei i = 0; i < lineCount; ++i)
             offsets[i] = (const void*)((tile + i * mapSize.x) * 6 * sizeof(GLuint));
-        
+
         glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), lineCount);
     }
 
@@ -115,15 +115,17 @@ void TileMap::draw(const ivec4s& viewport) const noexcept
             uint32_t width  = left + viewport.z + tileSize.x;
             uint32_t height = top + viewport.w + tileSize.y + (tileSize.y >> 1);
 
-            if (width >= mapSizeInPixels.x)  width = mapSizeInPixels.x;
-            if (height >= mapSizeInPixels.y) height = mapSizeInPixels.y;
+            if (width >= mapSizeInPixels.x)
+                width = mapSizeInPixels.x;
+            if (height >= mapSizeInPixels.y)
+                height = mapSizeInPixels.y;
 
             const uint32_t x = left / tileSize.x;
             const uint32_t y = top / tileSize.y;
 
-            const uint32_t tile = x + y * mapSize.x;
-            const GLsizei lineCount = (height - top) / tileSize.y;
-            const GLsizei length = (width - left) / tileSize.x;
+            const uint32_t tile      = x + y * mapSize.x;
+            const GLsizei  lineCount = (height - top) / tileSize.y;
+            const GLsizei  length    = (width - left) / tileSize.x;
 
             std::array<GLsizei, 64> counts; // TODO: dynamic count (using "lines" variable)
             counts.fill(length * 6);
@@ -132,13 +134,13 @@ void TileMap::draw(const ivec4s& viewport) const noexcept
 
             for (GLsizei i = 0; i < lineCount; ++i)
                 offsets[i] = (const void*)((tile + i * mapSize.x) * 6 * sizeof(GLuint));
-            
+
             glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), lineCount);
         }
     }
 
     glBindVertexArray(0);
-	glBindTextureUnit(0, 0);
+    glBindTextureUnit(0, 0);
 
     if (needSecondSampler)
         glBindTextureUnit(1, 0);
@@ -149,23 +151,21 @@ bool TileMap::loadTextures() noexcept
 {
     const auto& tilePlanes = m_loader->getLayers();
 
-    auto planeB = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Layer& plane) -> bool
-    {
-        return plane.name == "Background";
-    });
+    auto planeB = std::find_if(tilePlanes.begin(),
+                               tilePlanes.end(),
+                               [](const TmxLoader::Layer& plane) -> bool { return plane.name == "Background"; });
 
-    auto planeA = std::find_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Layer& plane) -> bool
-    {
-        return plane.name == "Foreground";
-    });
+    auto planeA = std::find_if(tilePlanes.begin(),
+                               tilePlanes.end(),
+                               [](const TmxLoader::Layer& plane) -> bool { return plane.name == "Foreground"; });
 
     if (planeB == tilePlanes.end()) // At least one tile layer must exist.
         return false;
 
-    const auto textureCount = std::count_if(tilePlanes.begin(), tilePlanes.end(), [](const TmxLoader::Layer& plane) -> size_t
-    {
-        return (plane.tileset->image.pixels != nullptr);
-    });
+    const auto textureCount = std::count_if(tilePlanes.begin(),
+                                            tilePlanes.end(),
+                                            [](const TmxLoader::Layer& plane) -> size_t
+                                            { return (plane.tileset->image.pixels != nullptr); });
 
     if (textureCount == 0)
         return false;
@@ -202,27 +202,23 @@ bool TileMap::loadTextures() noexcept
 
 void TileMap::createBufferData(void* bufferData) noexcept
 {
-    auto* data = static_cast<BufferData*>(bufferData);
+    auto*       data  = static_cast<BufferData*>(bufferData);
     const auto* layer = static_cast<const TmxLoader::Layer*>(data->tileLayer);
-    
-    std::span<const uint32_t> tiles = layer->tiles;
-    const auto* tileset = layer->tileset;
+
+    std::span<const uint32_t> tiles   = layer->tiles;
+    const auto*               tileset = layer->tileset;
 
     auto& vertices = data->vertices;
-    auto& indices = data->indices;
+    auto& indices  = data->indices;
 
     vertices.reserve(tiles.size() * 4);
     indices.reserve(tiles.size() * 6);
 
-    const vec2s ratio = 
-    { 
-        1.f / static_cast<float>(tileset->image.width), 
-        1.f / static_cast<float>(tileset->image.height)
-    };
+    const vec2s ratio = {1.f / static_cast<float>(tileset->image.width), 1.f / static_cast<float>(tileset->image.height)};
 
     const auto mapSize  = m_loader->getMapSize();
     const auto tileSize = m_loader->getTileSize();
-    size_t index = 0;
+    size_t     index    = 0;
 
     for (int32_t y = 0; y < mapSize.y; ++y)
     {
@@ -232,12 +228,14 @@ void TileMap::createBufferData(void* bufferData) noexcept
 
             if (tileId)
             {
-//  Positions
-                const vec2s leftBottom  = { static_cast<float>(x * tileSize.x),              static_cast<float>(y * tileSize.y + tileSize.y) };
-                const vec2s rightBottom = { static_cast<float>(x * tileSize.x + tileSize.x), static_cast<float>(y * tileSize.y + tileSize.y) };
-                const vec2s rightTop    = { static_cast<float>(x * tileSize.x + tileSize.x), static_cast<float>(y * tileSize.y) };
-                const vec2s leftTop     = { static_cast<float>(x * tileSize.x),              static_cast<float>(y * tileSize.y) };
-//  UV
+                //  Positions
+                const vec2s leftBottom  = {static_cast<float>(x * tileSize.x),
+                                           static_cast<float>(y * tileSize.y + tileSize.y)};
+                const vec2s rightBottom = {static_cast<float>(x * tileSize.x + tileSize.x),
+                                           static_cast<float>(y * tileSize.y + tileSize.y)};
+                const vec2s rightTop = {static_cast<float>(x * tileSize.x + tileSize.x), static_cast<float>(y * tileSize.y)};
+                const vec2s leftTop = {static_cast<float>(x * tileSize.x), static_cast<float>(y * tileSize.y)};
+                //  UV
                 const int32_t tileNum = tileId - tileset->firstGID;
 
                 const int32_t vY = (tileNum >= tileset->columns) ? tileNum / tileset->columns : 0;
@@ -288,24 +286,30 @@ void TileMap::createBufferData(void* bufferData) noexcept
 
 void TileMap::loadGraphics() noexcept
 {
-    const auto& layers = m_loader->getLayers();
-    auto buffers = m_glResources->getHandles(GlResourceManager::GLBuffer, 4);
+    const auto& layers  = m_loader->getLayers();
+    auto        buffers = m_glResources->getHandles(GlResourceManager::GLBuffer, 4);
 
     m_background.VBO = buffers[0];
     m_background.EBO = buffers[1];
     m_foreground.VBO = buffers[2];
     m_foreground.EBO = buffers[3];
 
-    {// Background tile plane
+    { // Background tile plane
         BufferData data;
         data.tileLayer = static_cast<const void*>(&layers.front());
         createBufferData(static_cast<void*>(&data));
 
-        std::span<const float> vertices = data.vertices;
-        std::span<const uint32_t> indices = data.indices;
-        glNamedBufferStorage(m_background.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-        glNamedBufferStorage(m_background.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-        m_background.indexCount = indices.size(); 
+        std::span<const float>    vertices = data.vertices;
+        std::span<const uint32_t> indices  = data.indices;
+        glNamedBufferStorage(m_background.VBO,
+                             static_cast<GLsizeiptr>(vertices.size_bytes()),
+                             vertices.data(),
+                             GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+        glNamedBufferStorage(m_background.EBO,
+                             static_cast<GLsizeiptr>(indices.size_bytes()),
+                             indices.data(),
+                             GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+        m_background.indexCount = indices.size();
     }
 
     if (layers.size() > 1) // Foreground tile plane
@@ -314,19 +318,25 @@ void TileMap::loadGraphics() noexcept
         data.tileLayer = static_cast<const void*>(&layers.back());
         createBufferData(static_cast<void*>(&data));
 
-        std::span<const float> vertices = data.vertices;
-        std::span<const uint32_t> indices = data.indices;
-        glNamedBufferStorage(m_foreground.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-        glNamedBufferStorage(m_foreground.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-        m_foreground.indexCount = indices.size(); 
+        std::span<const float>    vertices = data.vertices;
+        std::span<const uint32_t> indices  = data.indices;
+        glNamedBufferStorage(m_foreground.VBO,
+                             static_cast<GLsizeiptr>(vertices.size_bytes()),
+                             vertices.data(),
+                             GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+        glNamedBufferStorage(m_foreground.EBO,
+                             static_cast<GLsizeiptr>(indices.size_bytes()),
+                             indices.data(),
+                             GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+        m_foreground.indexCount = indices.size();
     }
 
     auto vertexArrays = m_glResources->getHandles(GlResourceManager::GLVertexArray, 2);
 
-    const std::array<VertexBufferLayout::Attribute, 1> attributes = { VertexBufferLayout::Attribute::Float4 };
-	VertexBufferLayout layout(attributes);
+    const std::array<VertexBufferLayout::Attribute, 1> attributes = {VertexBufferLayout::Attribute::Float4};
+    VertexBufferLayout                                 layout(attributes);
 
-	layout.createVertexInputState(vertexArrays[0], m_background.VBO);
+    layout.createVertexInputState(vertexArrays[0], m_background.VBO);
     glVertexArrayElementBuffer(vertexArrays[0], m_background.EBO);
 
     if (layers.size() > 1)
@@ -347,17 +357,13 @@ void TileMap::cleanup() noexcept
     if (!m_isLoaded)
         return;
 
-    const std::array<GLuint, 2> vertexArrays = { m_background.VAO, m_foreground.VAO };
+    const std::array<GLuint, 2> vertexArrays = {m_background.VAO, m_foreground.VAO};
     m_glResources->destroyHandles(GlResourceManager::GLVertexArray, vertexArrays);
 
-    const std::array<GLuint, 4> buffers = 
-    { 
-        m_background.VBO, m_background.EBO,
-        m_foreground.VBO, m_foreground.EBO 
-    };
+    const std::array<GLuint, 4> buffers = {m_background.VBO, m_background.EBO, m_foreground.VBO, m_foreground.EBO};
     m_glResources->destroyHandles(GlResourceManager::GLBuffer, buffers);
 
-    const std::array<GLuint, 2> textures = { m_background.texture, m_foreground.texture };
+    const std::array<GLuint, 2> textures = {m_background.texture, m_foreground.texture};
     m_glResources->destroyHandles(GlResourceManager::GLTexture2D, textures);
 
     memset(&m_background, 0, sizeof(m_background));

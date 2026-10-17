@@ -24,20 +24,20 @@
 class Texture2D
 {
 public:
-	explicit Texture2D(uint32_t handle) noexcept;
-	~Texture2D();
+    explicit Texture2D(uint32_t handle) noexcept;
+    ~Texture2D();
 
-	bool loadFromImage(const struct StbImage& image) noexcept;
-	bool loadFromFile(const std::filesystem::path& filePath) noexcept;
+    bool loadFromImage(const struct StbImage& image) noexcept;
+    bool loadFromFile(const std::filesystem::path& filePath) noexcept;
 
-	void setSmooth(bool smooth)    noexcept;
-	void setRepeated(bool repeate) noexcept;
+    void setSmooth(bool smooth) noexcept;
+    void setRepeated(bool repeate) noexcept;
 
-	ivec2s getSize() const noexcept;
-	uint32_t getHandle() const noexcept;
+    ivec2s   getSize() const noexcept;
+    uint32_t getHandle() const noexcept;
 
 private:
-	uint32_t m_handle;
-	bool m_isSmooth;
-	bool m_isRepeated;
+    uint32_t m_handle;
+    bool     m_isSmooth;
+    bool     m_isRepeated;
 };

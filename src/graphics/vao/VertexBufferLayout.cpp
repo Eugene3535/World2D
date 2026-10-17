@@ -74,7 +74,7 @@ static constexpr GLuint shaderAttributeTypeToComponentType(const VertexBufferLay
 }
 
 
-VertexBufferLayout::Attribute::Attribute(const Attribute::Type attrType, GLboolean normalized) noexcept:
+VertexBufferLayout::Attribute::Attribute(const Attribute::Type attrType, GLboolean normalized) noexcept :
     type(attrType),
     componentType(shaderAttributeTypeToComponentType(attrType)),
     componentsCount(shaderAttributeTypeToComponentCount(attrType)),
@@ -82,7 +82,6 @@ VertexBufferLayout::Attribute::Attribute(const Attribute::Type attrType, GLboole
     offset(0),
     isNormalized(normalized)
 {
-
 }
 
 
@@ -106,21 +105,25 @@ void VertexBufferLayout::createVertexInputState(GLuint vao, GLuint vbo) const no
     if (m_attributes.empty())
         return;
 
-	GLuint attributeCount = 0;
+    GLuint attributeCount = 0;
 
-	glBindVertexArray(vao);
+    glBindVertexArray(vao);
 
-	for (const auto& attribute : m_attributes)
-	{
-		glEnableVertexAttribArray(attributeCount);
-		glBindVertexBuffer(attributeCount, vbo, attribute.offset, m_stride);
-		glVertexAttribFormat(attributeCount, static_cast<GLint>(attribute.componentsCount), attribute.componentType, attribute.isNormalized, 0);
-		glVertexAttribBinding(attributeCount, attributeCount);
+    for (const auto& attribute : m_attributes)
+    {
+        glEnableVertexAttribArray(attributeCount);
+        glBindVertexBuffer(attributeCount, vbo, attribute.offset, m_stride);
+        glVertexAttribFormat(attributeCount,
+                             static_cast<GLint>(attribute.componentsCount),
+                             attribute.componentType,
+                             attribute.isNormalized,
+                             0);
+        glVertexAttribBinding(attributeCount, attributeCount);
 
-		++attributeCount;
-	}
+        ++attributeCount;
+    }
 
-	glBindVertexArray(0);	
+    glBindVertexArray(0);
 }
 
 

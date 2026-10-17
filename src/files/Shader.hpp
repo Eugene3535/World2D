@@ -16,7 +16,7 @@ public:
 
     GLuint loadFromFile(const std::filesystem::path& filepath, GLenum shaderType) noexcept;
     GLuint getHandle() const noexcept;
-    GLenum getType()   const noexcept;
+    GLenum getType() const noexcept;
 
 private:
     GLuint m_handle;

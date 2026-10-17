@@ -1,7 +1,7 @@
 #pragma once
 
-#include "graphics/resources/GlResourceManager.hpp"
 #include "app/window/WindowData.hpp"
+#include "graphics/resources/GlResourceManager.hpp"
 
 
 struct Game final
@@ -12,6 +12,6 @@ struct Game final
         Stage
     };
 
-    WindowData windowData;
+    WindowData        windowData;
     GlResourceManager glResources;
 };

@@ -1,16 +1,12 @@
-#include <glad/glad.h>
-#include <cglm/struct/cam.h>
 #include "cglm/struct/affine-mat.h"
+#include <cglm/struct/cam.h>
+#include <glad/glad.h>
 
 #include "graphics/camera/View.hpp"
 
 
-View::View() noexcept:
-    m_projection(glms_mat4_identity()),
-    m_uniformBuffer(0),
-    m_flipVertically(true)
+View::View() noexcept : m_projection(glms_mat4_identity()), m_uniformBuffer(0), m_flipVertically(true)
 {
-
 }
 
 
@@ -36,9 +32,9 @@ void View::create(int32_t width, int32_t height) noexcept
 
 void View::resize(int32_t width, int32_t height) noexcept
 {
-    m_projection = m_flipVertically ? 
-        glms_ortho(0.f, static_cast<float>(width), static_cast<float>(height), 0.f, -1.f, 1.f) :
-        glms_ortho(0.f, static_cast<float>(width), 0.f, static_cast<float>(height), -1.f, 1.f);
+    m_projection = m_flipVertically
+                       ? glms_ortho(0.f, static_cast<float>(width), static_cast<float>(height), 0.f, -1.f, 1.f)
+                       : glms_ortho(0.f, static_cast<float>(width), 0.f, static_cast<float>(height), -1.f, 1.f);
 }
 
 

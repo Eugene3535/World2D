@@ -2,24 +2,24 @@
 #include <windows.h>
 extern "C"
 {
-    __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
-    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+    __declspec(dllexport) unsigned long NvOptimusEnablement                  = 0x00000001;
+    __declspec(dllexport) int           AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 
-#include "files/FileProvider.hpp"
-#include "app/window/WindowData.hpp"
-#include "app/window/MainWindow.hpp"
+#include "app/Game.hpp"
 #include "app/context/Context.hpp"
 #include "app/loop/MainLoop.hpp"
-#include "app/Game.hpp"
+#include "app/window/MainWindow.hpp"
+#include "app/window/WindowData.hpp"
+#include "files/FileProvider.hpp"
 
 
 int main(int argc, char* argv[])
 {
     FileProvider provider(argv[0]);
 
-    Game game;
+    Game       game;
     MainWindow window(game.windowData);
 
     if (!window.open("Platformer 2D", 800, 600))
@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
 
     Context context;
 
-	if (!context.load(game))
-		return false;
+    if (!context.load(game))
+        return false;
 
     MainLoop loop(window);
     loop(game);
