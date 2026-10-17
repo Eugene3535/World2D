@@ -2,17 +2,18 @@
 
 #include <memory>
 
+#include "graphics/tilemap/CullingSystem.hpp"
 #include "graphics/transform/Transform2D.hpp"
 
 
-class TileMap : public Transform2D
+class TileMap : public Transform2D, public CullingSystem
 {
 public:
     TileMap(const class TmxLoader& loader, class GlResourceManager& resources) noexcept;
     ~TileMap();
 
     bool create() noexcept;
-    void draw(const ivec4s& viewport) const noexcept;
+    void draw(const ivec4s& viewport) noexcept;
 
     const class TmxLoader& getLoader() const noexcept;
 

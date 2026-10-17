@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     Game       game;
     MainWindow window(game.windowData);
 
-    if (!window.open("Platformer 2D", 800, 600))
+    if (!window.open("Platformer 2D", 1200, 920))
         return 1;
 
     Context context;

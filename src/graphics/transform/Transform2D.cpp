@@ -127,24 +127,12 @@ const mat4s& Transform2D::getMatrix() const noexcept
         const float ty     = m_origin.x * sxs - m_origin.y * syc + m_position.y;
 
         auto m = static_cast<float*>(&m_matrix.raw[0][0]);
-
-        m[0]  = sxc;
-        m[4]  = sys;
-        m[8]  = 0.f;
-        m[12] = tx;
-        m[1]  = -sxs;
-        m[5]  = syc;
-        m[9]  = 0.f;
-        m[13] = ty;
-        m[2]  = 0.f;
-        m[6]  = 0.f;
-        m[10] = 1.f;
-        m[14] = 0.f;
-        m[3]  = 0.f;
-        m[7]  = 0.f;
-        m[11] = 0.f;
-        m[15] = 1.f;
-
+        // clang-format off
+        m[0] = sxc;  m[4] = sys; m[8] = 0.f;  m[12] = tx;
+        m[1] = -sxs; m[5] = syc; m[9] = 0.f;  m[13] = ty;
+        m[2] = 0.f;  m[6] = 0.f; m[10] = 1.f; m[14] = 0.f;
+        m[3] = 0.f;  m[7] = 0.f; m[11] = 0.f; m[15] = 1.f;
+        // clang-format on
         m_transformNeedUpdate = false;
     }
 

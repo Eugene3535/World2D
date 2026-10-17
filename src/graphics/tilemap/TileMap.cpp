@@ -22,9 +22,10 @@ struct BufferData
 
 
 TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept :
+    Transform2D(),
+    CullingSystem(loader),
     m_loader(&loader),
     m_glResources(&resources),
-    Transform2D(),
     m_background{},
     m_foreground{},
     m_isLoaded(false)
@@ -47,102 +48,57 @@ bool TileMap::create() noexcept
 
     loadGraphics();
 
+
     return true;
 }
 
 
-void TileMap::draw(const ivec4s& viewport) const noexcept
+void TileMap::draw(const ivec4s& viewport) noexcept
 {
-    const bool needSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
+    const bool existsSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
 
     glBindTextureUnit(0, m_background.texture);
 
-    if (needSecondSampler)
+    if (existsSecondSampler)
         glBindTextureUnit(1, m_foreground.texture);
 
     glBindVertexArray(m_background.VAO);
 
+    updateCulling(viewport);
+    const auto renderData = getRenderData();
+
     const auto mapSize         = m_loader->getMapSize();
     const auto tileSize        = m_loader->getTileSize();
     const auto mapSizeInPixels = glms_ivec2_mul(mapSize, tileSize);
+    const bool isLarge = (mapSizeInPixels.x < (viewport.z + tileSize.x) || mapSizeInPixels.y < (viewport.w + tileSize.y));
 
-    if (mapSizeInPixels.x < (viewport.z + tileSize.x) || mapSizeInPixels.y < (viewport.w + tileSize.y))
+    if (isLarge)
     {
         glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
     }
     else
     {
-        uint32_t left   = (viewport.x < 1) ? 0 : viewport.x;
-        uint32_t top    = (viewport.y < 1) ? 0 : viewport.y;
-        uint32_t width  = left + viewport.z + tileSize.x;
-        uint32_t height = top + viewport.w + tileSize.y + (tileSize.y >> 1);
-
-        if (width >= mapSizeInPixels.x)
-            width = mapSizeInPixels.x;
-        if (height >= mapSizeInPixels.y)
-            height = mapSizeInPixels.y;
-
-        const uint32_t x = left / tileSize.x;
-        const uint32_t y = top / tileSize.y;
-
-        const uint32_t tile      = x + y * mapSize.x;
-        const GLsizei  lineCount = (height - top) / tileSize.y;
-        const GLsizei  length    = (width - left) / tileSize.x;
-
-        std::array<GLsizei, 64> counts; // TODO: dynamic count (using "lines" variable)
-        counts.fill(length * 6);
-
-        std::array<const void*, 64> offsets; // TODO: dynamic count (using "lines" variable)
-
-        for (GLsizei i = 0; i < lineCount; ++i)
-            offsets[i] = (const void*)((tile + i * mapSize.x) * 6 * sizeof(GLuint));
-
-        glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), lineCount);
+        glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
     }
 
     if (m_foreground.VAO)
     {
         glBindVertexArray(m_foreground.VAO);
 
-        if (mapSizeInPixels.x < (viewport.z + tileSize.x) || mapSizeInPixels.y < (viewport.w + tileSize.y))
+        if (isLarge)
         {
             glDrawElements(GL_TRIANGLES, m_foreground.indexCount, GL_UNSIGNED_INT, nullptr);
         }
         else
         {
-            uint32_t left   = (viewport.x < 1) ? 0 : viewport.x;
-            uint32_t top    = (viewport.y < 1) ? 0 : viewport.y;
-            uint32_t width  = left + viewport.z + tileSize.x;
-            uint32_t height = top + viewport.w + tileSize.y + (tileSize.y >> 1);
-
-            if (width >= mapSizeInPixels.x)
-                width = mapSizeInPixels.x;
-            if (height >= mapSizeInPixels.y)
-                height = mapSizeInPixels.y;
-
-            const uint32_t x = left / tileSize.x;
-            const uint32_t y = top / tileSize.y;
-
-            const uint32_t tile      = x + y * mapSize.x;
-            const GLsizei  lineCount = (height - top) / tileSize.y;
-            const GLsizei  length    = (width - left) / tileSize.x;
-
-            std::array<GLsizei, 64> counts; // TODO: dynamic count (using "lines" variable)
-            counts.fill(length * 6);
-
-            std::array<const void*, 64> offsets; // TODO: dynamic count (using "lines" variable)
-
-            for (GLsizei i = 0; i < lineCount; ++i)
-                offsets[i] = (const void*)((tile + i * mapSize.x) * 6 * sizeof(GLuint));
-
-            glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), lineCount);
+            glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
         }
     }
 
     glBindVertexArray(0);
     glBindTextureUnit(0, 0);
 
-    if (needSecondSampler)
+    if (existsSecondSampler)
         glBindTextureUnit(1, 0);
 }
 
@@ -301,14 +257,17 @@ void TileMap::loadGraphics() noexcept
 
         std::span<const float>    vertices = data.vertices;
         std::span<const uint32_t> indices  = data.indices;
+
         glNamedBufferStorage(m_background.VBO,
                              static_cast<GLsizeiptr>(vertices.size_bytes()),
                              vertices.data(),
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+
         glNamedBufferStorage(m_background.EBO,
                              static_cast<GLsizeiptr>(indices.size_bytes()),
                              indices.data(),
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+
         m_background.indexCount = indices.size();
     }
 
@@ -320,14 +279,17 @@ void TileMap::loadGraphics() noexcept
 
         std::span<const float>    vertices = data.vertices;
         std::span<const uint32_t> indices  = data.indices;
+
         glNamedBufferStorage(m_foreground.VBO,
                              static_cast<GLsizeiptr>(vertices.size_bytes()),
                              vertices.data(),
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+
         glNamedBufferStorage(m_foreground.EBO,
                              static_cast<GLsizeiptr>(indices.size_bytes()),
                              indices.data(),
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+
         m_foreground.indexCount = indices.size();
     }
 
