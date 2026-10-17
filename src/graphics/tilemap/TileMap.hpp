@@ -18,15 +18,8 @@ public:
     const class TmxLoader& getLoader() const noexcept;
 
 private:
-    struct BufferData
-    {
-        std::vector<float> vertices;
-        std::vector<uint32_t> indices;
-        const void* tileLayer;
-    };
-
     bool loadTextures() noexcept;
-    void createBufferData(BufferData& data) noexcept;
+    void createBufferData(void* bufferData) noexcept;
     void loadGraphics() noexcept;
     void cleanup() noexcept;
 

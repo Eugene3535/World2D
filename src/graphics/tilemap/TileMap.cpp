@@ -13,6 +13,14 @@
 #include "graphics/tilemap/TileMap.hpp"
 
 
+struct BufferData
+{
+    std::vector<float> vertices;
+    std::vector<uint32_t> indices;
+    const void* tileLayer;
+};
+
+
 
 TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept:
     m_loader(&loader),
@@ -95,7 +103,38 @@ void TileMap::draw(const ivec4s& viewport) const noexcept
     if (m_foreground.VAO)
     {
         glBindVertexArray(m_foreground.VAO);
-	    glDrawElements(GL_TRIANGLES, m_foreground.indexCount, GL_UNSIGNED_INT, nullptr);
+
+        if (mapSizeInPixels.x < (viewport.z + tileSize.x) || mapSizeInPixels.y < (viewport.w + tileSize.y))
+        {
+            glDrawElements(GL_TRIANGLES, m_foreground.indexCount, GL_UNSIGNED_INT, nullptr);
+        }
+        else
+        {
+            uint32_t left   = (viewport.x < 1) ? 0 : viewport.x;
+            uint32_t top    = (viewport.y < 1) ? 0 : viewport.y;
+            uint32_t width  = left + viewport.z + tileSize.x;
+            uint32_t height = top + viewport.w + tileSize.y + (tileSize.y >> 1);
+
+            if (width >= mapSizeInPixels.x)  width = mapSizeInPixels.x;
+            if (height >= mapSizeInPixels.y) height = mapSizeInPixels.y;
+
+            const uint32_t x = left / tileSize.x;
+            const uint32_t y = top / tileSize.y;
+
+            const uint32_t tile = x + y * mapSize.x;
+            const GLsizei lineCount = (height - top) / tileSize.y;
+            const GLsizei length = (width - left) / tileSize.x;
+
+            std::array<GLsizei, 64> counts; // TODO: dynamic count (using "lines" variable)
+            counts.fill(length * 6);
+
+            std::array<const void*, 64> offsets; // TODO: dynamic count (using "lines" variable)
+
+            for (GLsizei i = 0; i < lineCount; ++i)
+                offsets[i] = (const void*)((tile + i * mapSize.x) * 6 * sizeof(GLuint));
+            
+            glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), lineCount);
+        }
     }
 
     glBindVertexArray(0);
@@ -161,15 +200,16 @@ bool TileMap::loadTextures() noexcept
 }
 
 
-void TileMap::createBufferData(BufferData& data) noexcept
+void TileMap::createBufferData(void* bufferData) noexcept
 {
-    const auto* layer = static_cast<const TmxLoader::Layer*>(data.tileLayer);
+    auto* data = static_cast<BufferData*>(bufferData);
+    const auto* layer = static_cast<const TmxLoader::Layer*>(data->tileLayer);
     
     std::span<const uint32_t> tiles = layer->tiles;
     const auto* tileset = layer->tileset;
 
-    auto& vertices = data.vertices;
-    auto& indices = data.indices;
+    auto& vertices = data->vertices;
+    auto& indices = data->indices;
 
     vertices.reserve(tiles.size() * 4);
     indices.reserve(tiles.size() * 6);
@@ -259,12 +299,12 @@ void TileMap::loadGraphics() noexcept
     {// Background tile plane
         BufferData data;
         data.tileLayer = static_cast<const void*>(&layers.front());
-        createBufferData(data);
+        createBufferData(static_cast<void*>(&data));
 
         std::span<const float> vertices = data.vertices;
         std::span<const uint32_t> indices = data.indices;
-        glNamedBufferStorage(m_background.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), 0);
-        glNamedBufferStorage(m_background.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), 0);
+        glNamedBufferStorage(m_background.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+        glNamedBufferStorage(m_background.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
         m_background.indexCount = indices.size(); 
     }
 
@@ -272,12 +312,12 @@ void TileMap::loadGraphics() noexcept
     {
         BufferData data;
         data.tileLayer = static_cast<const void*>(&layers.back());
-        createBufferData(data);
+        createBufferData(static_cast<void*>(&data));
 
         std::span<const float> vertices = data.vertices;
         std::span<const uint32_t> indices = data.indices;
-        glNamedBufferStorage(m_foreground.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), 0);
-        glNamedBufferStorage(m_foreground.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), 0);
+        glNamedBufferStorage(m_foreground.VBO, static_cast<GLsizeiptr>(vertices.size_bytes()), vertices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+        glNamedBufferStorage(m_foreground.EBO, static_cast<GLsizeiptr>(indices.size_bytes()), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
         m_foreground.indexCount = indices.size(); 
     }
 
