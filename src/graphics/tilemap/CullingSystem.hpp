@@ -18,10 +18,9 @@ public:
     CullingSystem(const class TmxLoader& loader) noexcept;
     virtual ~CullingSystem();
 
-protected:
-    void updateCulling(const ivec4s& viewport) noexcept;
+    RenderData updateCulling(const ivec4s& viewport) noexcept;
 
-    RenderData getRenderData() const noexcept;
+    bool isMapLarge() const noexcept;
 
 private:
     const class TmxLoader* m_loader;
@@ -31,4 +30,6 @@ private:
 
     std::array<int32_t, 64>     m_counts;
     std::array<const void*, 64> m_offsets;
+
+    bool m_isLarge{false};
 };

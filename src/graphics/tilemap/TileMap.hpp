@@ -6,7 +6,7 @@
 #include "graphics/transform/Transform2D.hpp"
 
 
-class TileMap : public Transform2D, public CullingSystem
+class TileMap : public Transform2D
 {
 public:
     TileMap(const class TmxLoader& loader, class GlResourceManager& resources) noexcept;
@@ -25,6 +25,7 @@ private:
 
     const class TmxLoader*   m_loader;
     class GlResourceManager* m_glResources;
+    CullingSystem            m_culling;
 
     struct TilePlane
     {

@@ -12,19 +12,21 @@ CullingSystem::CullingSystem(const TmxLoader& loader) noexcept : m_loader(&loade
 CullingSystem::~CullingSystem() = default;
 
 
-void CullingSystem::updateCulling(const ivec4s& viewport) noexcept
+CullingSystem::RenderData CullingSystem::updateCulling(const ivec4s& viewport) noexcept
 {
     auto are_viewports_equal = [](ivec4s a, ivec4s b) -> bool
     { return (a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w); };
 
     if (are_viewports_equal(m_viewport, viewport))
-        return;
+        return {m_counts.data(), m_offsets.data(), m_lines};
 
     m_viewport = viewport;
 
     const auto mapSize         = m_loader->getMapSize();
     const auto tileSize        = m_loader->getTileSize();
     const auto mapSizeInPixels = glms_ivec2_mul(mapSize, tileSize);
+
+    m_isLarge = (mapSizeInPixels.x < (viewport.z + tileSize.x) || mapSizeInPixels.y < (viewport.w + tileSize.y));
 
     uint32_t left   = (viewport.x < 1) ? 0 : viewport.x;
     uint32_t top    = (viewport.y < 1) ? 0 : viewport.y;
@@ -41,17 +43,19 @@ void CullingSystem::updateCulling(const ivec4s& viewport) noexcept
     const uint32_t y = top / tileSize.y;
 
     const uint32_t tile  = x + y * mapSize.x;
-    m_lines              = (height - top) / tileSize.y;
-    const int32_t length = (width - left) / tileSize.x;
+    m_lines              = (height - top) / tileSize.y; // Number of tiles to draw along the width
+    const int32_t length = (width - left) / tileSize.x; // Number of tiles to draw along the height
 
     m_counts.fill(length * 6);
 
     for (int32_t i = 0; i < m_lines; ++i)
         m_offsets[i] = (const void*)((tile + i * mapSize.x) * 6 * sizeof(uint32_t));
+
+    return {m_counts.data(), m_offsets.data(), m_lines};
 }
 
 
-CullingSystem::RenderData CullingSystem::getRenderData() const noexcept
+bool CullingSystem::isMapLarge() const noexcept
 {
-    return {m_counts.data(), m_offsets.data(), m_lines};
+    return m_isLarge;
 }

@@ -23,9 +23,9 @@ struct BufferData
 
 TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept :
     Transform2D(),
-    CullingSystem(loader),
     m_loader(&loader),
     m_glResources(&resources),
+    m_culling(loader),
     m_background{},
     m_foreground{},
     m_isLoaded(false)
@@ -64,13 +64,8 @@ void TileMap::draw(const ivec4s& viewport) noexcept
 
     glBindVertexArray(m_background.VAO);
 
-    updateCulling(viewport);
-    const auto renderData = getRenderData();
-
-    const auto mapSize         = m_loader->getMapSize();
-    const auto tileSize        = m_loader->getTileSize();
-    const auto mapSizeInPixels = glms_ivec2_mul(mapSize, tileSize);
-    const bool isLarge = (mapSizeInPixels.x < (viewport.z + tileSize.x) || mapSizeInPixels.y < (viewport.w + tileSize.y));
+    const auto renderData = m_culling.updateCulling(viewport);
+    const bool isLarge    = m_culling.isMapLarge();
 
     if (isLarge)
     {
