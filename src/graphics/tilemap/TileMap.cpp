@@ -65,11 +65,11 @@ void TileMap::draw(const ivec4s& viewport) noexcept
 
     if (isLarge)
     {
-        glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
+        glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
     }
     else
     {
-        glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
+        glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
     }
 
     if (m_foreground.VAO)
@@ -78,11 +78,11 @@ void TileMap::draw(const ivec4s& viewport) noexcept
 
         if (isLarge)
         {
-            glDrawElements(GL_TRIANGLES, m_foreground.indexCount, GL_UNSIGNED_INT, nullptr);
+            glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
         }
         else
         {
-            glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
+            glDrawElements(GL_TRIANGLES, m_foreground.indexCount, GL_UNSIGNED_INT, nullptr);
         }
     }
 
