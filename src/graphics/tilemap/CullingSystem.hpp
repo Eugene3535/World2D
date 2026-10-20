@@ -5,7 +5,7 @@
 #include <cglm/struct/ivec2.h>
 
 
-class CullingSystem
+class CullingSystem final
 {
 public:
     struct RenderData
@@ -16,7 +16,7 @@ public:
     };
 
     CullingSystem(const class TmxLoader& loader) noexcept;
-    virtual ~CullingSystem();
+    ~CullingSystem();
 
     RenderData updateCulling(const ivec4s& viewport) noexcept;
 
