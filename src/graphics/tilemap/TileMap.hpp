@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "graphics/tilemap/CullingSystem.hpp"
+#include "graphics/tilemap/culling/CullingSystem.hpp"
 #include "graphics/transform/Transform2D.hpp"
 
 
@@ -23,8 +23,8 @@ private:
     void loadGraphics() noexcept;
     void cleanup() noexcept;
 
-    const class TmxLoader*   m_loader;
-    class GlResourceManager* m_glResources;
+    const class TmxLoader*   m_loader{nullptr};
+    class GlResourceManager* m_glResources{nullptr};
     CullingSystem            m_culling;
 
     struct TilePlane
@@ -36,7 +36,7 @@ private:
         uint32_t indexCount;
     };
 
-    TilePlane m_background;
-    TilePlane m_foreground;
-    bool      m_isLoaded;
+    TilePlane m_background{};
+    TilePlane m_foreground{};
+    bool      m_isLoaded{false};
 };

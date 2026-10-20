@@ -18,8 +18,10 @@ public:
     CullingSystem(const class TmxLoader& loader) noexcept;
     ~CullingSystem();
 
+    [[nodiscard]]
     RenderData updateCulling(const ivec4s& viewport) noexcept;
 
+    [[nodiscard]]
     bool isMapLarge() const noexcept;
 
 private:

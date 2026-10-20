@@ -17,7 +17,7 @@ struct BufferData
 {
     std::vector<float>    vertices;
     std::vector<uint32_t> indices;
-    const void*           tileLayer;
+    const void*           tileLayer{nullptr};
 };
 
 
@@ -25,10 +25,7 @@ TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept
     Transform2D(),
     m_loader(&loader),
     m_glResources(&resources),
-    m_culling(loader),
-    m_background{},
-    m_foreground{},
-    m_isLoaded(false)
+    m_culling(loader)
 {
 }
 
@@ -47,7 +44,6 @@ bool TileMap::create() noexcept
         return false;
 
     loadGraphics();
-
 
     return true;
 }
