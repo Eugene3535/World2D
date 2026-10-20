@@ -33,18 +33,18 @@ CullingSystem::RenderData CullingSystem::updateCulling(const ivec4s& viewport) n
     uint32_t width  = left + viewport.z + (tileSize.x << 1);
     uint32_t height = top + viewport.w + (tileSize.y << 1);
 
-    if (width >= mapSizeInPixels.x)
+    if (width > mapSizeInPixels.x)
         width = mapSizeInPixels.x;
 
-    if (height >= mapSizeInPixels.y)
+    if (height > mapSizeInPixels.y)
         height = mapSizeInPixels.y;
 
     const uint32_t x = left / tileSize.x;
     const uint32_t y = top / tileSize.y;
 
     const uint32_t tile  = x + y * mapSize.x;
-    m_lines              = (height - top) / tileSize.y; // Number of tiles to draw along the width
-    const int32_t length = (width - left) / tileSize.x; // Number of tiles to draw along the height
+    m_lines              = (height - top) / tileSize.y + 1; // Number of tiles to draw along the width
+    const int32_t length = (width - left) / tileSize.x + 1; // Number of tiles to draw along the height
 
     m_counts.fill(length * 6);
 

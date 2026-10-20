@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.31.10 FATAL_ERROR)
 
-project(Platformer2D LANGUAGES C CXX)
+project(World2D LANGUAGES C CXX)
 
 set(BUILD_SHARED_LIBS ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

@@ -25,7 +25,7 @@ void MainLoop::operator()(Game& game) noexcept
 {
     TmxLoader loader;
 
-    if (!loader.loadFromFile("Level-1.tmx"))
+    if (!loader.loadFromFile("World-1.tmx"))
         return;
 
     TileMap tilemap(loader, game.glResources);
@@ -46,6 +46,10 @@ void MainLoop::operator()(Game& game) noexcept
     const auto* view       = game.windowData.view;
     const auto& projection = view->getProjectionMatrix();
 
+    const auto mapSize         = loader.getMapSize();
+    const auto tileSize        = loader.getTileSize();
+    const auto mapSizeInPixels = glms_ivec2_mul(mapSize, tileSize);
+
     while (m_window.isOpen())
     {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -56,23 +60,30 @@ void MainLoop::operator()(Game& game) noexcept
         const float deltaTime    = currentFrame - lastFrame;
         lastFrame                = currentFrame;
 
-
         if (m_window.isKeyPressed(GLFW_KEY_W))
         {
-            startPosition.y -= 600 * deltaTime;
+            startPosition.y -= 6000 * deltaTime;
         }
         else if (m_window.isKeyPressed(GLFW_KEY_S))
         {
-            startPosition.y += 600 * deltaTime;
+            startPosition.y += 6000 * deltaTime;
         }
         else if (m_window.isKeyPressed(GLFW_KEY_D))
         {
-            startPosition.x += 600 * deltaTime;
+            startPosition.x += 6000 * deltaTime;
         }
         else if (m_window.isKeyPressed(GLFW_KEY_A))
         {
-            startPosition.x -= 600 * deltaTime;
+            startPosition.x -= 6000 * deltaTime;
         }
+
+        const ivec2s windowSize = m_window.getSize();
+        if (startPosition.x < 1) startPosition.x = 0;
+        if (startPosition.y < 1) startPosition.y = 0;
+        if ((startPosition.x + windowSize.x) > mapSizeInPixels.x) startPosition.x = mapSizeInPixels.x - windowSize.x;
+        if ((startPosition.y + windowSize.y) > mapSizeInPixels.y) startPosition.y = mapSizeInPixels.y - windowSize.y;
+
+        const ivec4s viewport   = {startPosition.x, startPosition.y, windowSize.x, windowSize.y};
 
         if ((finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y))
         {
@@ -85,9 +96,6 @@ void MainLoop::operator()(Game& game) noexcept
         }
 
         finishPosition = startPosition;
-
-        const ivec2s windowSize = m_window.getSize();
-        const ivec4s viewport   = {startPosition.x, startPosition.y, windowSize.x, windowSize.y};
 
         tilemap.draw(viewport);
 
