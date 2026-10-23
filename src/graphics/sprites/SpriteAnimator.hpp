@@ -19,15 +19,15 @@ struct Sprite2D
 };
 
 
-class SpriteManager final
+class SpriteAnimator final
 {
 public:
-    SpriteManager() noexcept;
-    SpriteManager(const SpriteManager&) noexcept            = delete;
-    SpriteManager(SpriteManager&&) noexcept                 = delete;
-    SpriteManager& operator=(const SpriteManager&) noexcept = delete;
-    SpriteManager& operator=(SpriteManager&&) noexcept      = delete;
-    ~SpriteManager();
+    SpriteAnimator() noexcept;
+    SpriteAnimator(const SpriteAnimator&) noexcept            = delete;
+    SpriteAnimator(SpriteAnimator&&) noexcept                 = delete;
+    SpriteAnimator& operator=(const SpriteAnimator&) noexcept = delete;
+    SpriteAnimator& operator=(SpriteAnimator&&) noexcept      = delete;
+    ~SpriteAnimator();
 
     void createSprite(const std::string& name, uint32_t texture) noexcept;
     void createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept;
@@ -51,4 +51,5 @@ private:
 
     std::vector<Sprite2D> m_sprites;
     std::vector<float>    m_vertices;
+    bool                  m_isLocked{false};
 };

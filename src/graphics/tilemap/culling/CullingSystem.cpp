@@ -26,7 +26,8 @@ CullingSystem::RenderData CullingSystem::updateCulling(const ivec4s& viewport) n
     const auto tileSize        = m_loader->getTileSize();
     const auto mapSizeInPixels = glms_ivec2_mul(mapSize, tileSize);
 
-    m_isLarge = (mapSizeInPixels.x > (viewport.z + (viewport.z >> 1)) || mapSizeInPixels.y > (viewport.w + (viewport.w >> 1)));
+    m_isLarge = (mapSizeInPixels.x > (viewport.z + (viewport.z >> 1)) ||
+                 mapSizeInPixels.y > (viewport.w + (viewport.w >> 1)));
 
     uint32_t left   = (viewport.x < 1) ? 0 : viewport.x;
     uint32_t top    = (viewport.y < 1) ? 0 : viewport.y;

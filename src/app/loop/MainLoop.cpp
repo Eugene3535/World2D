@@ -78,12 +78,16 @@ void MainLoop::operator()(Game& game) noexcept
         }
 
         const ivec2s windowSize = m_window.getSize();
-        if (startPosition.x < 1) startPosition.x = 0;
-        if (startPosition.y < 1) startPosition.y = 0;
-        if ((startPosition.x + windowSize.x) > mapSizeInPixels.x) startPosition.x = mapSizeInPixels.x - windowSize.x;
-        if ((startPosition.y + windowSize.y) > mapSizeInPixels.y) startPosition.y = mapSizeInPixels.y - windowSize.y;
+        if (startPosition.x < 1)
+            startPosition.x = 0;
+        if (startPosition.y < 1)
+            startPosition.y = 0;
+        if ((startPosition.x + windowSize.x) > mapSizeInPixels.x)
+            startPosition.x = mapSizeInPixels.x - windowSize.x;
+        if ((startPosition.y + windowSize.y) > mapSizeInPixels.y)
+            startPosition.y = mapSizeInPixels.y - windowSize.y;
 
-        const ivec4s viewport   = {startPosition.x, startPosition.y, windowSize.x, windowSize.y};
+        const ivec4s viewport = {startPosition.x, startPosition.y, windowSize.x, windowSize.y};
 
         if ((finishPosition.x != startPosition.x) || (finishPosition.y != startPosition.y))
         {

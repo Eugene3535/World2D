@@ -3,15 +3,18 @@
 #include "RapidXML/rapidxml_utils.hpp"
 #include <glad/glad.h>
 
-#include "graphics/sprites/SpriteManager.hpp"
+#include "graphics/sprites/SpriteAnimator.hpp"
 
 
-SpriteManager::SpriteManager() noexcept = default;
-SpriteManager::~SpriteManager()         = default;
+SpriteAnimator::SpriteAnimator() noexcept = default;
+SpriteAnimator::~SpriteAnimator()         = default;
 
 
-void SpriteManager::createSprite(const std::string& name, uint32_t texture) noexcept
+void SpriteAnimator::createSprite(const std::string& name, uint32_t texture) noexcept
 {
+    if (m_isLocked)
+        return;
+
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
         GLint width;
@@ -25,8 +28,11 @@ void SpriteManager::createSprite(const std::string& name, uint32_t texture) noex
 }
 
 
-void SpriteManager::createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept
+void SpriteAnimator::createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept
 {
+    if (m_isLocked)
+        return;
+
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
         const GLuint id = m_sprites.size();
@@ -43,8 +49,11 @@ void SpriteManager::createSprite(const std::string& name, uint32_t texture, cons
 }
 
 
-void SpriteManager::createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept
+void SpriteAnimator::createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept
 {
+    if (m_isLocked)
+        return;
+
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
         const GLuint id = m_sprites.size();
@@ -68,8 +77,11 @@ void SpriteManager::createLinearAnimaton(const std::string& name, uint32_t textu
 }
 
 
-void SpriteManager::createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept
+void SpriteAnimator::createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept
 {
+    if (m_isLocked)
+        return;
+
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
         const GLuint id       = m_sprites.size();
@@ -98,8 +110,11 @@ void SpriteManager::createGridAnimaton(const std::string& name, uint32_t texture
 }
 
 
-void SpriteManager::createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept
+void SpriteAnimator::createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept
 {
+    if (m_isLocked)
+        return;
+
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
         const GLuint id = m_sprites.size();
@@ -117,8 +132,11 @@ void SpriteManager::createCustomAnimaton(const std::string& name, uint32_t textu
 }
 
 
-void SpriteManager::loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept
+void SpriteAnimator::loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept
 {
+    if (m_isLocked)
+        return;
+
     auto                 document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filePath.string().c_str());
     document->parse<0>(xmlFile.data());
@@ -132,17 +150,9 @@ void SpriteManager::loadSpriteSheet(const std::filesystem::path& filePath, uint3
     const ivec2s size  = {width, height};
     const vec2s  ratio = {1.f / size.x, 1.f / size.y};
 
-    for (auto animNode = spriteNode->first_node("animation"); animNode != nullptr;
-         animNode      = animNode->next_sibling(
-             "a"
-                  "n"
-                  "i"
-                  "m"
-                  "a"
-                  "t"
-                  "i"
-                  "o"
-                  "n"))
+    auto animNode = spriteNode->first_node("animation");
+
+    while (animNode)
     {
         const std::string title = animNode->first_attribute("title")->value();
         const GLuint      id    = m_sprites.size();
@@ -178,11 +188,13 @@ void SpriteManager::loadSpriteSheet(const std::filesystem::path& filePath, uint3
             for (const auto& frame : frames)
                 addSprite(texture, frame, ratio);
         }
+
+        animNode = animNode->next_sibling("animation");
     }
 }
 
 
-std::optional<Sprite2D> SpriteManager::getSprite(const std::string& name) const noexcept
+std::optional<Sprite2D> SpriteAnimator::getSprite(const std::string& name) const noexcept
 {
     if (auto it = m_animations.find(name); it != m_animations.end())
     {
@@ -196,7 +208,7 @@ std::optional<Sprite2D> SpriteManager::getSprite(const std::string& name) const 
 }
 
 
-std::span<const Sprite2D> SpriteManager::getAnimation(const std::string& name) const noexcept
+std::span<const Sprite2D> SpriteAnimator::getAnimation(const std::string& name) const noexcept
 {
     if (auto it = m_animations.find(name); it != m_animations.end())
     {
@@ -210,7 +222,7 @@ std::span<const Sprite2D> SpriteManager::getAnimation(const std::string& name) c
 }
 
 
-void SpriteManager::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
+void SpriteAnimator::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
 {
     if (m_vertices.empty())
         return;
@@ -221,10 +233,11 @@ void SpriteManager::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
                          0);
 
     std::vector<float>().swap(m_vertices);
+    m_isLocked = true;
 }
 
 
-void SpriteManager::addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept
+void SpriteAnimator::addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept
 {
     auto& sprite   = m_sprites.emplace_back();
     sprite.frame   = m_vertices.size() >> 2;

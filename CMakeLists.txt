@@ -31,14 +31,12 @@ if(WIN32)
 		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/glfw3")
 		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/glad")
 		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/cglm")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/magic_enum")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/spdlog")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/entt")
 	elseif(MINGW)
 		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/glfw3")
 		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/glad")
 		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/cglm")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/magic_enum")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/spdlog")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/entt")
 	endif()
 endif()
 
@@ -49,6 +47,7 @@ endif()
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(cglm CONFIG REQUIRED)
+find_package(entt CONFIG REQUIRED)
 
 file(GLOB_RECURSE GAME_SRC_FILES CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
@@ -59,8 +58,6 @@ file(GLOB SHADER_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.vert
 	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.frag
 	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.geom
-	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.comp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.tess
 )
 
 add_executable(${PROJECT_NAME} ${GAME_SRC_FILES})
@@ -78,6 +75,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	glfw
 	glad::glad
 	cglm::cglm
+	EnTT::EnTT
 )
 
 if(MSVC)
