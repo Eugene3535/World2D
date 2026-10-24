@@ -7,12 +7,12 @@ extern "C"
 }
 #endif
 
-#include "app/Game.hpp"
-#include "app/context/Context.hpp"
-#include "app/loop/MainLoop.hpp"
-#include "app/window/MainWindow.hpp"
-#include "app/window/WindowData.hpp"
 #include "files/FileProvider.hpp"
+#include "game/Game.hpp"
+#include "game/context/Context.hpp"
+#include "game/loop/MainLoop.hpp"
+#include "game/window/MainWindow.hpp"
+#include "game/window/WindowData.hpp"
 
 
 int main(int argc, char* argv[])

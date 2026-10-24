@@ -19,8 +19,8 @@ public:
 
 private:
     mat4s    m_projection;
-    uint32_t m_uniformBuffer;
+    uint32_t m_uniformBuffer = 0;
 
-    ivec2s m_size;
-    bool   m_flipVertically;
+    ivec2s m_size{0, 0};
+    bool   m_flipVertically{true};
 };

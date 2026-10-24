@@ -28,7 +28,7 @@ private:
     void initializeDebug() noexcept;
     void initCallbacks() noexcept;
 
-    struct WindowData&          m_windowData;
+    struct WindowData*          m_windowData;
     struct GLFWwindow*          m_glfwWindow;
     std::unique_ptr<class View> m_view;
 };

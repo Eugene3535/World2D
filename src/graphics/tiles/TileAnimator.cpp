@@ -98,7 +98,7 @@ void TileAnimator::createGridAnimaton(uint32_t id, const TileAnimator::Tile& til
     std::vector<float> vertices(static_cast<size_t>(columns * rows * TILE_FLOAT_COUNT));
     const vec2s        ratio = {1.f / m_textureSize.x, 1.f / m_textureSize.y};
 
-    auto culculate_tile_bounds = [&vertices, &tile, ratio](int row, int column) -> void
+    auto culculate_tile_bounds = [&vertices, &tile, ratio](uint32_t row, uint32_t column) -> void
     {
         auto* quad = vertices.data() + row * column * TILE_FLOAT_COUNT;
 
@@ -134,9 +134,9 @@ void TileAnimator::createGridAnimaton(uint32_t id, const TileAnimator::Tile& til
         quad[15] = bottom;
     };
 
-    for (int y = 0; y < rows; ++y)
+    for (uint32_t y = 0; y < rows; ++y)
     {
-        for (int x = 0; x < columns; ++x)
+        for (uint32_t x = 0; x < columns; ++x)
         {
             culculate_tile_bounds(y, x);
         }

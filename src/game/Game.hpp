@@ -1,6 +1,6 @@
 #pragma once
 
-#include "app/window/WindowData.hpp"
+#include "game/window/WindowData.hpp"
 #include "graphics/resources/GlResourceManager.hpp"
 
 

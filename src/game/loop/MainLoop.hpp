@@ -1,6 +1,6 @@
 #pragma once
 
-class MainLoop
+class MainLoop final
 {
 public:
     explicit MainLoop(class MainWindow& window) noexcept;

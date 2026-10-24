@@ -5,7 +5,7 @@
 #include "graphics/camera/View.hpp"
 
 
-View::View() noexcept : m_projection(glms_mat4_identity()), m_uniformBuffer(0), m_flipVertically(true)
+View::View() noexcept : m_projection(glms_mat4_identity())
 {
 }
 
@@ -35,6 +35,8 @@ void View::resize(int32_t width, int32_t height) noexcept
     m_projection = m_flipVertically
                        ? glms_ortho(0.f, static_cast<float>(width), static_cast<float>(height), 0.f, -1.f, 1.f)
                        : glms_ortho(0.f, static_cast<float>(width), 0.f, static_cast<float>(height), -1.f, 1.f);
+
+    m_size = {width, height};
 }
 
 

@@ -3,7 +3,7 @@
 #include <cglm/struct/vec2.h>
 
 
-struct WindowData
+struct WindowData final
 {
     vec2s cursor;
 
@@ -22,5 +22,7 @@ struct WindowData
         int mods;
     } keyboard;
 
-    const class View* view;
+    const class View* view = nullptr;
+
+    ivec2s locationSize;
 };

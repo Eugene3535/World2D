@@ -2,12 +2,12 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-#include "app/window/MainWindow.hpp"
-#include "app/window/WindowData.hpp"
+#include "game/window/MainWindow.hpp"
+#include "game/window/WindowData.hpp"
 #include "graphics/camera/View.hpp"
 
 
-MainWindow::MainWindow(struct WindowData& data) noexcept : m_windowData(data), m_glfwWindow(nullptr)
+MainWindow::MainWindow(struct WindowData& data) noexcept : m_windowData(&data), m_glfwWindow(nullptr)
 {
 }
 
@@ -32,7 +32,7 @@ bool MainWindow::open(const char* title, int width, int height) noexcept
 
     m_view = std::make_unique<View>();
     m_view->create(width, height);
-    m_windowData.view = m_view.get();
+    m_windowData->view = m_view.get();
 
     initCallbacks();
 
@@ -216,8 +216,8 @@ void MainWindow::initCallbacks() noexcept
                              {
                                  if (auto wnd = static_cast<MainWindow*>(glfwGetWindowUserPointer(window)))
                                  {
-                                     auto& data  = wnd->m_windowData;
-                                     data.cursor = {static_cast<float>(xpos), static_cast<float>(ypos)};
+                                     auto data    = wnd->m_windowData;
+                                     data->cursor = {static_cast<float>(xpos), static_cast<float>(ypos)};
                                  }
                              });
 
@@ -226,10 +226,10 @@ void MainWindow::initCallbacks() noexcept
                                {
                                    if (auto wnd = static_cast<MainWindow*>(glfwGetWindowUserPointer(window)))
                                    {
-                                       auto& data        = wnd->m_windowData;
-                                       data.mouse.button = button;
-                                       data.mouse.action = action;
-                                       data.mouse.mods   = mods;
+                                       auto data          = wnd->m_windowData;
+                                       data->mouse.button = button;
+                                       data->mouse.action = action;
+                                       data->mouse.mods   = mods;
                                    }
                                });
 
@@ -241,11 +241,11 @@ void MainWindow::initCallbacks() noexcept
 
                            if (auto wnd = static_cast<MainWindow*>(glfwGetWindowUserPointer(window)))
                            {
-                               auto& data             = wnd->m_windowData;
-                               data.keyboard.key      = key;
-                               data.keyboard.scancode = scancode;
-                               data.keyboard.action   = action;
-                               data.keyboard.mods     = mods;
+                               auto data               = wnd->m_windowData;
+                               data->keyboard.key      = key;
+                               data->keyboard.scancode = scancode;
+                               data->keyboard.action   = action;
+                               data->keyboard.mods     = mods;
                            }
                        });
 }

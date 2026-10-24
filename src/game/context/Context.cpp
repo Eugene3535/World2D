@@ -8,10 +8,10 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include "app/Game.hpp"
-#include "app/context/Context.hpp"
 #include "files/FileProvider.hpp"
 #include "files/Shader.hpp"
+#include "game/Game.hpp"
+#include "game/context/Context.hpp"
 
 
 static GLuint create_program(std::span<const GLuint> shaders) noexcept
