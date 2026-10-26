@@ -62,7 +62,8 @@ void MainLoop::operator()(Game& game) noexcept
         const vec2s  position   = tilemap.getPosition();
         const ivec4s viewport   = {-(int)position.x, -(int)position.y, windowSize.x, windowSize.y};
 
-        tilemap.draw(viewport);
+        tilemap.drawBackground(viewport);
+        tilemap.drawForeground(viewport);
         m_window.display();
     }
 }

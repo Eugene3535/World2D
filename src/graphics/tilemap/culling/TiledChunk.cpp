@@ -1,18 +1,18 @@
-#include "graphics/tilemap/culling/CullingSystem.hpp"
+#include "graphics/tilemap/culling/TiledChunk.hpp"
 #include "files/TmxLoader.hpp"
 
 
-CullingSystem::CullingSystem(const TmxLoader& loader) noexcept : m_loader(&loader), m_viewport({0, 0, 0, 0}), m_lines(0)
+TiledChunk::TiledChunk(const TmxLoader& loader) noexcept : m_loader(&loader), m_viewport({0, 0, 0, 0}), m_lines(0)
 {
     m_counts.fill(0);
     m_offsets.fill(nullptr);
 }
 
 
-CullingSystem::~CullingSystem() = default;
+TiledChunk::~TiledChunk() = default;
 
 
-CullingSystem::RenderData CullingSystem::updateCulling(const ivec4s& viewport) noexcept
+TiledChunk::RenderArea TiledChunk::updateCulling(const ivec4s& viewport) noexcept
 {
     auto are_viewports_equal = [](ivec4s a, ivec4s b) -> bool
     { return (a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w); };
@@ -56,7 +56,7 @@ CullingSystem::RenderData CullingSystem::updateCulling(const ivec4s& viewport) n
 }
 
 
-bool CullingSystem::isMapLarge() const noexcept
+bool TiledChunk::isMapLarge() const noexcept
 {
     return m_isLarge;
 }

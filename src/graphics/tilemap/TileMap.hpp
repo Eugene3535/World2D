@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "graphics/tilemap/culling/CullingSystem.hpp"
+#include "graphics/tilemap/culling/TiledChunk.hpp"
 #include "graphics/transform/Transform2D.hpp"
 
 
@@ -13,20 +13,12 @@ public:
     ~TileMap();
 
     bool create() noexcept;
-    void draw(const ivec4s& viewport) noexcept;
+    void drawBackground(const ivec4s& viewport) noexcept;
+    void drawForeground(const ivec4s& viewport) noexcept;
 
     const class TmxLoader& getLoader() const noexcept;
 
 private:
-    bool loadTextures() noexcept;
-    void createBufferData(void* bufferData) noexcept;
-    void loadGraphics() noexcept;
-    void cleanup() noexcept;
-
-    const class TmxLoader*   m_loader{nullptr};
-    class GlResourceManager* m_glResources{nullptr};
-    CullingSystem            m_culling;
-
     struct TilePlane
     {
         uint32_t texture;
@@ -35,6 +27,16 @@ private:
         uint32_t EBO; // Element Buffer Object
         uint32_t indexCount;
     };
+
+    bool loadTextures() noexcept;
+    void createBufferData(void* bufferData) noexcept;
+    void loadGraphics() noexcept;
+    void cleanup() noexcept;
+    void draw(const TilePlane& plane, const ivec4s& viewport) noexcept;
+
+    const class TmxLoader*   m_loader{nullptr};
+    class GlResourceManager* m_glResources{nullptr};
+    TiledChunk               m_chunk;
 
     TilePlane m_background{};
     TilePlane m_foreground{};

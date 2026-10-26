@@ -5,21 +5,21 @@
 #include <cglm/struct/ivec2.h>
 
 
-class CullingSystem final
+class TiledChunk final
 {
 public:
-    struct RenderData
+    struct RenderArea
     {
         const int32_t*     counts;
         const void* const* indices;
         int32_t            drawcount;
     };
 
-    CullingSystem(const class TmxLoader& loader) noexcept;
-    ~CullingSystem();
+    TiledChunk(const class TmxLoader& loader) noexcept;
+    ~TiledChunk();
 
     [[nodiscard]]
-    RenderData updateCulling(const ivec4s& viewport) noexcept;
+    RenderArea updateCulling(const ivec4s& viewport) noexcept;
 
     [[nodiscard]]
     bool isMapLarge() const noexcept;

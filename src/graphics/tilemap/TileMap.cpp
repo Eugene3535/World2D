@@ -25,7 +25,7 @@ TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept
     Transform2D(),
     m_loader(&loader),
     m_glResources(&resources),
-    m_culling(loader)
+    m_chunk(loader)
 {
 }
 
@@ -49,48 +49,21 @@ bool TileMap::create() noexcept
 }
 
 
-void TileMap::draw(const ivec4s& viewport) noexcept
+void TileMap::drawBackground(const ivec4s& viewport) noexcept
 {
-    const bool existsSecondSampler = ((m_foreground.texture != 0) && (m_foreground.texture != m_background.texture));
+    draw(m_background, viewport);
+}
 
-    glBindTextureUnit(0, m_background.texture);
 
-    if (existsSecondSampler)
-        glBindTextureUnit(1, m_foreground.texture);
+void TileMap::drawForeground(const ivec4s& viewport) noexcept
+{
+    draw(m_foreground, viewport);
+}
 
-    glBindVertexArray(m_background.VAO);
 
-    const auto renderData = m_culling.updateCulling(viewport);
-    const bool isLarge    = m_culling.isMapLarge();
-
-    if (isLarge)
-    {
-        glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
-    }
-    else
-    {
-        glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
-    }
-
-    if (m_foreground.VAO)
-    {
-        glBindVertexArray(m_foreground.VAO);
-
-        if (isLarge)
-        {
-            glMultiDrawElements(GL_TRIANGLES, renderData.counts, GL_UNSIGNED_INT, renderData.indices, renderData.drawcount);
-        }
-        else
-        {
-            glDrawElements(GL_TRIANGLES, m_foreground.indexCount, GL_UNSIGNED_INT, nullptr);
-        }
-    }
-
-    glBindVertexArray(0);
-    glBindTextureUnit(0, 0);
-
-    if (existsSecondSampler)
-        glBindTextureUnit(1, 0);
+const TmxLoader& TileMap::getLoader() const noexcept
+{
+    return *m_loader;
 }
 
 
@@ -326,7 +299,26 @@ void TileMap::cleanup() noexcept
 }
 
 
-const TmxLoader& TileMap::getLoader() const noexcept
+void TileMap::draw(const TileMap::TilePlane& plane, const ivec4s& viewport) noexcept
 {
-    return *m_loader;
+    if (!plane.VAO)
+        return;
+
+    const auto renderArea = m_chunk.updateCulling(viewport);
+    const bool isLarge    = m_chunk.isMapLarge();
+
+    glBindTextureUnit(0, plane.texture);
+    glBindVertexArray(plane.VAO);
+
+    if (isLarge)
+    {
+        glMultiDrawElements(GL_TRIANGLES, renderArea.counts, GL_UNSIGNED_INT, renderArea.indices, renderArea.drawcount);
+    }
+    else
+    {
+        glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
+    }
+
+    glBindVertexArray(0);
+    glBindTextureUnit(0, 0);
 }
