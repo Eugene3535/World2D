@@ -1,0 +1,101 @@
+
+# Find MSVC installation path
+find_program(VSWHERE_EXECUTABLE
+    NAMES vswhere.exe
+    PATHS "$ENV{ProgramFiles\(x86\)}/Microsoft Visual Studio/Installer"
+    NO_DEFAULT_PATH
+)
+
+if(NOT VSWHERE_EXECUTABLE)
+    message(FATAL_ERROR "vswhere.exe not found")
+endif()
+
+execute_process(COMMAND
+    ${VSWHERE_EXECUTABLE} -latest -property installationPath
+    OUTPUT_VARIABLE MSVC_INSTALLATION_PATH
+    RESULT_VARIABLE RET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+if(NOT RET EQUAL 0 )
+  message( FATAL_ERROR "Failed to execute vswhere, error code ${RET}")
+endif()
+if(NOT MSVC_INSTALLATION_PATH)
+  message( FATAL_ERROR "output of 'vswhere -latest -property installationPath' is empty")
+endif()
+
+cmake_path(NORMAL_PATH MSVC_INSTALLATION_PATH)
+
+file(GLOB VC_TOOLS_VERSIONS 
+    RELATIVE "${MSVC_INSTALLATION_PATH}/VC/Tools/MSVC"
+    "${MSVC_INSTALLATION_PATH}/VC/Tools/MSVC/*"
+)
+
+if(NOT VC_TOOLS_VERSIONS)
+    message(FATAL_ERROR "No VC Tools versions found!")
+endif()
+
+list(FILTER VC_TOOLS_VERSIONS INCLUDE REGEX "^[0-9]+\\.[0-9]+\\.")
+list(SORT VC_TOOLS_VERSIONS COMPARE NATURAL ORDER DESCENDING)
+
+set(VCTOOLSVERSION "")
+foreach(ver ${VC_TOOLS_VERSIONS})
+    if(EXISTS "${MSVC_INSTALLATION_PATH}/VC/Tools/MSVC/${ver}/bin")
+        set(VCTOOLSVERSION "${ver}")
+        break()
+    endif()
+endforeach()
+
+if(NOT VCTOOLSVERSION)
+    message(FATAL_ERROR "No valid MSVC toolset with bin/ found in ${MSVC_INSTALLATION_PATH}/VC/Tools/MSVC")
+endif()
+
+message(STATUS "Selected toolset: ${VCTOOLSVERSION}")
+
+set(MSVC_BIN_PATH     "${MSVC_INSTALLATION_PATH}/VC/Tools/MSVC/${VCTOOLSVERSION}/bin/Hostx64/x64")
+set(MSVC_LIB_PATH     "${MSVC_INSTALLATION_PATH}/VC/Tools/MSVC/${VCTOOLSVERSION}/lib/x64")
+set(MSVC_INCLUDE_PATH "${MSVC_INSTALLATION_PATH}/VC/Tools/MSVC/${VCTOOLSVERSION}/include")
+
+set(CMAKE_C_COMPILER   "${MSVC_BIN_PATH}/cl.exe")
+set(CMAKE_CXX_COMPILER "${MSVC_BIN_PATH}/cl.exe")
+set(CMAKE_LINKER       "${MSVC_BIN_PATH}/link.exe")
+set(CMAKE_AR           "${MSVC_BIN_PATH}/lib.exe")
+
+link_directories("${MSVC_LIB_PATH}")
+include_directories(SYSTEM "${MSVC_INCLUDE_PATH}")
+
+# WinSDK
+get_filename_component(WIN_10_KITS_DIR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v10.0;InstallationFolder]" ABSOLUTE CACHE)
+
+file(GLOB WIN_KITS_VERSIONS RELATIVE "${WIN_10_KITS_DIR}/lib" "${WIN_10_KITS_DIR}/lib/*")
+list(FILTER WIN_KITS_VERSIONS INCLUDE REGEX "10\\.0\\.")
+list(SORT WIN_KITS_VERSIONS COMPARE NATURAL ORDER DESCENDING)
+list(POP_FRONT WIN_KITS_VERSIONS CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+
+set(WIN_KITS_BIN_PATH        "${WIN_10_KITS_DIR}/bin/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}"      CACHE PATH "" FORCE)
+set(WIN_KITS_INCLUDE_PATH    "${WIN_10_KITS_DIR}/include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}"  CACHE PATH "" FORCE)
+set(WIN_KITS_LIB_PATH        "${WIN_10_KITS_DIR}/lib/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}"      CACHE PATH "" FORCE)
+set(WIN_KITS_REFERENCES_PATH "${WIN_10_KITS_DIR}/References"                                           CACHE PATH "" FORCE)
+
+find_program(CMAKE_RC_COMPILER
+    NAMES rc.exe
+    PATHS "${WIN_KITS_BIN_PATH}"
+    PATH_SUFFIXES "x64"
+)
+
+set(CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE "x64")
+set(CMAKE_MT "${WIN_KITS_BIN_PATH}/${CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE}/mt.exe")
+set(CMAKE_RC_COMPILER_INIT "${CMAKE_RC_COMPILER}")
+set(CMAKE_RC_FLAGS_INIT "/nologo")
+
+set(MIDL_COMPILER "${WIN_KITS_BIN_PATH}/${CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE}/midl.exe")
+set(MDMERGE_TOOL "${WIN_KITS_BIN_PATH}/${CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE}/mdmerge.exe")
+
+include_directories(SYSTEM "${WIN_KITS_INCLUDE_PATH}/ucrt")
+include_directories(SYSTEM "${WIN_KITS_INCLUDE_PATH}/shared")
+include_directories(SYSTEM "${WIN_KITS_INCLUDE_PATH}/um")
+include_directories(SYSTEM "${WIN_KITS_INCLUDE_PATH}/winrt")
+include_directories(SYSTEM "${WIN_KITS_INCLUDE_PATH}/cppwinrt")
+link_directories("${WIN_KITS_LIB_PATH}/ucrt/${CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE}")
+link_directories("${WIN_KITS_LIB_PATH}/um/${CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE}")
+link_directories("${WIN_KITS_REFERENCES_PATH}/${CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE}")
