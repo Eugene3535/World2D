@@ -4,7 +4,10 @@
 #include "graphics/texture/Texture2D.hpp"
 
 
-Texture2D::Texture2D(uint32_t handle) noexcept : m_handle(handle), m_isSmooth(false), m_isRepeated(false)
+Texture2D::Texture2D(uint32_t handle) noexcept :
+    m_handle(handle),
+    m_isSmooth(false),
+    m_isRepeated(false)
 {
 }
 

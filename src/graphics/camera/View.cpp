@@ -5,7 +5,8 @@
 #include "graphics/camera/View.hpp"
 
 
-View::View() noexcept : m_projection(glms_mat4_identity())
+View::View() noexcept :
+    m_projection(glms_mat4_identity())
 {
 }
 

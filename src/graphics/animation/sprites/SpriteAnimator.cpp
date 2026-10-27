@@ -3,7 +3,7 @@
 #include "RapidXML/rapidxml_utils.hpp"
 #include <glad/glad.h>
 
-#include "graphics/sprites/SpriteAnimator.hpp"
+#include "graphics/animation/sprites/SpriteAnimator.hpp"
 
 
 SpriteAnimator::SpriteAnimator() noexcept = default;

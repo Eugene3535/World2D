@@ -6,12 +6,16 @@
 #include "files/Shader.hpp"
 
 
-Shader::Shader() noexcept : m_handle(0), m_type(GL_VERTEX_SHADER)
+Shader::Shader() noexcept :
+    m_handle(0),
+    m_type(GL_VERTEX_SHADER)
 {
 }
 
 
-Shader::Shader(Shader&& other) noexcept : m_handle(other.m_handle), m_type(other.m_type)
+Shader::Shader(Shader&& other) noexcept :
+    m_handle(other.m_handle),
+    m_type(other.m_type)
 {
     other.m_handle = 0;
 }

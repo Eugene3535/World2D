@@ -3,14 +3,15 @@
 
 #include <glad/glad.h>
 
-#include "graphics/tiles/TileAnimator.hpp"
+#include "graphics/animation/tiles/TileAnimator.hpp"
 
 
 #define TILE_FLOAT_COUNT   16
 #define TILE_COUNT_RESERVE 256
 
 
-TileAnimator::TileAnimator(uint32_t texture) noexcept : m_texture(texture)
+TileAnimator::TileAnimator(uint32_t texture) noexcept :
+    m_texture(texture)
 {
     glGetTextureLevelParameteriv(m_texture, 0, GL_TEXTURE_WIDTH, &m_textureSize.x);
     glGetTextureLevelParameteriv(m_texture, 0, GL_TEXTURE_HEIGHT, &m_textureSize.y);

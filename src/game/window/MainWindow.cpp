@@ -7,7 +7,9 @@
 #include "graphics/camera/View.hpp"
 
 
-MainWindow::MainWindow(struct WindowData& data) noexcept : m_windowData(&data), m_glfwWindow(nullptr)
+MainWindow::MainWindow(struct WindowData& data) noexcept :
+    m_windowData(&data),
+    m_glfwWindow(nullptr)
 {
 }
 

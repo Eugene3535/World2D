@@ -11,7 +11,8 @@
 #define CAMERA_VELOCITY 600
 
 
-HeadUpDisplay::HeadUpDisplay(const WindowData& data) noexcept : m_windowData(&data)
+HeadUpDisplay::HeadUpDisplay(const WindowData& data) noexcept :
+    m_windowData(&data)
 {
 }
 

@@ -9,5 +9,5 @@ public:
     void operator()(struct Game& game) noexcept;
 
 private:
-    class MainWindow& m_window;
+    class MainWindow* m_window;
 };

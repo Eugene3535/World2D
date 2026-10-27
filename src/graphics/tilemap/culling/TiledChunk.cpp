@@ -2,7 +2,10 @@
 #include "files/TmxLoader.hpp"
 
 
-TiledChunk::TiledChunk(const TmxLoader& loader) noexcept : m_loader(&loader), m_viewport({0, 0, 0, 0}), m_lines(0)
+TiledChunk::TiledChunk(const TmxLoader& loader) noexcept :
+    m_loader(&loader),
+    m_viewport({0, 0, 0, 0}),
+    m_lines(0)
 {
     m_counts.fill(0);
     m_offsets.fill(nullptr);
