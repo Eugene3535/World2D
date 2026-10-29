@@ -7,6 +7,7 @@
 
 #include "files/Shader.hpp"
 #include "files/TmxLoader.hpp"
+#include "game/assets/AssetManager.hpp"
 #include "graphics/resources/GlResourceManager.hpp"
 #include "graphics/texture/Texture2D.hpp"
 #include "graphics/tilemap/TileMap.hpp"
@@ -82,39 +83,19 @@ bool TileMap::loadTextures() noexcept
     if (planeB == tilePlanes.end()) // At least one tile layer must exist.
         return false;
 
-    const auto textureCount = std::count_if(tilePlanes.begin(),
-                                            tilePlanes.end(),
-                                            [](const TmxLoader::Layer& plane) -> size_t
-                                            { return (plane.tileset->image.pixels != nullptr); });
+    Texture2D* background = Assets->get<Texture2D>(planeB->tileset->filename);
 
-    if (textureCount == 0)
+    if (!background)
         return false;
 
-    auto textures = m_glResources->getHandles(GlResourceManager::GLTexture2D, textureCount);
+    m_background.texture = background->getHandle();
 
-    if (textures.empty())
+    Texture2D* foreground = Assets->get<Texture2D>(planeA->tileset->filename);
+
+    if (!foreground)
         return false;
 
-    Texture2D background(textures[0]);
-
-    if (!background.loadFromImage(planeB->tileset->image))
-        return false;
-
-    if (textures.size() > 1)
-    {
-        Texture2D foreground(textures[0]);
-
-        if (!foreground.loadFromImage(planeA->tileset->image))
-            return false;
-
-        m_foreground.texture = foreground.getHandle();
-    }
-    else
-    {
-        m_foreground.texture = background.getHandle();
-    }
-
-    m_background.texture = background.getHandle();
+    m_foreground.texture = foreground->getHandle();
 
     return true;
 }
@@ -134,7 +115,7 @@ void TileMap::createBufferData(void* bufferData) noexcept
     vertices.reserve(tiles.size() * 4);
     indices.reserve(tiles.size() * 6);
 
-    const vec2s ratio = {1.f / static_cast<float>(tileset->image.width), 1.f / static_cast<float>(tileset->image.height)};
+    const vec2s ratio = {1.f / static_cast<float>(tileset->width), 1.f / static_cast<float>(tileset->height)};
 
     const auto mapSize  = m_loader->getMapSize();
     const auto tileSize = m_loader->getTileSize();

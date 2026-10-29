@@ -18,6 +18,8 @@ public:
     GlResourceManager() noexcept;
     ~GlResourceManager();
 
+    bool compilePrograms() noexcept;
+
     std::span<const uint32_t> getHandles(Resource type, uint32_t count) noexcept;
     void                      destroyHandles(Resource type, std::span<const uint32_t> handles) noexcept;
 

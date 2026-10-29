@@ -11,8 +11,6 @@ public:
 
     bool open() noexcept;
 
-    static World* getInstance() noexcept;
-
 private:
     entt::registry m_registry;
 };

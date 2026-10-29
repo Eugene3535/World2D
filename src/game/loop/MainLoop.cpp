@@ -6,6 +6,7 @@
 #include "files/FileProvider.hpp"
 #include "files/TmxLoader.hpp"
 #include "game/Game.hpp"
+#include "game/assets/AssetManager.hpp"
 #include "game/loop/MainLoop.hpp"
 #include "game/ui/HeadUpDisplay.hpp"
 #include "game/window/MainWindow.hpp"
@@ -24,6 +25,8 @@ MainLoop::~MainLoop() = default;
 
 void MainLoop::operator()(Game& game) noexcept
 {
+    AssetManager assets(game.glResources);
+
     TmxLoader loader;
 
     if (!loader.loadFromFile("World-1.tmx"))

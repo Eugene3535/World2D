@@ -25,8 +25,24 @@ bool TmxLoader::loadFromFile(const std::string& filename) noexcept
     document->parse<0>(xmlFile.data());
     const auto* mapNode = document->first_node("map");
 
-    m_layers.clear();
-    m_objects.clear();
+    if (!m_layers.empty())
+        m_layers.clear();
+
+    if (!m_objects.empty())
+        m_objects.clear();
+
+    const auto* mapW  = mapNode->first_attribute("width");
+    const auto* mapH  = mapNode->first_attribute("height");
+    const auto* tileW = mapNode->first_attribute("tilewidth");
+    const auto* tileH = mapNode->first_attribute("tileheight");
+
+    const int32_t mapWidth   = mapW ? std::atoi(mapW->value()) : 0;
+    const int32_t mapHeight  = mapH ? std::atoi(mapH->value()) : 0;
+    const int32_t tileWidth  = tileW ? std::atoi(tileW->value()) : 0;
+    const int32_t tileHeight = tileH ? std::atoi(tileH->value()) : 0;
+
+    m_mapSize  = {mapWidth, mapHeight};
+    m_tileSize = {tileWidth, tileHeight};
 
     if (!loadTilesets(static_cast<const void*>(mapNode)))
         return false;
@@ -67,12 +83,10 @@ ivec2s TmxLoader::getTileSize() const noexcept
 
 bool TmxLoader::loadTilesets(const void* rootNode) noexcept
 {
-    const auto* mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
+    const auto* mapNode     = static_cast<const rapidxml::xml_node<char>*>(rootNode);
+    auto*       tilesetNode = mapNode->first_node("tileset");
 
-    for (auto* tilesetNode = mapNode->first_node("tileset"); tilesetNode;
-         tilesetNode       = tilesetNode->next_sibling("tile"
-                                                       "se"
-                                                       "t"))
+    while (tilesetNode)
     {
         auto* imageNode = tilesetNode->first_node("image");
 
@@ -87,27 +101,25 @@ bool TmxLoader::loadTilesets(const void* rootNode) noexcept
         const auto filename = std::filesystem::path(source->value()).filename().string();
         const auto filepath = FileProvider::findPathToFile(filename);
 
-        auto alreadyExists = std::find_if(m_tilesets.begin(),
-                                          m_tilesets.end(),
-                                          [&filename](const Tileset& ts) { return ts.name == filename; });
-
-        if (alreadyExists != m_tilesets.end())
-            continue; // Already exists
+        if (!std::filesystem::exists(filepath))
+            return false;
 
         auto& tileset = m_tilesets.emplace_back();
 
-        if (!tileset.image.loadFromFile(filepath))
-            return false;
-
-        tileset.name    = filename;
-        auto* tileCount = tilesetNode->first_attribute("tilecount");
-        auto* columns   = tilesetNode->first_attribute("columns");
-        auto* firstGID  = tilesetNode->first_attribute("firstgid");
+        tileset.filename = filename;
+        auto* tileCount  = tilesetNode->first_attribute("tilecount");
+        auto* columns    = tilesetNode->first_attribute("columns");
+        auto* firstGID   = tilesetNode->first_attribute("firstgid");
 
         tileset.tileCount = tileCount ? atoi(tileCount->value()) : 0;
         tileset.columns   = columns ? atoi(columns->value()) : 0;
         tileset.rows      = (!tileCount || !columns) ? 0 : tileset.tileCount / tileset.columns;
         tileset.firstGID  = firstGID ? atoi(firstGID->value()) : 0;
+
+        tileset.width  = tileset.columns * m_tileSize.x;
+        tileset.height = tileset.rows * m_tileSize.y;
+
+        tilesetNode = tilesetNode->next_sibling("tileset");
     }
 
     return (!m_tilesets.empty());
@@ -116,22 +128,8 @@ bool TmxLoader::loadTilesets(const void* rootNode) noexcept
 
 bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
 {
-    const auto* mapNode = static_cast<const rapidxml::xml_node<char>*>(rootNode);
-
-    const auto* mapW  = mapNode->first_attribute("width");
-    const auto* mapH  = mapNode->first_attribute("height");
-    const auto* tileW = mapNode->first_attribute("tilewidth");
-    const auto* tileH = mapNode->first_attribute("tileheight");
-
-    const int32_t mapWidth   = mapW ? std::atoi(mapW->value()) : 0;
-    const int32_t mapHeight  = mapH ? std::atoi(mapH->value()) : 0;
-    const int32_t tileWidth  = tileW ? std::atoi(tileW->value()) : 0;
-    const int32_t tileHeight = tileH ? std::atoi(tileH->value()) : 0;
-
-    m_mapSize  = {mapWidth, mapHeight};
-    m_tileSize = {tileWidth, tileHeight};
-
-    auto* layerNode = mapNode->first_node("layer");
+    const auto* mapNode   = static_cast<const rapidxml::xml_node<char>*>(rootNode);
+    auto*       layerNode = mapNode->first_node("layer");
 
     while (layerNode)
     {

@@ -64,6 +64,7 @@ add_executable(${PROJECT_NAME} ${GAME_SRC_FILES})
 
 target_sources(${PROJECT_NAME} PRIVATE ${SHADER_FILES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${GAME_SRC_FILES})
+source_group("shaders" FILES ${SHADER_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
 	${PROJECT_SOURCE_DIR}/src

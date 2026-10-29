@@ -8,20 +8,19 @@
 
 #include <cglm/struct/vec2.h>
 
-#include "files/StbImage.hpp"
-
 
 class TmxLoader final
 {
 public:
     struct Tileset
     {
-        std::string name;
-        StbImage    image;
-        int32_t     columns;
-        int32_t     rows;
-        int32_t     tileCount;
-        int32_t     firstGID;
+        std::string filename;
+        uint32_t    width;
+        uint32_t    height;
+        uint32_t    columns;
+        uint32_t    rows;
+        uint32_t    tileCount;
+        uint32_t    firstGID;
     };
 
     struct Layer
