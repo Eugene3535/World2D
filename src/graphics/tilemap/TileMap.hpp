@@ -9,7 +9,7 @@
 class TileMap : public Transform2D
 {
 public:
-    TileMap(const class TmxLoader& loader, class GlResourceManager& resources) noexcept;
+    TileMap(const class TmxLoader& loader) noexcept;
     ~TileMap();
 
     bool create() noexcept;
@@ -35,7 +35,6 @@ private:
     void draw(const TilePlane& plane, const ivec4s& viewport) noexcept;
 
     const class TmxLoader*   m_loader{nullptr};
-    class GlResourceManager* m_glResources{nullptr};
     TiledChunk               m_chunk;
 
     TilePlane m_background{};

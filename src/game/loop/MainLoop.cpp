@@ -32,7 +32,7 @@ void MainLoop::operator()(Game& game) noexcept
     if (!loader.loadFromFile("World-1.tmx"))
         return;
 
-    TileMap tilemap(loader, game.glResources);
+    TileMap tilemap(loader);
 
     if (!tilemap.create())
         return;

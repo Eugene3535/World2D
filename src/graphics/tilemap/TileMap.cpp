@@ -22,10 +22,9 @@ struct BufferData
 };
 
 
-TileMap::TileMap(const TmxLoader& loader, GlResourceManager& resources) noexcept :
+TileMap::TileMap(const TmxLoader& loader) noexcept :
     Transform2D(),
     m_loader(&loader),
-    m_glResources(&resources),
     m_chunk(loader)
 {
 }
@@ -187,8 +186,10 @@ void TileMap::createBufferData(void* bufferData) noexcept
 
 void TileMap::loadGraphics() noexcept
 {
+    auto glResources = Assets->getResourceManager();
+
     const auto& layers  = m_loader->getLayers();
-    auto        buffers = m_glResources->getHandles(GlResourceManager::GLBuffer, 4);
+    auto        buffers = glResources->getHandles(GlResourceManager::GLBuffer, 4);
 
     m_background.VBO = buffers[0];
     m_background.EBO = buffers[1];
@@ -238,7 +239,7 @@ void TileMap::loadGraphics() noexcept
         m_foreground.indexCount = indices.size();
     }
 
-    auto vertexArrays = m_glResources->getHandles(GlResourceManager::GLVertexArray, 2);
+    auto vertexArrays = glResources->getHandles(GlResourceManager::GLVertexArray, 2);
 
     const std::array<VertexBufferLayout::Attribute, 1> attributes = {VertexBufferLayout::Attribute::Float4};
     VertexBufferLayout                                 layout(attributes);
@@ -264,14 +265,16 @@ void TileMap::cleanup() noexcept
     if (!m_isLoaded)
         return;
 
+    auto glResources = Assets->getResourceManager();
+
     const std::array<GLuint, 2> vertexArrays = {m_background.VAO, m_foreground.VAO};
-    m_glResources->destroyHandles(GlResourceManager::GLVertexArray, vertexArrays);
+    glResources->destroyHandles(GlResourceManager::GLVertexArray, vertexArrays);
 
     const std::array<GLuint, 4> buffers = {m_background.VBO, m_background.EBO, m_foreground.VBO, m_foreground.EBO};
-    m_glResources->destroyHandles(GlResourceManager::GLBuffer, buffers);
+    glResources->destroyHandles(GlResourceManager::GLBuffer, buffers);
 
     const std::array<GLuint, 2> textures = {m_background.texture, m_foreground.texture};
-    m_glResources->destroyHandles(GlResourceManager::GLTexture2D, textures);
+    glResources->destroyHandles(GlResourceManager::GLTexture2D, textures);
 
     memset(&m_background, 0, sizeof(m_background));
     memset(&m_foreground, 0, sizeof(m_foreground));

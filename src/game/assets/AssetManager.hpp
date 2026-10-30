@@ -25,6 +25,7 @@ public:
         return nullptr;
     }
 
+    GlResourceManager* getResourceManager() noexcept;
     static AssetManager* getInstance() noexcept;
 
 private:

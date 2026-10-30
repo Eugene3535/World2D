@@ -19,6 +19,12 @@ AssetManager::~AssetManager()
 }
 
 
+GlResourceManager* AssetManager::getResourceManager() noexcept
+{
+    return m_glResources;
+}
+
+
 AssetManager* AssetManager::getInstance() noexcept
 {
     return sInstance;
