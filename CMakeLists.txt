@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.31.10 FATAL_ERROR)
 
 project(World2D LANGUAGES C CXX)
 
-set(BUILD_SHARED_LIBS ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
@@ -26,22 +25,32 @@ else()
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 endif()
 
+if(NOT DEFINED BUILD_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build using shared libraries")
+endif()
+
+set(LIB_TYPE_FOLDER "static")
+
+if(BUILD_SHARED_LIBS)
+	set(LIB_TYPE_FOLDER "shared")
+endif()
+
 if(WIN32)
 	if(MSVC)
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/glfw3")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/glad")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/cglm")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/entt")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/${LIB_TYPE_FOLDER}/glfw3")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/${LIB_TYPE_FOLDER}/glad")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/${LIB_TYPE_FOLDER}/cglm")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/msvc/${LIB_TYPE_FOLDER}/entt")
 	elseif(MINGW)
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/glfw3")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/glad")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/cglm")
-		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/entt")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/${LIB_TYPE_FOLDER}/glfw3")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/${LIB_TYPE_FOLDER}/glad")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/${LIB_TYPE_FOLDER}/cglm")
+		list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/mingw/${LIB_TYPE_FOLDER}/entt")
 	endif()
 endif()
 
 if(LINUX)
-	list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/linux")
+	list(APPEND CMAKE_PREFIX_PATH "${EXTERNAL_SOURCE_DIR}/install/linux/${LIB_TYPE_FOLDER}")
 endif()
 
 find_package(glfw3 CONFIG REQUIRED)
@@ -102,9 +111,9 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 	VERBATIM
 )
 
-if(WIN32)
+if(WIN32 AND BUILD_SHARED_LIBS)
 	if(MSVC)
-		set(EXTERNAL_BIN_DIR "${EXTERNAL_SOURCE_DIR}/install/msvc")
+		set(EXTERNAL_BIN_DIR "${EXTERNAL_SOURCE_DIR}/install/msvc/shared")
 
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${EXTERNAL_BIN_DIR}/cglm/bin/cglm-0$<$<CONFIG:Debug>:d>.dll" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/cglm-0$<$<CONFIG:Debug>:d>.dll"
@@ -113,7 +122,7 @@ if(WIN32)
 			VERBATIM
 		)
 	elseif(MINGW)
-		set(EXTERNAL_BIN_DIR "${EXTERNAL_SOURCE_DIR}/install/mingw")
+		set(EXTERNAL_BIN_DIR "${EXTERNAL_SOURCE_DIR}/install/mingw/shared")
 
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${EXTERNAL_BIN_DIR}/cglm/bin/libcglm-0$<$<CONFIG:Debug>:d>.dll" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/libcglm-0$<$<CONFIG:Debug>:d>.dll"
