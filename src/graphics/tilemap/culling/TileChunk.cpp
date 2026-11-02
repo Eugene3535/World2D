@@ -20,7 +20,8 @@ TileChunk::RenderArea TileChunk::updateCulling(const ivec4s& viewport) noexcept
     auto are_viewports_equal = [](ivec4s a, ivec4s b) -> bool
     { return (a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w); };
 
-    if (are_viewports_equal(m_viewport, viewport)) return {m_counts.data(), m_offsets.data(), m_lines};
+    if (are_viewports_equal(m_viewport, viewport))
+        return {m_counts.data(), m_offsets.data(), m_lines};
 
     m_viewport = viewport;
 
@@ -36,9 +37,11 @@ TileChunk::RenderArea TileChunk::updateCulling(const ivec4s& viewport) noexcept
     uint32_t width  = left + viewport.z + (tileSize.x << 1);
     uint32_t height = top + viewport.w + (tileSize.y << 1);
 
-    if (width > mapSizeInPixels.x) width = mapSizeInPixels.x;
+    if (width > mapSizeInPixels.x)
+        width = mapSizeInPixels.x;
 
-    if (height > mapSizeInPixels.y) height = mapSizeInPixels.y;
+    if (height > mapSizeInPixels.y)
+        height = mapSizeInPixels.y;
 
     const uint32_t x = left / tileSize.x;
     const uint32_t y = top / tileSize.y;

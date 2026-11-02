@@ -38,7 +38,8 @@ static GLuint create_program(std::span<const GLuint> shaders) noexcept
     {
         GLuint uniformBlockIndex = glGetUniformBlockIndex(program, "Matrices");
 
-        if (uniformBlockIndex != GL_INVALID_INDEX) glUniformBlockBinding(program, uniformBlockIndex, 0);
+        if (uniformBlockIndex != GL_INVALID_INDEX)
+            glUniformBlockBinding(program, uniformBlockIndex, 0);
     }
 
     for (const auto& shader : shaders)
@@ -84,7 +85,8 @@ bool GlResourceManager::compilePrograms() noexcept
         else if (filename.ends_with(".geom"))
             target = GL_GEOMETRY_SHADER;
 
-        if (!shader.loadFromFile(FileProvider::findPathToFile(filename), target)) return false;
+        if (!shader.loadFromFile(FileProvider::findPathToFile(filename), target))
+            return false;
     }
 
 
@@ -93,7 +95,8 @@ bool GlResourceManager::compilePrograms() noexcept
         shaders[0] = shaderMap["sprite.vert"].getHandle();
         shaders[1] = shaderMap["sprite.frag"].getHandle();
 
-        if (const GLuint program = create_program(shaders)) m_shaderPrograms.emplace("sprite", program);
+        if (const GLuint program = create_program(shaders))
+            m_shaderPrograms.emplace("sprite", program);
     }
 
     return true;
@@ -192,7 +195,8 @@ void GlResourceManager::appendPrograms(std::unordered_map<std::string, uint32_t>
 
 uint32_t GlResourceManager::getProgram(const std::string& name) const noexcept
 {
-    if (auto it = m_shaderPrograms.find(name); it != m_shaderPrograms.end()) return it->second;
+    if (auto it = m_shaderPrograms.find(name); it != m_shaderPrograms.end())
+        return it->second;
 
     return 0;
 }

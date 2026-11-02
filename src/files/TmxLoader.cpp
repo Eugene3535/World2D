@@ -17,16 +17,19 @@ bool TmxLoader::loadFromFile(const std::string& filename) noexcept
 {
     const auto filepath = FileProvider::findPathToFile(filename);
 
-    if (!std::filesystem::exists(filepath)) return false;
+    if (!std::filesystem::exists(filepath))
+        return false;
 
     auto                 document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filepath.string().c_str());
     document->parse<0>(xmlFile.data());
     const auto* mapNode = document->first_node("map");
 
-    if (!m_layers.empty()) m_layers.clear();
+    if (!m_layers.empty())
+        m_layers.clear();
 
-    if (!m_objects.empty()) m_objects.clear();
+    if (!m_objects.empty())
+        m_objects.clear();
 
     const auto* mapW  = mapNode->first_attribute("width");
     const auto* mapH  = mapNode->first_attribute("height");
@@ -41,11 +44,14 @@ bool TmxLoader::loadFromFile(const std::string& filename) noexcept
     m_mapSize  = {mapWidth, mapHeight};
     m_tileSize = {tileWidth, tileHeight};
 
-    if (!loadTilesets(static_cast<const void*>(mapNode))) return false;
+    if (!loadTilesets(static_cast<const void*>(mapNode)))
+        return false;
 
-    if (!loadTileLayers(static_cast<const void*>(mapNode))) return false;
+    if (!loadTileLayers(static_cast<const void*>(mapNode)))
+        return false;
 
-    if (!loadObjects(static_cast<const void*>(mapNode))) return false;
+    if (!loadObjects(static_cast<const void*>(mapNode)))
+        return false;
 
     return true;
 }
@@ -84,16 +90,19 @@ bool TmxLoader::loadTilesets(const void* rootNode) noexcept
     {
         auto* imageNode = tilesetNode->first_node("image");
 
-        if (!imageNode) continue;
+        if (!imageNode)
+            continue;
 
         auto* source = imageNode->first_attribute("source");
 
-        if (!source) continue;
+        if (!source)
+            continue;
 
         const auto filename = std::filesystem::path(source->value()).filename().string();
         const auto filepath = FileProvider::findPathToFile(filename);
 
-        if (!std::filesystem::exists(filepath)) return false;
+        if (!std::filesystem::exists(filepath))
+            return false;
 
         auto& tileset = m_tilesets.emplace_back();
 
@@ -127,7 +136,8 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
         auto* dataNode = layerNode->first_node("data");
         auto  tileNums = parseCSV(dataNode);
 
-        if (tileNums.empty()) return false;
+        if (tileNums.empty())
+            return false;
 
         auto& layer = m_layers.emplace_back();
 
@@ -146,7 +156,8 @@ bool TmxLoader::loadTileLayers(const void* rootNode) noexcept
                                                       maxTile <= (ts.firstGID + ts.tileCount);
                                            });
 
-        if (currentTileset == m_tilesets.end()) return false;
+        if (currentTileset == m_tilesets.end())
+            return false;
 
         layer.tileset = &*currentTileset;
         layer.tiles.swap(tileNums);
@@ -193,7 +204,8 @@ bool TmxLoader::loadObjects(const void* rootNode) noexcept
                     object.size.y = atoi(attribute->value());
                     continue;
                 }
-                if (strcmp(attribute->name(), "name") == 0) object.name = {attribute->value(), attribute->value_size()};
+                if (strcmp(attribute->name(), "name") == 0)
+                    object.name = {attribute->value(), attribute->value_size()};
                 if (strcmp(attribute->name(), "class") == 0)
                     object.type = {attribute->value(), attribute->value_size()};
             }
@@ -234,7 +246,8 @@ bool TmxLoader::loadObjects(const void* rootNode) noexcept
                         float result   = 0.f;
                         auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
 
-                        if (ec == std::errc()) property.value = result;
+                        if (ec == std::errc())
+                            property.value = result;
                     }
                     else if (type == "string")
                     {

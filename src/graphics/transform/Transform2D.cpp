@@ -47,7 +47,8 @@ void Transform2D::setRotation(float angle) noexcept
 {
     m_rotation = static_cast<float>(fmod(angle, 360));
 
-    if (m_rotation < 0) m_rotation += 360.f;
+    if (m_rotation < 0)
+        m_rotation += 360.f;
 
     m_transformNeedUpdate = true;
 }

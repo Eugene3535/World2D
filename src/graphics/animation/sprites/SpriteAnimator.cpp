@@ -12,7 +12,8 @@ SpriteAnimator::~SpriteAnimator()         = default;
 
 void SpriteAnimator::createSprite(const std::string& name, uint32_t texture) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
@@ -29,7 +30,8 @@ void SpriteAnimator::createSprite(const std::string& name, uint32_t texture) noe
 
 void SpriteAnimator::createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
@@ -49,7 +51,8 @@ void SpriteAnimator::createSprite(const std::string& name, uint32_t texture, con
 
 void SpriteAnimator::createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
@@ -76,7 +79,8 @@ void SpriteAnimator::createLinearAnimaton(const std::string& name, uint32_t text
 
 void SpriteAnimator::createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
@@ -108,7 +112,8 @@ void SpriteAnimator::createGridAnimaton(const std::string& name, uint32_t textur
 
 void SpriteAnimator::createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
     if (auto it = m_animations.find(name); it == m_animations.end())
     {
@@ -129,7 +134,8 @@ void SpriteAnimator::createCustomAnimaton(const std::string& name, uint32_t text
 
 void SpriteAnimator::loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
     auto                 document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filePath.string().c_str());
@@ -218,7 +224,8 @@ std::span<const Sprite2D> SpriteAnimator::getAnimation(const std::string& name) 
 
 void SpriteAnimator::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
 {
-    if (m_vertices.empty()) return;
+    if (m_vertices.empty())
+        return;
 
     glNamedBufferStorage(vertexBuffer,
                          std::span<float>(m_vertices).size_bytes(),

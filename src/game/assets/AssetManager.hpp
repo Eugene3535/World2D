@@ -32,7 +32,8 @@ private:
     template <class T>
     T* findOrLoad(const std::string& name, std::unordered_map<std::string, T>& container) noexcept
     {
-        if (auto it = container.find(name); it != container.end()) return &it->second;
+        if (auto it = container.find(name); it != container.end())
+            return &it->second;
 
         if constexpr (std::is_same_v<T, Texture2D>)
         {
@@ -50,7 +51,8 @@ private:
 
             if (std::filesystem::exists(filepath))
             {
-                if (iterator->second.loadFromFile(filepath)) return &iterator->second;
+                if (iterator->second.loadFromFile(filepath))
+                    return &iterator->second;
             }
 
             m_glResources->destroyHandles(GlResourceManager::GLTexture2D, textures);

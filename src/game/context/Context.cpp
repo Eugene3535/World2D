@@ -5,7 +5,8 @@
 
 bool Context::load(Game& game) noexcept
 {
-    if (!game.glResources.compilePrograms()) return false;
+    if (!game.glResources.compilePrograms())
+        return false;
 
     return true;
 }

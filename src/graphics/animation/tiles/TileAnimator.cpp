@@ -24,9 +24,11 @@ TileAnimator::~TileAnimator() = default;
 
 void TileAnimator::createLinearAnimaton(uint32_t id, const TileAnimator::Tile& tile, uint32_t duration) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
-    if (m_animations.find(id) != m_animations.end()) return;
+    if (m_animations.find(id) != m_animations.end())
+        return;
 
     auto& animation = m_animations[id];
     animation.begin = m_currentTile;
@@ -83,9 +85,11 @@ void TileAnimator::createLinearAnimaton(uint32_t id, const TileAnimator::Tile& t
 
 void TileAnimator::createGridAnimaton(uint32_t id, const TileAnimator::Tile& tile, uint32_t columns, uint32_t rows) noexcept
 {
-    if (m_isLocked) return;
+    if (m_isLocked)
+        return;
 
-    if (m_animations.find(id) != m_animations.end()) return;
+    if (m_animations.find(id) != m_animations.end())
+        return;
 
     auto& animation = m_animations[id];
     animation.begin = m_currentTile;
@@ -145,7 +149,8 @@ void TileAnimator::createGridAnimaton(uint32_t id, const TileAnimator::Tile& til
 
 std::optional<TileAnimator::TileAnimation2D> TileAnimator::getAnimation(uint32_t id) const noexcept
 {
-    if (auto it = m_animations.find(id); it != m_animations.end()) return it->second;
+    if (auto it = m_animations.find(id); it != m_animations.end())
+        return it->second;
 
     return std::nullopt;
 }
@@ -153,7 +158,8 @@ std::optional<TileAnimator::TileAnimation2D> TileAnimator::getAnimation(uint32_t
 
 void TileAnimator::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
 {
-    if (m_vertices.empty()) return;
+    if (m_vertices.empty())
+        return;
 
     glNamedBufferStorage(vertexBuffer,
                          std::span<float>(m_vertices).size_bytes(),

@@ -49,18 +49,26 @@ void HeadUpDisplay::update(TileMap& tilemap, float dt) noexcept
     const float velocity      = dt * CAMERA_VELOCITY;
     vec2s       scenePosition = tilemap.getPosition();
 
-    if (isNearTheLeftEdge) scenePosition.x += velocity;
+    if (isNearTheLeftEdge)
+        scenePosition.x += velocity;
 
-    if (isNearTheTopEdge) scenePosition.y += velocity;
+    if (isNearTheTopEdge)
+        scenePosition.y += velocity;
 
-    if (isNearTheRightEdge) scenePosition.x -= velocity;
+    if (isNearTheRightEdge)
+        scenePosition.x -= velocity;
 
-    if (isNearTheBottomEdge) scenePosition.y -= velocity;
+    if (isNearTheBottomEdge)
+        scenePosition.y -= velocity;
 
-    if (scenePosition.x > 0) scenePosition.x = 0;
-    if (scenePosition.y > 0) scenePosition.y = 0;
-    if (scenePosition.x < (viewSize.x - locationSize.x)) scenePosition.x = viewSize.x - locationSize.x;
-    if (scenePosition.y < (viewSize.y - locationSize.y)) scenePosition.y = viewSize.y - locationSize.y;
+    if (scenePosition.x > 0)
+        scenePosition.x = 0;
+    if (scenePosition.y > 0)
+        scenePosition.y = 0;
+    if (scenePosition.x < (viewSize.x - locationSize.x))
+        scenePosition.x = viewSize.x - locationSize.x;
+    if (scenePosition.y < (viewSize.y - locationSize.y))
+        scenePosition.y = viewSize.y - locationSize.y;
 
     tilemap.setPosition(scenePosition);
 

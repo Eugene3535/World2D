@@ -23,9 +23,11 @@ MainWindow::~MainWindow()
 
 bool MainWindow::open(const char* title, int width, int height) noexcept
 {
-    if (!createGLFWWindow(title, width, height)) return false;
+    if (!createGLFWWindow(title, width, height))
+        return false;
 
-    if (!gladLoadGL()) return false;
+    if (!gladLoadGL())
+        return false;
 
     initializeDebug();
     glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -202,7 +204,8 @@ void MainWindow::initCallbacks() noexcept
     glfwSetFramebufferSizeCallback(m_glfwWindow,
                                    [](GLFWwindow* window, int width, int height)
                                    {
-                                       if (glViewport) glViewport(0, 0, width, height);
+                                       if (glViewport)
+                                           glViewport(0, 0, width, height);
 
                                        if (auto wnd = static_cast<MainWindow*>(glfwGetWindowUserPointer(window)))
                                        {
