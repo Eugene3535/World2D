@@ -1,17 +1,16 @@
 ﻿{
-    "version": 3,
+    "version": 6,
     "cmakeMinimumRequired": 
     {
-        "major": 3,
-        "minor": 31,
-        "patch": 5
+        "major": 4,
+        "minor": 0,
+        "patch": 0
     },
     "configurePresets": 
     [
         {
             "name": "windows-msvc",
             "hidden": true,
-            "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "toolchainFile": "cmake/msvc-toolchain.cmake",
             "cacheVariables": 
@@ -27,7 +26,8 @@
             }
         },
         {
-            "name": "debug-msvc",
+            "name": "debug-msvc-ninja",
+            "generator": "Ninja",
             "displayName": "Debug (Windows/MSVC)",
             "inherits": "windows-msvc",
             "architecture": 
@@ -40,7 +40,8 @@
             }
         },
         {
-            "name": "release-msvc",
+            "name": "release-msvc-ninja",
+            "generator": "Ninja",
             "displayName": "Release (Windows/MSVC)",
             "inherits": "windows-msvc",
             "architecture": 
@@ -50,6 +51,16 @@
             "cacheVariables": 
             {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "vs2022-msbuild",
+            "generator": "Visual Studio 17 2022",
+            "displayName": "Visual Studio 2022",
+            "inherits": "windows-msvc",
+            "architecture": 
+            {
+                "value": "x64"
             }
         },
         {
