@@ -1,8 +1,8 @@
-#include "graphics/tilemap/culling/TiledChunk.hpp"
+#include "graphics/tilemap/culling/TileChunk.hpp"
 #include "files/TmxLoader.hpp"
 
 
-TiledChunk::TiledChunk(const TmxLoader& loader) noexcept :
+TileChunk::TileChunk(const TmxLoader& loader) noexcept :
     m_loader(&loader),
     m_viewport({0, 0, 0, 0}),
     m_lines(0)
@@ -12,16 +12,15 @@ TiledChunk::TiledChunk(const TmxLoader& loader) noexcept :
 }
 
 
-TiledChunk::~TiledChunk() = default;
+TileChunk::~TileChunk() = default;
 
 
-TiledChunk::RenderArea TiledChunk::updateCulling(const ivec4s& viewport) noexcept
+TileChunk::RenderArea TileChunk::updateCulling(const ivec4s& viewport) noexcept
 {
     auto are_viewports_equal = [](ivec4s a, ivec4s b) -> bool
     { return (a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w); };
 
-    if (are_viewports_equal(m_viewport, viewport))
-        return {m_counts.data(), m_offsets.data(), m_lines};
+    if (are_viewports_equal(m_viewport, viewport)) return {m_counts.data(), m_offsets.data(), m_lines};
 
     m_viewport = viewport;
 
@@ -37,11 +36,9 @@ TiledChunk::RenderArea TiledChunk::updateCulling(const ivec4s& viewport) noexcep
     uint32_t width  = left + viewport.z + (tileSize.x << 1);
     uint32_t height = top + viewport.w + (tileSize.y << 1);
 
-    if (width > mapSizeInPixels.x)
-        width = mapSizeInPixels.x;
+    if (width > mapSizeInPixels.x) width = mapSizeInPixels.x;
 
-    if (height > mapSizeInPixels.y)
-        height = mapSizeInPixels.y;
+    if (height > mapSizeInPixels.y) height = mapSizeInPixels.y;
 
     const uint32_t x = left / tileSize.x;
     const uint32_t y = top / tileSize.y;
@@ -59,7 +56,7 @@ TiledChunk::RenderArea TiledChunk::updateCulling(const ivec4s& viewport) noexcep
 }
 
 
-bool TiledChunk::isMapLarge() const noexcept
+bool TileChunk::isMapLarge() const noexcept
 {
     return m_isLarge;
 }

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
-#include "graphics/tilemap/culling/TiledChunk.hpp"
+#include "graphics/tilemap/culling/TileChunk.hpp"
 #include "graphics/transform/Transform2D.hpp"
 
 
@@ -26,18 +27,25 @@ private:
         uint32_t VBO; // Vertex Buffer Object
         uint32_t EBO; // Element Buffer Object
         uint32_t indexCount;
+
+        struct Chunk
+        {
+            const void* indices;
+            uint32_t    count;
+        };
+
+        std::vector<Chunk> chunks;
     };
 
     bool loadTextures() noexcept;
-    void createBufferData(void* bufferData) noexcept;
+    void createBufferData(TilePlane& plane, void* bufferData) noexcept;
     void loadGraphics() noexcept;
     void cleanup() noexcept;
     void draw(const TilePlane& plane, const ivec4s& viewport) noexcept;
 
-    const class TmxLoader*   m_loader{nullptr};
-    TiledChunk               m_chunk;
-
-    TilePlane m_background{};
-    TilePlane m_foreground{};
-    bool      m_isLoaded{false};
+    const class TmxLoader* m_loader{nullptr};
+    TileChunk              m_chunk;
+    TilePlane              m_background{};
+    TilePlane              m_foreground{};
+    bool                   m_isLoaded{false};
 };

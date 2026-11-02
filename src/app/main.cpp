@@ -22,13 +22,11 @@ int main(int argc, char* argv[])
     Game       game;
     MainWindow window(game.windowData);
 
-    if (!window.open("Platformer 2D", 1200, 920))
-        return 1;
+    if (!window.open("Platformer 2D", 1200, 920)) return 1;
 
     Context context;
 
-    if (!context.load(game))
-        return false;
+    if (!context.load(game)) return false;
 
     MainLoop loop(window);
     loop(game);

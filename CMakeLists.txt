@@ -54,10 +54,9 @@ if(LINUX)
     endforeach()
 endif()
 
-find_package(glfw3 CONFIG REQUIRED)
-find_package(glad CONFIG REQUIRED)
-find_package(cglm CONFIG REQUIRED)
-find_package(entt CONFIG REQUIRED)
+foreach(lib glfw3 glad cglm entt)
+	find_package(${lib} CONFIG REQUIRED)
+endforeach()
 
 file(GLOB_RECURSE GAME_SRC_FILES CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp

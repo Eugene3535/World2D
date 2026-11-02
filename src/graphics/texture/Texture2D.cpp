@@ -54,8 +54,7 @@ bool Texture2D::loadFromFile(const std::filesystem::path& filePath) noexcept
 {
     StbImage image;
 
-    if (image.loadFromFile(filePath))
-        return loadFromImage(image);
+    if (image.loadFromFile(filePath)) return loadFromImage(image);
 
     return false;
 }

@@ -19,24 +19,20 @@ static std::filesystem::path get_root_path() noexcept
     wchar_t buffer[MAX_PATH]{};
     DWORD   result = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
 
-    if (result == 0)
-        return {};
+    if (result == 0) return {};
 
     int size = WideCharToMultiByte(CP_UTF8, 0, buffer, -1, nullptr, 0, nullptr, nullptr);
 
-    if (size == 0)
-        return {};
+    if (size == 0) return {};
 
     std::string path(size, 0);
     size = WideCharToMultiByte(CP_UTF8, 0, buffer, -1, path.data(), size, nullptr, nullptr);
 
-    if (size == 0)
-        return {};
+    if (size == 0) return {};
 
     size_t pos = path.find_last_of("/\\");
 
-    if (pos != std::string::npos)
-        path.resize(pos);
+    if (pos != std::string::npos) path.resize(pos);
 
     return std::filesystem::path(path);
 
@@ -50,8 +46,7 @@ static std::filesystem::path get_root_path() noexcept
     {
         size_t pos = buffer.find_last_of('/');
 
-        if (pos != std::string::npos)
-            buffer.resize(pos);
+        if (pos != std::string::npos) buffer.resize(pos);
 
         return std::filesystem::path(buffer);
     }
@@ -85,8 +80,7 @@ std::filesystem::path FileProvider::findPathToFile(const std::string& filename) 
         if (std::filesystem::exists(resFolder))
         {
             for (const auto& file : std::filesystem::recursive_directory_iterator(resFolder))
-                if (file.path().filename() == filename)
-                    return file.path();
+                if (file.path().filename() == filename) return file.path();
         }
     }
 

@@ -29,13 +29,11 @@ void MainLoop::operator()(Game& game) noexcept
 
     TmxLoader loader;
 
-    if (!loader.loadFromFile("World-1.tmx"))
-        return;
+    if (!loader.loadFromFile("World-1.tmx")) return;
 
     TileMap tilemap(loader);
 
-    if (!tilemap.create())
-        return;
+    if (!tilemap.create()) return;
 
     const GLuint program = game.glResources.getProgram("sprite");
     glUseProgram(program);

@@ -102,8 +102,7 @@ VertexBufferLayout::VertexBufferLayout(std::span<const Attribute> attributes) no
 
 void VertexBufferLayout::createVertexInputState(GLuint vao, GLuint vbo) const noexcept
 {
-    if (m_attributes.empty())
-        return;
+    if (m_attributes.empty()) return;
 
     GLuint attributeCount = 0;
 

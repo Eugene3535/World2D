@@ -5,7 +5,7 @@
 #include <cglm/struct/ivec2.h>
 
 
-class TiledChunk final
+class TileChunk final
 {
 public:
     struct RenderArea
@@ -15,8 +15,8 @@ public:
         int32_t            drawcount;
     };
 
-    TiledChunk(const class TmxLoader& loader) noexcept;
-    ~TiledChunk();
+    TileChunk(const class TmxLoader& loader) noexcept;
+    ~TileChunk();
 
     [[nodiscard]]
     RenderArea updateCulling(const ivec4s& viewport) noexcept;

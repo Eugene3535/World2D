@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <ranges>
 #include <span>
 
 #include <glad/glad.h>
@@ -40,8 +41,7 @@ bool TileMap::create() noexcept
 {
     cleanup();
 
-    if (!loadTextures())
-        return false;
+    if (!loadTextures()) return false;
 
     loadGraphics();
 
@@ -84,15 +84,13 @@ bool TileMap::loadTextures() noexcept
 
     Texture2D* background = Assets->get<Texture2D>(planeB->tileset->filename);
 
-    if (!background)
-        return false;
+    if (!background) return false;
 
     m_background.texture = background->getHandle();
 
     Texture2D* foreground = Assets->get<Texture2D>(planeA->tileset->filename);
 
-    if (!foreground)
-        return false;
+    if (!foreground) return false;
 
     m_foreground.texture = foreground->getHandle();
 
@@ -100,7 +98,7 @@ bool TileMap::loadTextures() noexcept
 }
 
 
-void TileMap::createBufferData(void* bufferData) noexcept
+void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
 {
     auto*       data  = static_cast<BufferData*>(bufferData);
     const auto* layer = static_cast<const TmxLoader::Layer*>(data->tileLayer);
@@ -111,14 +109,21 @@ void TileMap::createBufferData(void* bufferData) noexcept
     auto& vertices = data->vertices;
     auto& indices  = data->indices;
 
-    vertices.reserve(tiles.size() * 4);
-    indices.reserve(tiles.size() * 6);
+    const uint32_t tileCount = std::ranges::count_if(tiles, [](uint32_t n) { return n != 0; });
+
+    vertices.reserve(tileCount * 4);
+    indices.reserve(tileCount * 6);
 
     const vec2s ratio = {1.f / static_cast<float>(tileset->width), 1.f / static_cast<float>(tileset->height)};
 
-    const auto mapSize  = m_loader->getMapSize();
-    const auto tileSize = m_loader->getTileSize();
-    size_t     index    = 0;
+    const auto     mapSize   = m_loader->getMapSize();
+    const auto     tileSize  = m_loader->getTileSize();
+    const uint32_t chunkSize = 64;
+    const uint32_t chunksX = (mapSize.x + chunkSize - 1) / chunkSize;
+    const uint32_t chunksY = (mapSize.y + chunkSize - 1) / chunkSize;
+    size_t         index     = 0;
+
+    std::vector<TilePlane::Chunk> chunks(chunksX * chunksY, {nullptr, 0});
 
     for (int32_t y = 0; y < mapSize.y; ++y)
     {
@@ -126,61 +131,71 @@ void TileMap::createBufferData(void* bufferData) noexcept
         {
             const int32_t tileId = tiles[index++];
 
-            if (tileId)
-            {
-                //  Positions
-                const vec2s leftBottom  = {static_cast<float>(x * tileSize.x),
-                                           static_cast<float>(y * tileSize.y + tileSize.y)};
-                const vec2s rightBottom = {static_cast<float>(x * tileSize.x + tileSize.x),
-                                           static_cast<float>(y * tileSize.y + tileSize.y)};
-                const vec2s rightTop = {static_cast<float>(x * tileSize.x + tileSize.x), static_cast<float>(y * tileSize.y)};
-                const vec2s leftTop = {static_cast<float>(x * tileSize.x), static_cast<float>(y * tileSize.y)};
-                //  UV
-                const int32_t tileNum = tileId - tileset->firstGID;
+            if (!tileId) continue;
 
-                const int32_t vY = (tileNum >= tileset->columns) ? tileNum / tileset->columns : 0;
-                const int32_t vX = tileNum % tileset->columns;
+            //  Positions
+            const vec2s leftBottom = {static_cast<float>(x * tileSize.x), static_cast<float>(y * tileSize.y + tileSize.y)};
+            const vec2s rightBottom = {static_cast<float>(x * tileSize.x + tileSize.x),
+                                       static_cast<float>(y * tileSize.y + tileSize.y)};
+            const vec2s rightTop = {static_cast<float>(x * tileSize.x + tileSize.x), static_cast<float>(y * tileSize.y)};
+            const vec2s leftTop = {static_cast<float>(x * tileSize.x), static_cast<float>(y * tileSize.y)};
+            //  UV
+            const int32_t tileNum = tileId - tileset->firstGID;
 
-                const int32_t offsetX = vX * tileSize.x;
-                const int32_t offsetY = vY * tileSize.y;
+            const int32_t vY = (tileNum >= tileset->columns) ? tileNum / tileset->columns : 0;
+            const int32_t vX = tileNum % tileset->columns;
 
-                const float left   = offsetX * ratio.x;
-                const float top    = offsetY * ratio.y;
-                const float right  = (offsetX + tileSize.x) * ratio.x;
-                const float bottom = (offsetY + tileSize.y) * ratio.y;
+            const int32_t offsetX = vX * tileSize.x;
+            const int32_t offsetY = vY * tileSize.y;
 
-                const uint32_t cell = static_cast<uint32_t>(vertices.size() >> 2);
+            const float left   = offsetX * ratio.x;
+            const float top    = offsetY * ratio.y;
+            const float right  = (offsetX + tileSize.x) * ratio.x;
+            const float bottom = (offsetY + tileSize.y) * ratio.y;
 
-                vertices.push_back(leftBottom.x);
-                vertices.push_back(leftBottom.y);
-                vertices.push_back(left);
-                vertices.push_back(bottom);
+            vertices.push_back(leftBottom.x);
+            vertices.push_back(leftBottom.y);
+            vertices.push_back(left);
+            vertices.push_back(bottom);
 
-                vertices.push_back(rightBottom.x);
-                vertices.push_back(rightBottom.y);
-                vertices.push_back(right);
-                vertices.push_back(bottom);
+            vertices.push_back(rightBottom.x);
+            vertices.push_back(rightBottom.y);
+            vertices.push_back(right);
+            vertices.push_back(bottom);
 
-                vertices.push_back(rightTop.x);
-                vertices.push_back(rightTop.y);
-                vertices.push_back(right);
-                vertices.push_back(top);
+            vertices.push_back(rightTop.x);
+            vertices.push_back(rightTop.y);
+            vertices.push_back(right);
+            vertices.push_back(top);
 
-                vertices.push_back(leftTop.x);
-                vertices.push_back(leftTop.y);
-                vertices.push_back(left);
-                vertices.push_back(top);
+            vertices.push_back(leftTop.x);
+            vertices.push_back(leftTop.y);
+            vertices.push_back(left);
+            vertices.push_back(top);
 
-                indices.push_back(cell);
-                indices.push_back(cell + 1u);
-                indices.push_back(cell + 2u);
+            const uint32_t chunkX = x / chunkSize;
+            const uint32_t chunkY = y / chunkSize;
 
-                indices.push_back(cell);
-                indices.push_back(cell + 2u);
-                indices.push_back(cell + 3u);
-            }
+            auto* chunk = chunks.data() + chunkY * chunksX + chunkX;
+
+            if (chunk->count == 0) 
+                chunk->indices = (const void*)(indices.size() * sizeof(uint32_t));
+
+            chunk->count += 6;
+
+            const uint32_t vertexIndex = (vertices.size() >> 2) - 4; // chunkX * mapSize.x + x;
+
+            indices.push_back(vertexIndex);
+            indices.push_back(vertexIndex + 1u);
+            indices.push_back(vertexIndex + 2u);
+
+            indices.push_back(vertexIndex);
+            indices.push_back(vertexIndex + 2u);
+            indices.push_back(vertexIndex + 3u);
         }
     }
+
+    plane.chunks.swap(chunks);
 }
 
 
@@ -199,7 +214,7 @@ void TileMap::loadGraphics() noexcept
     { // Background tile plane
         BufferData data;
         data.tileLayer = static_cast<const void*>(&layers.front());
-        createBufferData(static_cast<void*>(&data));
+        createBufferData(m_background, static_cast<void*>(&data));
 
         std::span<const float>    vertices = data.vertices;
         std::span<const uint32_t> indices  = data.indices;
@@ -221,7 +236,7 @@ void TileMap::loadGraphics() noexcept
     {
         BufferData data;
         data.tileLayer = static_cast<const void*>(&layers.back());
-        createBufferData(static_cast<void*>(&data));
+        createBufferData(m_foreground, static_cast<void*>(&data));
 
         std::span<const float>    vertices = data.vertices;
         std::span<const uint32_t> indices  = data.indices;
@@ -262,8 +277,7 @@ void TileMap::loadGraphics() noexcept
 
 void TileMap::cleanup() noexcept
 {
-    if (!m_isLoaded)
-        return;
+    if (!m_isLoaded) return;
 
     auto glResources = Assets->getResourceManager();
 
@@ -285,8 +299,7 @@ void TileMap::cleanup() noexcept
 
 void TileMap::draw(const TileMap::TilePlane& plane, const ivec4s& viewport) noexcept
 {
-    if (!plane.VAO)
-        return;
+    if (!plane.VAO) return;
 
     const auto renderArea = m_chunk.updateCulling(viewport);
     const bool isLarge    = m_chunk.isMapLarge();
@@ -294,14 +307,17 @@ void TileMap::draw(const TileMap::TilePlane& plane, const ivec4s& viewport) noex
     glBindTextureUnit(0, plane.texture);
     glBindVertexArray(plane.VAO);
 
-    if (isLarge)
-    {
-        glMultiDrawElements(GL_TRIANGLES, renderArea.counts, GL_UNSIGNED_INT, renderArea.indices, renderArea.drawcount);
-    }
-    else
-    {
-        glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
-    }
+    for (const auto& chunk : plane.chunks)
+        glDrawElements(GL_TRIANGLES, chunk.count, GL_UNSIGNED_INT, chunk.indices);
+
+    // if (isLarge)
+    // {
+    //     glMultiDrawElements(GL_TRIANGLES, renderArea.counts, GL_UNSIGNED_INT, renderArea.indices, renderArea.drawcount);
+    // }
+    // else
+    // {
+    //     glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
+    // }
 
     glBindVertexArray(0);
     glBindTextureUnit(0, 0);
