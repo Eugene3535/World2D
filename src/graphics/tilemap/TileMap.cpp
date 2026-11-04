@@ -123,10 +123,10 @@ void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
 
     const vec2s ratio = {1.f / static_cast<float>(tileset->width), 1.f / static_cast<float>(tileset->height)};
 
-    const auto     mapSize   = m_loader->getMapSize();
-    const auto     tileSize  = m_loader->getTileSize();
-    const uint32_t chunksX   = (mapSize.x + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
-    const uint32_t chunksY   = (mapSize.y + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
+    const auto     mapSize  = m_loader->getMapSize();
+    const auto     tileSize = m_loader->getTileSize();
+    const uint32_t chunksX  = (mapSize.x + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
+    const uint32_t chunksY  = (mapSize.y + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
 
     std::vector<TilePlane::Chunk> chunks(chunksX * chunksY, {nullptr, 0});
 
@@ -340,7 +340,7 @@ void TileMap::prepareChunks(TileMap::TilePlane& plane, const ivec4s& extents) no
 
     const auto tileSize = m_loader->getTileSize();
 
-    const int32_t chunkPixelWidth = MAX_CHUNK_SIZE * tileSize.x;
+    const int32_t chunkPixelWidth  = MAX_CHUNK_SIZE * tileSize.x;
     const int32_t chunkPixelHeight = MAX_CHUNK_SIZE * tileSize.y;
 
     int32_t left   = extents.x / chunkPixelWidth;

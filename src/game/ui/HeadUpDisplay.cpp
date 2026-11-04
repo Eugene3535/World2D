@@ -49,10 +49,10 @@ void HeadUpDisplay::update(TileMap& tilemap, float dt) noexcept
     const float velocity      = dt * CAMERA_VELOCITY;
     vec2s       scenePosition = tilemap.getPosition();
 
-//  Center if the map size is smaller than the viewport
+    //  Center if the map size is smaller than the viewport
     if (locationSize.x < viewSize.x)
     {
-        int32_t delta = viewSize.x - locationSize.x;
+        int32_t delta   = viewSize.x - locationSize.x;
         scenePosition.x = delta >> 1;
     }
     else
@@ -72,7 +72,7 @@ void HeadUpDisplay::update(TileMap& tilemap, float dt) noexcept
 
     if (locationSize.y < viewSize.y)
     {
-        int32_t delta = viewSize.y - locationSize.y;
+        int32_t delta   = viewSize.y - locationSize.y;
         scenePosition.y = delta >> 1;
     }
     else

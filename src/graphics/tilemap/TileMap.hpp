@@ -9,14 +9,14 @@
 class TileMap : public Transform2D
 {
 public:
-    TileMap(const class TmxLoader& loader)      noexcept;
+    TileMap(const class TmxLoader& loader) noexcept;
     ~TileMap();
 
-    bool create()                               noexcept;
+    bool create() noexcept;
     void drawBackground(const ivec4s& viewport) noexcept;
     void drawForeground(const ivec4s& viewport) noexcept;
 
-    const class TmxLoader& getLoader()    const noexcept;
+    const class TmxLoader& getLoader() const noexcept;
 
 private:
     struct TilePlane
@@ -38,11 +38,11 @@ private:
         uint32_t           height;
     };
 
-    bool loadTextures()                                             noexcept;
-    void createBufferData(TilePlane& plane, void* bufferData)       noexcept;
-    void loadGraphics()                                             noexcept;
-    void cleanup()                                                  noexcept;
-    void prepareChunks(TilePlane& plane, const ivec4s& extents)     noexcept;
+    bool loadTextures() noexcept;
+    void createBufferData(TilePlane& plane, void* bufferData) noexcept;
+    void loadGraphics() noexcept;
+    void cleanup() noexcept;
+    void prepareChunks(TilePlane& plane, const ivec4s& extents) noexcept;
     void draw(const TilePlane& plane, const ivec4s& viewport) const noexcept;
 
     const class TmxLoader* m_loader{nullptr};
