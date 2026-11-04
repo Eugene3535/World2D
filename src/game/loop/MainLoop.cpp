@@ -29,7 +29,7 @@ void MainLoop::operator()(Game& game) noexcept
 
     TmxLoader loader;
 
-    if (!loader.loadFromFile("Location-2.tmx"))
+    if (!loader.loadFromFile("Location-1.tmx"))
         return;
 
     TileMap tilemap(loader);

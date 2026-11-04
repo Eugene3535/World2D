@@ -14,6 +14,8 @@ public:
     bool open(const char* title, int width, int height) noexcept;
     void close() const noexcept;
 
+    void setVerticalSyncEnabled(bool enable) const noexcept;
+
     void pollEvents() const noexcept;
     void display() const noexcept;
 

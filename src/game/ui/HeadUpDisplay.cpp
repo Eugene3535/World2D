@@ -49,26 +49,46 @@ void HeadUpDisplay::update(TileMap& tilemap, float dt) noexcept
     const float velocity      = dt * CAMERA_VELOCITY;
     vec2s       scenePosition = tilemap.getPosition();
 
-    if (isNearTheLeftEdge)
-        scenePosition.x += velocity;
+//  Center if the map size is smaller than the viewport
+    if (locationSize.x < viewSize.x)
+    {
+        int32_t delta = viewSize.x - locationSize.x;
+        scenePosition.x = delta >> 1;
+    }
+    else
+    {
+        if (isNearTheLeftEdge)
+            scenePosition.x += velocity;
 
-    if (isNearTheTopEdge)
-        scenePosition.y += velocity;
+        if (isNearTheRightEdge)
+            scenePosition.x -= velocity;
 
-    if (isNearTheRightEdge)
-        scenePosition.x -= velocity;
+        if (scenePosition.x > 0)
+            scenePosition.x = 0;
 
-    if (isNearTheBottomEdge)
-        scenePosition.y -= velocity;
+        if (scenePosition.x < (viewSize.x - locationSize.x))
+            scenePosition.x = viewSize.x - locationSize.x;
+    }
 
-    if (scenePosition.x > 0)
-        scenePosition.x = 0;
-    if (scenePosition.y > 0)
-        scenePosition.y = 0;
-    if (scenePosition.x < (viewSize.x - locationSize.x))
-        scenePosition.x = viewSize.x - locationSize.x;
-    if (scenePosition.y < (viewSize.y - locationSize.y))
-        scenePosition.y = viewSize.y - locationSize.y;
+    if (locationSize.y < viewSize.y)
+    {
+        int32_t delta = viewSize.y - locationSize.y;
+        scenePosition.y = delta >> 1;
+    }
+    else
+    {
+        if (isNearTheTopEdge)
+            scenePosition.y += velocity;
+
+        if (isNearTheBottomEdge)
+            scenePosition.y -= velocity;
+
+        if (scenePosition.y > 0)
+            scenePosition.y = 0;
+
+        if (scenePosition.y < (viewSize.y - locationSize.y))
+            scenePosition.y = viewSize.y - locationSize.y;
+    }
 
     tilemap.setPosition(scenePosition);
 

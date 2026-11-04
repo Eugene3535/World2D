@@ -48,6 +48,15 @@ void MainWindow::close() const noexcept
 }
 
 
+void MainWindow::setVerticalSyncEnabled(bool enable) const noexcept
+{
+    if (m_glfwWindow)
+    {
+        glfwSwapInterval(enable ? 1 : 0);
+    }
+}
+
+
 void MainWindow::pollEvents() const noexcept
 {
     glfwPollEvents();
@@ -101,7 +110,7 @@ bool MainWindow::createGLFWWindow(const char* title, int width, int height) noex
         if (m_glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr); m_glfwWindow)
         {
             glfwMakeContextCurrent(m_glfwWindow);
-            glfwSwapInterval(0);
+            setVerticalSyncEnabled(true);
             // glfwSetInputMode(m_glfwWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
             return true;

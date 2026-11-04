@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include "graphics/tilemap/culling/TileChunk.hpp"
 #include "graphics/transform/Transform2D.hpp"
 
 
@@ -47,7 +46,6 @@ private:
     void draw(const TilePlane& plane, const ivec4s& viewport) const noexcept;
 
     const class TmxLoader* m_loader{nullptr};
-    TileChunk              m_chunk;
     TilePlane              m_background{};
     TilePlane              m_foreground{};
     bool                   m_isLoaded{false};

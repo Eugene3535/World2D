@@ -28,8 +28,7 @@ struct BufferData
 
 TileMap::TileMap(const TmxLoader& loader) noexcept :
     Transform2D(),
-    m_loader(&loader),
-    m_chunk(loader)
+    m_loader(&loader)
 {
 }
 
