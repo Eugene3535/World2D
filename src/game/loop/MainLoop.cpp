@@ -62,8 +62,11 @@ void MainLoop::operator()(Game& game) noexcept
         hud.update(tilemap, deltaTime);
 
         const ivec2s windowSize = m_window->getSize();
-        const vec2s  position   = tilemap.getPosition();
-        const ivec4s viewport   = {-(int)position.x, -(int)position.y, windowSize.x, windowSize.y};
+        const vec2s  position   = glms_vec2_negate(tilemap.getPosition());
+        const ivec4s viewport   = {static_cast<int>(position.x),
+                                   static_cast<int>(position.y),
+                                   static_cast<int>(position.x) + windowSize.x,
+                                   static_cast<int>(position.y) + windowSize.y};
 
         tilemap.drawBackground(viewport);
         tilemap.drawForeground(viewport);

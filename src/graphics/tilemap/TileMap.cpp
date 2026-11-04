@@ -15,6 +15,8 @@
 #include "graphics/tilemap/TileMap.hpp"
 #include "graphics/vao/VertexBufferLayout.hpp"
 
+#define MAX_CHUNK_SIZE 64u
+
 
 struct BufferData
 {
@@ -53,12 +55,14 @@ bool TileMap::create() noexcept
 
 void TileMap::drawBackground(const ivec4s& viewport) noexcept
 {
+    prepareChunks(m_background, viewport);
     draw(m_background, viewport);
 }
 
 
 void TileMap::drawForeground(const ivec4s& viewport) noexcept
 {
+    prepareChunks(m_foreground, viewport);
     draw(m_foreground, viewport);
 }
 
@@ -122,9 +126,8 @@ void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
 
     const auto     mapSize   = m_loader->getMapSize();
     const auto     tileSize  = m_loader->getTileSize();
-    const uint32_t chunkSize = 64;
-    const uint32_t chunksX   = (mapSize.x + chunkSize - 1) / chunkSize;
-    const uint32_t chunksY   = (mapSize.y + chunkSize - 1) / chunkSize;
+    const uint32_t chunksX   = (mapSize.x + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
+    const uint32_t chunksY   = (mapSize.y + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
 
     std::vector<TilePlane::Chunk> chunks(chunksX * chunksY, {nullptr, 0});
 
@@ -132,11 +135,11 @@ void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
     {
         for (uint32_t j = 0; j < chunksX; ++j)
         {
-            const uint32_t cy = i * chunkSize; // global chunk Y
-            const uint32_t cx = j * chunkSize; // global chunk X
+            const uint32_t cy = i * MAX_CHUNK_SIZE; // global chunk Y
+            const uint32_t cx = j * MAX_CHUNK_SIZE; // global chunk X
 
-            const uint32_t chunkHeight = std::min(chunkSize, mapSize.y - cy);
-            const uint32_t chunkWidth  = std::min(chunkSize, mapSize.x - cx);
+            const uint32_t chunkHeight = std::min(MAX_CHUNK_SIZE, mapSize.y - cy);
+            const uint32_t chunkWidth  = std::min(MAX_CHUNK_SIZE, mapSize.x - cx);
 
             auto* chunk = chunks.data() + i * chunksX + j;
 
@@ -216,6 +219,8 @@ void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
     }
 
     plane.chunks.swap(chunks);
+    plane.width  = chunksX;
+    plane.height = chunksY;
 }
 
 
@@ -248,8 +253,6 @@ void TileMap::loadGraphics() noexcept
                              static_cast<GLsizeiptr>(indices.size_bytes()),
                              indices.data(),
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-
-        m_background.indexCount = indices.size();
     }
 
     if (layers.size() > 1) // Foreground tile plane
@@ -270,8 +273,6 @@ void TileMap::loadGraphics() noexcept
                              static_cast<GLsizeiptr>(indices.size_bytes()),
                              indices.data(),
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-
-        m_foreground.indexCount = indices.size();
     }
 
     auto vertexArrays = glResources->getHandles(GlResourceManager::GLVertexArray, 2);
@@ -318,28 +319,102 @@ void TileMap::cleanup() noexcept
 }
 
 
-void TileMap::draw(const TileMap::TilePlane& plane, const ivec4s& viewport) noexcept
+void TileMap::prepareChunks(TileMap::TilePlane& plane, const ivec4s& extents) noexcept
 {
-    if (!plane.VAO)
+    const auto& chunks = plane.chunks;
+
+    if (chunks.empty())
         return;
 
-    const auto renderArea = m_chunk.updateCulling(viewport);
-    const bool isLarge    = m_chunk.isMapLarge();
+    auto& visibleChunks = plane.visibleChunks;
+    visibleChunks.clear();
+
+    if (chunks.size() == 1)
+    {
+        const auto& chunk = chunks[0];
+
+        if (chunk.count)
+            visibleChunks.push_back(chunk);
+
+        return;
+    }
+
+    const auto tileSize = m_loader->getTileSize();
+
+    const int32_t chunkPixelWidth = MAX_CHUNK_SIZE * tileSize.x;
+    const int32_t chunkPixelHeight = MAX_CHUNK_SIZE * tileSize.y;
+
+    int32_t left   = extents.x / chunkPixelWidth;
+    int32_t top    = extents.y / chunkPixelHeight;
+    int32_t right  = extents.z / chunkPixelWidth;
+    int32_t bottom = extents.w / chunkPixelHeight;
+
+    if ((left == top) && (left == right) && (left == bottom))
+    {
+        const auto& chunk = chunks[static_cast<size_t>(left)];
+
+        if (chunk.count)
+            visibleChunks.push_back(chunk);
+
+        return;
+    }
+
+    for (int32_t y = top; y <= bottom; ++y)
+    {
+        for (int32_t x = left; x <= right; ++x)
+        {
+            const size_t index = y * plane.width + x;
+
+            if (index < chunks.size())
+                visibleChunks.push_back(chunks[index]);
+        }
+    }
+
+    size_t index = 0;
+
+    while (index < visibleChunks.size())
+    {
+        bool shouldRemove = false;
+
+        if (visibleChunks[index].count == 0)
+        {
+            shouldRemove = true;
+        }
+        else
+        {
+            for (size_t j = 0; j < index; ++j)
+            {
+                if (visibleChunks[j].indices == visibleChunks[index].indices)
+                {
+                    shouldRemove = true;
+                    break;
+                }
+            }
+        }
+
+        if (shouldRemove)
+        {
+            visibleChunks[index] = visibleChunks.back();
+            visibleChunks.pop_back();
+        }
+        else
+        {
+            ++index;
+        }
+    }
+}
+
+
+void TileMap::draw(const TileMap::TilePlane& plane, const ivec4s& viewport) const noexcept
+{
+    if (plane.visibleChunks.empty())
+        return;
 
     glBindTextureUnit(0, plane.texture);
     glBindVertexArray(plane.VAO);
 
-    for (const auto& chunk : plane.chunks)
+    for (const auto& chunk : plane.visibleChunks)
         glDrawElements(GL_TRIANGLES, chunk.count, GL_UNSIGNED_INT, chunk.indices);
-
-    // if (isLarge)
-    // {
-    //     glMultiDrawElements(GL_TRIANGLES, renderArea.counts, GL_UNSIGNED_INT, renderArea.indices, renderArea.drawcount);
-    // }
-    // else
-    // {
-    //     glDrawElements(GL_TRIANGLES, m_background.indexCount, GL_UNSIGNED_INT, nullptr);
-    // }
 
     glBindVertexArray(0);
     glBindTextureUnit(0, 0);

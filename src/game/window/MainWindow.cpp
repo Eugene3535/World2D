@@ -101,7 +101,7 @@ bool MainWindow::createGLFWWindow(const char* title, int width, int height) noex
         if (m_glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr); m_glfwWindow)
         {
             glfwMakeContextCurrent(m_glfwWindow);
-            glfwSwapInterval(1);
+            glfwSwapInterval(0);
             // glfwSetInputMode(m_glfwWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
             return true;
