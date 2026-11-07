@@ -11,6 +11,8 @@ MainWindow::MainWindow(struct WindowData& data) noexcept :
     m_windowData(&data),
     m_glfwWindow(nullptr)
 {
+    m_clearColor = glms_vec4_zero();
+    m_clearColor.a = 1;
 }
 
 
@@ -30,7 +32,7 @@ bool MainWindow::open(const char* title, int width, int height) noexcept
         return false;
 
     initializeDebug();
-    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 
     m_view = std::make_unique<View>();
     m_view->create(width, height);
@@ -57,9 +59,21 @@ void MainWindow::setVerticalSyncEnabled(bool enable) const noexcept
 }
 
 
+void MainWindow::setClearColor(const vec4s& clearColor) noexcept
+{
+    m_clearColor = clearColor;
+}
+
+
 void MainWindow::pollEvents() const noexcept
 {
     glfwPollEvents();
+}
+
+
+void MainWindow::clear() const noexcept
+{
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 
@@ -81,6 +95,12 @@ ivec2s MainWindow::getSize() const noexcept
     glfwGetWindowSize(m_glfwWindow, &width, &height);
 
     return {width, height};
+}
+
+
+GLFWwindow* MainWindow::getGLFWHandle() const noexcept
+{
+    return m_glfwWindow;
 }
 
 

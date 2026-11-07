@@ -1,9 +1,9 @@
 #include "cglm/struct/affine-mat.h"
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 #include <glad/glad.h>
 
-#include "files/FileProvider.hpp"
 #include "files/TmxLoader.hpp"
 #include "game/Game.hpp"
 #include "game/assets/AssetManager.hpp"
@@ -25,11 +25,19 @@ MainLoop::~MainLoop() = default;
 
 void MainLoop::operator()(Game& game) noexcept
 {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    ImGui_ImplGlfw_InitForOpenGL(m_window->getGLFWHandle(), true);
+    ImGui_ImplOpenGL3_Init(nullptr);
+
     AssetManager assets(game.glResources);
 
     TmxLoader loader;
 
-    if (!loader.loadFromFile("Location-1.tmx"))
+    if (!loader.loadFromFile("Location-2.tmx"))
         return;
 
     TileMap tilemap(loader);
@@ -42,16 +50,13 @@ void MainLoop::operator()(Game& game) noexcept
 
     float lastFrame = 0.f;
 
-    glClearColor(0.f, 0.f, 0.f, 1.f);
-
     const auto mapSize           = loader.getMapSize();
     const auto tileSize          = loader.getTileSize();
     game.windowData.locationSize = glms_ivec2_mul(mapSize, tileSize);
 
     while (m_window->isOpen())
     {
-        glClear(GL_COLOR_BUFFER_BIT);
-
+        m_window->clear();
         m_window->pollEvents();
 
         const float currentFrame = m_window->getElapsedTime();
@@ -70,6 +75,23 @@ void MainLoop::operator()(Game& game) noexcept
 
         tilemap.drawBackground(viewport);
         tilemap.drawForeground(viewport);
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("Debug Info");
+        ImGui::Text("Local mouse: (%.1f, %.1f)", game.windowData.cursor.x, game.windowData.cursor.y);
+        ImGui::Text("Tilemap position: (%.1f, %.1f)", -position.x, -position.y);
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         m_window->display();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }

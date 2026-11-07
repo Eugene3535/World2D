@@ -58,6 +58,26 @@ foreach(lib glfw3 glad cglm entt)
 	find_package(${lib} CONFIG REQUIRED)
 endforeach()
 
+add_library(ImGui STATIC
+	${EXTERNAL_SOURCE_DIR}/imgui/imgui.cpp
+	${EXTERNAL_SOURCE_DIR}/imgui/imgui.h
+	${EXTERNAL_SOURCE_DIR}/imgui/backends/imgui_impl_glfw.cpp
+	${EXTERNAL_SOURCE_DIR}/imgui/backends/imgui_impl_glfw.h
+	${EXTERNAL_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
+	${EXTERNAL_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.h
+	${EXTERNAL_SOURCE_DIR}/imgui/imgui_demo.cpp
+	${EXTERNAL_SOURCE_DIR}/imgui/imgui_tables.cpp
+	${EXTERNAL_SOURCE_DIR}/imgui/imgui_widgets.cpp
+	${EXTERNAL_SOURCE_DIR}/imgui/imgui_draw.cpp
+)
+
+target_include_directories(ImGui PUBLIC 
+	${EXTERNAL_SOURCE_DIR}/imgui
+	${EXTERNAL_SOURCE_DIR}/imgui/backends
+)
+
+target_link_libraries(ImGui PRIVATE glfw)
+
 file(GLOB_RECURSE GAME_SRC_FILES CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
@@ -79,6 +99,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	${PROJECT_SOURCE_DIR}/src
 	${EXTERNAL_SOURCE_DIR}/rapidxml
 	${EXTERNAL_SOURCE_DIR}/stb
+	${EXTERNAL_SOURCE_DIR}/imgui
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -86,6 +107,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	glad::glad
 	cglm::cglm
 	EnTT::EnTT
+	ImGui
 )
 
 if(MSVC)
