@@ -1,8 +1,9 @@
-#include "cglm/struct/affine-mat.h"
-#include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <cglm/struct/aabb2d.h>
+#include <cglm/struct/affine-mat.h>
 #include <glad/glad.h>
+#include <imgui.h>
 
 #include "files/TmxLoader.hpp"
 #include "game/Game.hpp"
@@ -45,6 +46,8 @@ void MainLoop::operator()(Game& game) noexcept
     if (!tilemap.create())
         return;
 
+    auto objects = loader.getObjects();
+
     const GLuint program = game.glResources.getProgram("sprite");
     glUseProgram(program);
 
@@ -66,12 +69,13 @@ void MainLoop::operator()(Game& game) noexcept
         HeadUpDisplay hud(game.windowData);
         hud.update(tilemap, deltaTime);
 
-        const ivec2s windowSize = m_window->getSize();
-        const vec2s  position   = glms_vec2_negate(tilemap.getPosition());
-        const ivec4s viewport   = {static_cast<int>(position.x),
-                                   static_cast<int>(position.y),
-                                   static_cast<int>(position.x) + windowSize.x,
-                                   static_cast<int>(position.y) + windowSize.y};
+        const ivec2s windowSize  = m_window->getSize();
+        const vec2s  position    = glms_vec2_negate(tilemap.getPosition());
+        const vec2s  worldCoords = glms_vec2_add(position, game.windowData.cursor);
+        const ivec4s viewport    = {static_cast<int>(position.x),
+                                    static_cast<int>(position.y),
+                                    static_cast<int>(position.x) + windowSize.x,
+                                    static_cast<int>(position.y) + windowSize.y};
 
         tilemap.drawBackground(viewport);
         tilemap.drawForeground(viewport);
@@ -81,8 +85,24 @@ void MainLoop::operator()(Game& game) noexcept
         ImGui::NewFrame();
 
         ImGui::Begin("Debug Info");
-        ImGui::Text("Local mouse: (%.1f, %.1f)", game.windowData.cursor.x, game.windowData.cursor.y);
+        ImGui::Text("Local mouse position: (%.1f, %.1f)", game.windowData.cursor.x, game.windowData.cursor.y);
         ImGui::Text("Tilemap position: (%.1f, %.1f)", -position.x, -position.y);
+        ImGui::Text("World cursor position: (%.1f, %.1f)", worldCoords.x, worldCoords.y);
+
+        for (const auto& object : objects)
+        {
+            vec2s aabb[2];
+            aabb[0].x = static_cast<float>(object.position.x);
+            aabb[0].y = static_cast<float>(object.position.y);
+            aabb[1].x = static_cast<float>(object.position.x + object.size.x);
+            aabb[1].y = static_cast<float>(object.position.y + object.size.y);
+
+            if (glms_aabb2d_point(aabb, worldCoords))
+            {
+                ImGui::Text("Found intersection with object: %s", object.name.c_str());
+            }
+        }
+
         ImGui::End();
 
         ImGui::Render();

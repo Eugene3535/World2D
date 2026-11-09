@@ -11,7 +11,7 @@ MainWindow::MainWindow(struct WindowData& data) noexcept :
     m_windowData(&data),
     m_glfwWindow(nullptr)
 {
-    m_clearColor = glms_vec4_zero();
+    m_clearColor   = glms_vec4_zero();
     m_clearColor.a = 1;
 }
 
