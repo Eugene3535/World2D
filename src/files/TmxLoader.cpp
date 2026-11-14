@@ -20,6 +20,9 @@ bool TmxLoader::loadFromFile(const std::string& filename) noexcept
     if (!std::filesystem::exists(filepath))
         return false;
 
+    const size_t dot = filename.rfind('.');
+    m_name           = (dot == std::string::npos) ? filename : filename.substr(0, dot);
+
     auto                 document = std::make_unique<rapidxml::xml_document<char>>();
     rapidxml::file<char> xmlFile(filepath.string().c_str());
     document->parse<0>(xmlFile.data());
@@ -54,6 +57,12 @@ bool TmxLoader::loadFromFile(const std::string& filename) noexcept
         return false;
 
     return true;
+}
+
+
+std::string_view TmxLoader::getName() const noexcept
+{
+    return m_name;
 }
 
 

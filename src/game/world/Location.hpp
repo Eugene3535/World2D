@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "files/TmxLoader.hpp"
 #include "graphics/tilemap/TileMap.hpp"
 

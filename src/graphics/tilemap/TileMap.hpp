@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <vector>
 
 #include "graphics/transform/Transform2D.hpp"
@@ -18,6 +17,8 @@ public:
 
     const class TmxLoader& getLoader() const noexcept;
 
+    bool saveToFile(const class BinaryLoader& saver) noexcept;
+
 private:
     struct TilePlane
     {
@@ -28,8 +29,10 @@ private:
 
         struct Chunk
         {
-            const void* indices;
-            uint32_t    count;
+            const void* indices; // offset in bytes
+            uint32_t    count;   // number of indices
+            uint32_t    width;   // in tiles
+            uint32_t    height;  // in tiles
         };
 
         std::vector<Chunk> chunks;

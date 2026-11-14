@@ -92,3 +92,11 @@ std::filesystem::path FileProvider::findPathToFile(const std::string& filename) 
 
     return std::filesystem::path();
 }
+
+
+const std::filesystem::path& FileProvider::getAppPath() noexcept
+{
+    assert(s_instance != nullptr);
+
+    return s_instance->m_exeDir;
+}

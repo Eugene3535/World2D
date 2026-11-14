@@ -52,6 +52,7 @@ public:
 
     bool loadFromFile(const std::string& filename) noexcept;
 
+    std::string_view        getName() const noexcept;
     const std::list<Layer>& getLayers() const noexcept;
     std::span<const Object> getObjects() const noexcept;
     ivec2s                  getMapSize() const noexcept;
@@ -63,6 +64,7 @@ private:
     bool                  loadObjects(const void* rootNode) noexcept;
     std::vector<uint32_t> parseCSV(const void* node) noexcept;
 
+    std::string         m_name;
     std::list<Layer>    m_layers;
     std::list<Tileset>  m_tilesets;
     std::vector<Object> m_objects;

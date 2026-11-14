@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 #include <imgui.h>
 
+#include "files/BinaryLoader.hpp"
 #include "files/TmxLoader.hpp"
 #include "game/Game.hpp"
 #include "game/assets/AssetManager.hpp"
@@ -36,9 +37,10 @@ void MainLoop::operator()(Game& game) noexcept
 
     AssetManager assets(game.glResources);
 
-    TmxLoader loader;
+    TmxLoader         loader;
+    const std::string locationName("Location-2.tmx");
 
-    if (!loader.loadFromFile("Location-2.tmx"))
+    if (!loader.loadFromFile(locationName))
         return;
 
     TileMap tilemap(loader);
@@ -110,6 +112,9 @@ void MainLoop::operator()(Game& game) noexcept
 
         m_window->display();
     }
+
+    BinaryLoader binaryLoader(locationName);
+    tilemap.saveToFile(binaryLoader);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
