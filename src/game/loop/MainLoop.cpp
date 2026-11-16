@@ -39,14 +39,19 @@ void MainLoop::operator()(Game& game) noexcept
 
     TmxLoader         loader;
     const std::string locationName("Location-2.tmx");
-
-    if (!loader.loadFromFile(locationName))
-        return;
+    
 
     TileMap tilemap(loader);
+    BinaryLoader binaryLoader(locationName);
 
-    if (!tilemap.create())
-        return;
+    if (!tilemap.openFromFile(binaryLoader))
+    {
+        if (!loader.loadFromFile(locationName))
+            return;
+ 
+        if (!tilemap.create())
+            return;
+    }
 
     auto objects = loader.getObjects();
 
@@ -113,7 +118,6 @@ void MainLoop::operator()(Game& game) noexcept
         m_window->display();
     }
 
-    BinaryLoader binaryLoader(locationName);
     tilemap.saveToFile(binaryLoader);
 
     ImGui_ImplOpenGL3_Shutdown();

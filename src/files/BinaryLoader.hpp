@@ -16,7 +16,7 @@ public:
         {
             struct Chunk
             {
-                uint32_t offset; // offset in bytes in EBO (void*)
+                uint64_t offset; // offset in bytes in EBO (const void* indices)
                 uint32_t count;  // number of indices
                 uint32_t width;  // in tiles
                 uint32_t height; // in tiles
