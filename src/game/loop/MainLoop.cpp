@@ -113,7 +113,6 @@ void MainLoop::operator()(Game& game) noexcept
                 if (!object.properties.empty())
                 {
                     auto& property = object.properties[0];
-                    ImGui::Text("Object info: %s", property.name.c_str());
 
                     if (const auto* s = std::get_if<std::string>(&property.value))
                     {

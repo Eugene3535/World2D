@@ -258,7 +258,7 @@ bool TmxLoader::loadObjects(const void* rootNode) noexcept
                         if (ec == std::errc())
                             property.value = result;
                     }
-                    else if (type == "string")
+                    else
                     {
                         property.value = std::string(value);
                     }
