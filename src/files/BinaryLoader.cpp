@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <span>
 
 #include "files/BinaryLoader.hpp"
 #include "files/FileProvider.hpp"
@@ -31,14 +32,6 @@ struct FileCloser
 
 using FileOpener = std::unique_ptr<FILE, FileCloser>;
 
-struct TilePlane
-{
-    uint32_t chunks;
-    uint32_t vertices;
-    uint32_t indices;
-    uint32_t texture;
-};
-
 
 struct FileHeader
 {
@@ -49,14 +42,49 @@ struct FileHeader
     uint32_t tileWidth;
     uint32_t tileHeight;
     uint32_t tilePlaneCount;
+    uint32_t objects;
 };
 
+
+struct TilePlane
+{
+    uint32_t chunks;
+    uint32_t vertices;
+    uint32_t indices;
+    uint32_t texture;
+};
+
+
+struct ObjectEntry
+{
+    uint32_t name;
+    uint32_t type;
+    ivec2s   position;
+    ivec2s   size;
+    uint32_t properties;
+};
+
+
+struct PropertyEntry
+{
+    enum Type : uint32_t
+    {
+        Undefined = 0,
+        Boolean,
+        Character,
+        Integer,
+        Floating
+    } type;
+
+    uint32_t name;
+    uint32_t size;
+};
 
 
 BinaryLoader::BinaryLoader(const std::string& filename) noexcept :
     m_filename(filename)
 {
-    assert(m_filename.find("\\/") == std::string::npos);
+    assert(m_filename.find_first_of("\\/") == std::string::npos);
 
     if (!m_filename.ends_with(".bin"))
     {
@@ -111,24 +139,25 @@ bool BinaryLoader::save(const BinaryLoader::Data& data) const noexcept
     // Header
     FileHeader header;
     memset(static_cast<void*>(&header), 0, sizeof(FileHeader));
-    header.magic = get_binary_magic();
+    header.magic   = get_binary_magic();
     header.version = get_binary_version();
 
-    header.mapWidth   = static_cast<uint32_t>(data.mapSize.x);
-    header.mapHeight  = static_cast<uint32_t>(data.mapSize.y);
-    header.tileWidth  = static_cast<uint32_t>(data.tileSize.x);
-    header.tileHeight = static_cast<uint32_t>(data.tileSize.y);
+    header.mapWidth       = static_cast<uint32_t>(data.mapSize.x);
+    header.mapHeight      = static_cast<uint32_t>(data.mapSize.y);
+    header.tileWidth      = static_cast<uint32_t>(data.tileSize.x);
+    header.tileHeight     = static_cast<uint32_t>(data.tileSize.y);
     header.tilePlaneCount = data.foreground.chunks.empty() ? 1u : 2u;
+    header.objects        = static_cast<uint32_t>(data.objects.size());
 
     if (!try_write_data<FileHeader>(&header, 1, fp))
         return false;
 
     TilePlane plane;
-    {// Background
-        plane.chunks = static_cast<uint32_t>(data.background.chunks.size());
+    { // Background
+        plane.chunks   = static_cast<uint32_t>(data.background.chunks.size());
         plane.vertices = static_cast<uint32_t>(data.background.vertices.size());
-        plane.indices = static_cast<uint32_t>(data.background.indices.size());
-        plane.texture = static_cast<uint32_t>(data.background.texture.size());
+        plane.indices  = static_cast<uint32_t>(data.background.indices.size());
+        plane.texture  = static_cast<uint32_t>(data.background.texture.size());
 
         if (!try_write_data<TilePlane>(&plane, 1, fp))
             return false;
@@ -160,11 +189,11 @@ bool BinaryLoader::save(const BinaryLoader::Data& data) const noexcept
         return false;
 
     if (!data.foreground.chunks.empty())
-    {// Foreground
-        plane.chunks = static_cast<uint32_t>(data.foreground.chunks.size());
+    { // Foreground
+        plane.chunks   = static_cast<uint32_t>(data.foreground.chunks.size());
         plane.vertices = static_cast<uint32_t>(data.foreground.vertices.size());
-        plane.indices = static_cast<uint32_t>(data.foreground.indices.size());
-        plane.texture = static_cast<uint32_t>(data.foreground.texture.size());
+        plane.indices  = static_cast<uint32_t>(data.foreground.indices.size());
+        plane.texture  = static_cast<uint32_t>(data.foreground.texture.size());
 
         if (!try_write_data<TilePlane>(&plane, 1, fp))
             return false;
@@ -176,7 +205,111 @@ bool BinaryLoader::save(const BinaryLoader::Data& data) const noexcept
             return false;
     }
 
-    return true;
+    std::span<const TmxObject> objects        = data.objects;
+    size_t                     writtenObjects = 0;
+
+    for (const auto& object : objects)
+    {
+        ObjectEntry objEntry;
+        objEntry.name       = static_cast<uint32_t>(object.name.size());
+        objEntry.type       = static_cast<uint32_t>(object.type.size());
+        objEntry.position   = object.position;
+        objEntry.size       = object.size;
+        objEntry.properties = static_cast<uint32_t>(object.properties.size());
+
+        if (!try_write_data<ObjectEntry>(&objEntry, 1, fp))
+            continue;
+
+        if (!try_write_data<char>(object.name.data(), object.name.size(), fp))
+            continue;
+
+        if (objEntry.type > 0) // object may not have a type
+            if (!try_write_data<char>(object.type.data(), object.type.size(), fp))
+                continue;
+
+        // Properties
+        size_t writtenProperties = 0;
+
+        struct
+        {
+            const bool*        b;
+            const int32_t*     i;
+            const float*       f;
+            const std::string* s;
+        } cache;
+
+        for (const auto& property : object.properties)
+        {
+            PropertyEntry propEntry{.type = PropertyEntry::Undefined, .name = 0, .size = 0};
+            propEntry.name = static_cast<uint32_t>(property.name.size());
+
+            if (const auto* b = std::get_if<bool>(&property.value))
+            {
+                propEntry.type = PropertyEntry::Boolean;
+                propEntry.size = 1;
+                cache.b        = b;
+            }
+            else if (const auto* i = std::get_if<int>(&property.value))
+            {
+                propEntry.type = PropertyEntry::Integer;
+                propEntry.size = 1;
+                cache.i        = i;
+            }
+            else if (const auto* f = std::get_if<float>(&property.value))
+            {
+                propEntry.type = PropertyEntry::Floating;
+                propEntry.size = 1;
+                cache.f        = f;
+            }
+            else if (const auto* s = std::get_if<std::string>(&property.value))
+            {
+                propEntry.type = PropertyEntry::Character;
+                propEntry.size = static_cast<uint32_t>(s->size());
+                cache.s        = s;
+            }
+
+            if (propEntry.type == PropertyEntry::Undefined)
+                continue;
+
+            if (!try_write_data<PropertyEntry>(&propEntry, 1, fp))
+                continue;
+
+            if (!try_write_data<char>(property.name.data(), property.name.size(), fp))
+                continue;
+
+            bool result = false;
+
+            switch (propEntry.type)
+            {
+                case PropertyEntry::Boolean:
+                    result = try_write_data<bool>(cache.b, 1, fp);
+                    break;
+
+                case PropertyEntry::Integer:
+                    result = try_write_data<int>(cache.i, 1, fp);
+                    break;
+
+                case PropertyEntry::Floating:
+                    result = try_write_data<float>(cache.f, 1, fp);
+                    break;
+
+                case PropertyEntry::Character:
+                    result = try_write_data<char>(cache.s->data(), cache.s->size(), fp);
+                    break;
+
+                default:
+                    break;
+            }
+
+            if (result)
+                ++writtenProperties;
+        }
+
+        if (writtenProperties == object.properties.size())
+            ++writtenObjects;
+    }
+
+    return (writtenObjects == objects.size());
 }
 
 
@@ -221,8 +354,8 @@ std::unique_ptr<BinaryLoader::Data> BinaryLoader::load() const noexcept
 
     auto binaryData = std::make_unique<BinaryLoader::Data>();
 
-    binaryData->mapSize.x = header.mapWidth;
-    binaryData->mapSize.y = header.mapHeight;
+    binaryData->mapSize.x  = header.mapWidth;
+    binaryData->mapSize.y  = header.mapHeight;
     binaryData->tileSize.x = header.tileWidth;
     binaryData->tileSize.y = header.tileHeight;
 
@@ -263,7 +396,7 @@ std::unique_ptr<BinaryLoader::Data> BinaryLoader::load() const noexcept
         return {};
 
     if (header.tilePlaneCount > 0)
-    {// Foreground
+    { // Foreground
         if (!try_read_data<TilePlane>(&plane, 1, fp))
             return {};
 
@@ -279,6 +412,99 @@ std::unique_ptr<BinaryLoader::Data> BinaryLoader::load() const noexcept
         if (!read_large_binary_data(foreground, fp))
             return {};
     }
+
+    // Game objects
+    if (header.objects == 0)
+        return binaryData;
+
+    binaryData->objects.resize(static_cast<uint32_t>(header.objects));
+    std::span<TmxObject> objects     = binaryData->objects;
+    size_t               readObjects = 0;
+
+    for (auto& object : objects)
+    {
+        ObjectEntry objEntry;
+
+        if (!try_read_data<ObjectEntry>(&objEntry, 1, fp))
+            continue;
+
+        object.name.resize(static_cast<size_t>(objEntry.name));
+        object.type.resize(static_cast<size_t>(objEntry.type));
+        object.position = objEntry.position;
+        object.size     = objEntry.size;
+
+        if (!try_read_data<char>(object.name.data(), object.name.size(), fp))
+            continue;
+
+        if (objEntry.type > 0)
+            if (!try_read_data<char>(object.type.data(), object.type.size(), fp))
+                continue;
+
+        size_t readProperties = 0;
+
+        for (uint32_t i = 0; i < objEntry.properties; ++i)
+        {
+            PropertyEntry propEntry;
+
+            if (!try_read_data<PropertyEntry>(&propEntry, 1, fp))
+                continue;
+
+            auto& property = object.properties.emplace_back();
+            property.name.resize(static_cast<size_t>(propEntry.name));
+
+            if (!try_read_data<char>(property.name.data(), property.name.size(), fp))
+                continue;
+
+            bool result = false;
+
+            switch (propEntry.type)
+            {
+                case PropertyEntry::Boolean:
+                {
+                    bool value;
+                    result         = try_read_data<bool>(&value, 1, fp);
+                    property.value = value;
+                }
+                break;
+
+                case PropertyEntry::Integer:
+                {
+                    int32_t value;
+                    result         = try_read_data<int32_t>(&value, 1, fp);
+                    property.value = value;
+                }
+                break;
+
+                case PropertyEntry::Floating:
+                {
+                    float value;
+                    result         = try_read_data<float>(&value, 1, fp);
+                    property.value = value;
+                }
+                break;
+
+                case PropertyEntry::Character:
+                {
+                    std::string value;
+                    value.resize(static_cast<size_t>(propEntry.size));
+                    result         = try_read_data<char>(value.data(), value.size(), fp);
+                    property.value = std::move(value);
+                }
+                break;
+
+                default:
+                    break;
+            }
+
+            if (result)
+                ++readProperties;
+        }
+
+        if (readProperties == object.properties.size())
+            ++readObjects;
+    }
+
+    assert(readObjects == objects.size());
 
     return binaryData;
 }

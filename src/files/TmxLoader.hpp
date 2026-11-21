@@ -2,11 +2,8 @@
 
 #include <list>
 #include <span>
-#include <string>
-#include <variant>
-#include <vector>
 
-#include <cglm/struct/vec2.h>
+#include "files/TmxData.hpp"
 
 
 class TmxLoader final
@@ -30,33 +27,16 @@ public:
         std::vector<uint32_t> tiles;
     };
 
-    struct Object
-    {
-        struct Property
-        {
-            std::string                                 name;
-            std::variant<bool, int, float, std::string> value;
-        };
-
-        std::string name;
-        std::string type;
-        ivec2s      position;
-        ivec2s      size;
-
-        std::vector<Property> properties;
-    };
-
-
     TmxLoader() noexcept;
     ~TmxLoader();
 
     bool loadFromFile(const std::string& filename) noexcept;
 
-    std::string_view        getName() const noexcept;
-    const std::list<Layer>& getLayers() const noexcept;
-    std::span<const Object> getObjects() const noexcept;
-    ivec2s                  getMapSize() const noexcept;
-    ivec2s                  getTileSize() const noexcept;
+    std::string_view           getName() const noexcept;
+    const std::list<Layer>&    getLayers() const noexcept;
+    std::span<const TmxObject> getObjects() const noexcept;
+    ivec2s                     getMapSize() const noexcept;
+    ivec2s                     getTileSize() const noexcept;
 
 private:
     bool                  loadTilesets(const void* rootNode) noexcept;
@@ -64,10 +44,10 @@ private:
     bool                  loadObjects(const void* rootNode) noexcept;
     std::vector<uint32_t> parseCSV(const void* node) noexcept;
 
-    std::string         m_name;
-    std::list<Layer>    m_layers;
-    std::list<Tileset>  m_tilesets;
-    std::vector<Object> m_objects;
+    std::string            m_name;
+    std::list<Layer>       m_layers;
+    std::list<Tileset>     m_tilesets;
+    std::vector<TmxObject> m_objects;
 
     ivec2s m_mapSize;
     ivec2s m_tileSize;

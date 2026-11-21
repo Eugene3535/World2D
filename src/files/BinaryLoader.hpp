@@ -1,10 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <string>
-#include <vector>
 
-#include <cglm/struct/ivec2.h>
+#include "files/TmxData.hpp"
 
 
 class BinaryLoader final
@@ -32,6 +30,8 @@ public:
         TilePlane foreground;
         ivec2s    mapSize;
         ivec2s    tileSize;
+
+        std::vector<TmxObject> objects;
     };
 
     BinaryLoader(const std::string& filename) noexcept;

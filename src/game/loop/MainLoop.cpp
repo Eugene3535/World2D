@@ -1,3 +1,5 @@
+#include <variant>
+
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <cglm/struct/aabb2d.h>
@@ -39,21 +41,21 @@ void MainLoop::operator()(Game& game) noexcept
 
     TmxLoader         loader;
     const std::string locationName("Location-2.tmx");
-    
 
-    TileMap tilemap(loader);
+
+    TileMap      tilemap(loader);
     BinaryLoader binaryLoader(locationName);
 
     if (!tilemap.openFromFile(binaryLoader))
     {
         if (!loader.loadFromFile(locationName))
             return;
- 
+
         if (!tilemap.create())
             return;
     }
 
-    auto objects = loader.getObjects();
+    auto objects = tilemap.getObjects();
 
     const GLuint program = game.glResources.getProgram("sprite");
     glUseProgram(program);
@@ -107,6 +109,17 @@ void MainLoop::operator()(Game& game) noexcept
             if (glms_aabb2d_point(aabb, worldCoords))
             {
                 ImGui::Text("Found intersection with object: %s", object.name.c_str());
+
+                if (!object.properties.empty())
+                {
+                    auto& property = object.properties[0];
+                    ImGui::Text("Object info: %s", property.name.c_str());
+
+                    if (const auto* s = std::get_if<std::string>(&property.value))
+                    {
+                        ImGui::Text("Object info: %s", s->c_str());
+                    }
+                }
             }
         }
 

@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cstring>
 #include <ranges>
-#include <span>
 
 #include <glad/glad.h>
 
@@ -52,6 +51,12 @@ bool TileMap::create() noexcept
 
     loadGraphics();
 
+    if (auto objects = m_loader->getObjects(); !objects.empty())
+    {
+        m_objects.reserve(objects.size());
+        m_objects.assign(objects.begin(), objects.end());
+    }
+
     return m_isLoaded;
 }
 
@@ -70,9 +75,9 @@ void TileMap::drawForeground(const ivec4s& viewport) noexcept
 }
 
 
-const TmxLoader& TileMap::getLoader() const noexcept
+std::span<struct TmxObject> TileMap::getObjects() noexcept
 {
-    return *m_loader;
+    return m_objects;
 }
 
 
@@ -103,8 +108,8 @@ bool TileMap::saveToFile(const BinaryLoader& saver) noexcept
 
     BinaryLoader::Data data;
 
-    data.mapSize  = m_mapSize;
-    data.tileSize = m_tileSize;
+    data.mapSize            = m_mapSize;
+    data.tileSize           = m_tileSize;
     data.background.texture = m_background.textureName;
     data.foreground.texture = m_foreground.textureName;
 
@@ -156,6 +161,12 @@ bool TileMap::saveToFile(const BinaryLoader& saver) noexcept
         data.foreground.indices.swap(indices);
     }
 
+    if (!m_objects.empty())
+    {
+        data.objects.reserve(m_objects.size());
+        data.objects.assign(m_objects.begin(), m_objects.end());
+    }
+
     return saver.save(data);
 }
 
@@ -170,29 +181,29 @@ bool TileMap::openFromFile(const BinaryLoader& saver) noexcept
     if (!binaryData)
         return false;
 
-    m_mapSize = binaryData->mapSize;
+    m_mapSize  = binaryData->mapSize;
     m_tileSize = binaryData->tileSize;
 
-    {// Textures
+    { // Textures
         const Texture2D* background = Assets->get<Texture2D>(binaryData->background.texture);
 
         if (!background)
             return false;
 
-        m_background.texture = background->getHandle();
+        m_background.texture     = background->getHandle();
         m_background.textureName = binaryData->background.texture;
 
         const Texture2D* foreground = Assets->get<Texture2D>(binaryData->foreground.texture);
 
         if (!foreground)
         {
-            m_foreground.texture = background->getHandle();
+            m_foreground.texture     = background->getHandle();
             m_foreground.textureName = binaryData->foreground.texture;
         }
     }
 
     auto glResources = Assets->getResourceManager();
-    auto        buffers = glResources->getHandles(GlResourceManager::GLBuffer, 4);
+    auto buffers     = glResources->getHandles(GlResourceManager::GLBuffer, 4);
 
     m_background.VBO = buffers[0];
     m_background.EBO = buffers[1];
@@ -204,15 +215,15 @@ bool TileMap::openFromFile(const BinaryLoader& saver) noexcept
     for (size_t i = 0; i < m_background.chunks.size(); ++i)
     {
         auto& binChunk = binaryData->background.chunks[i];
-        auto& chunk = m_background.chunks[i];
+        auto& chunk    = m_background.chunks[i];
 
         chunk.indices = reinterpret_cast<const void*>(binChunk.offset);
-        chunk.count = binChunk.count;
-        chunk.width = binChunk.width;
-        chunk.height = binChunk.height;
+        chunk.count   = binChunk.count;
+        chunk.width   = binChunk.width;
+        chunk.height  = binChunk.height;
     }
 
-    {// Background tile plane
+    { // Background tile plane
         std::span<const float>    vertices = binaryData->background.vertices;
         std::span<const uint32_t> indices  = binaryData->background.indices;
 
@@ -226,7 +237,7 @@ bool TileMap::openFromFile(const BinaryLoader& saver) noexcept
                              indices.data(),
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
     }
-    
+
     if (!binaryData->foreground.chunks.empty()) // Foreground tile plane
     {
         std::span<const float>    vertices = binaryData->foreground.vertices;
@@ -247,12 +258,12 @@ bool TileMap::openFromFile(const BinaryLoader& saver) noexcept
         for (size_t i = 0; i < m_foreground.chunks.size(); ++i)
         {
             auto& binChunk = binaryData->foreground.chunks[i];
-            auto& chunk = m_foreground.chunks[i];
+            auto& chunk    = m_foreground.chunks[i];
 
             chunk.indices = reinterpret_cast<const void*>(binChunk.offset);
-            chunk.count = binChunk.count;
-            chunk.width = binChunk.width;
-            chunk.height = binChunk.height;
+            chunk.count   = binChunk.count;
+            chunk.width   = binChunk.width;
+            chunk.height  = binChunk.height;
         }
     }
 
@@ -272,6 +283,14 @@ bool TileMap::openFromFile(const BinaryLoader& saver) noexcept
 
     m_background.VAO = vertexArrays[0];
     m_foreground.VAO = vertexArrays[1];
+
+    std::span<TmxObject> objects = binaryData->objects;
+
+    if (!objects.empty())
+    {
+        m_objects.reserve(objects.size());
+        m_objects.assign(objects.begin(), objects.end());
+    }
 
     m_isLoaded = true;
 
@@ -299,7 +318,7 @@ bool TileMap::loadTextures() noexcept
     if (!background)
         return false;
 
-    m_background.texture = background->getHandle();
+    m_background.texture     = background->getHandle();
     m_background.textureName = planeB->tileset->filename;
 
     Texture2D* foreground = Assets->get<Texture2D>(planeA->tileset->filename);
@@ -307,7 +326,7 @@ bool TileMap::loadTextures() noexcept
     if (!foreground)
         return false;
 
-    m_foreground.texture = foreground->getHandle();
+    m_foreground.texture     = foreground->getHandle();
     m_background.textureName = planeA->tileset->filename;
 
     return true;
@@ -332,10 +351,10 @@ void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
 
     const vec2s ratio = {1.f / static_cast<float>(tileset->width), 1.f / static_cast<float>(tileset->height)};
 
-    m_mapSize  = m_loader->getMapSize();
-    m_tileSize = m_loader->getTileSize();
-    const uint32_t chunksX  = (m_mapSize.x + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
-    const uint32_t chunksY  = (m_mapSize.y + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
+    m_mapSize              = m_loader->getMapSize();
+    m_tileSize             = m_loader->getTileSize();
+    const uint32_t chunksX = (m_mapSize.x + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
+    const uint32_t chunksY = (m_mapSize.y + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
 
     std::vector<TilePlane::Chunk> chunks(chunksX * chunksY, {nullptr, 0});
 

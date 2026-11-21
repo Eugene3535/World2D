@@ -1,9 +1,11 @@
 #pragma once
 
-#include <vector>
+#include <span>
 #include <string>
+#include <vector>
 
 #include "graphics/transform/Transform2D.hpp"
+#include <files/TmxData.hpp>
 
 
 class TileMap : public Transform2D
@@ -16,7 +18,7 @@ public:
     void drawBackground(const ivec4s& viewport) noexcept;
     void drawForeground(const ivec4s& viewport) noexcept;
 
-    const class TmxLoader& getLoader() const noexcept;
+    std::span<TmxObject> getObjects() noexcept;
 
     bool saveToFile(const class BinaryLoader& saver) noexcept;
     bool openFromFile(const class BinaryLoader& saver) noexcept;
@@ -25,10 +27,10 @@ private:
     struct TilePlane
     {
         std::string textureName;
-        uint32_t texture;
-        uint32_t VAO; // Vertex Array Object
-        uint32_t VBO; // Vertex Buffer Object
-        uint32_t EBO; // Element Buffer Object
+        uint32_t    texture;
+        uint32_t    VAO; // Vertex Array Object
+        uint32_t    VBO; // Vertex Buffer Object
+        uint32_t    EBO; // Element Buffer Object
 
         struct Chunk
         {
@@ -54,7 +56,8 @@ private:
     const class TmxLoader* m_loader{nullptr};
     TilePlane              m_background{};
     TilePlane              m_foreground{};
-        ivec2s    m_mapSize{0, 0};
-        ivec2s    m_tileSize{0, 0};
+    std::vector<TmxObject> m_objects;
+    ivec2s                 m_mapSize{0, 0};
+    ivec2s                 m_tileSize{0, 0};
     bool                   m_isLoaded{false};
 };

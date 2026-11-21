@@ -72,7 +72,7 @@ const std::list<TmxLoader::Layer>& TmxLoader::getLayers() const noexcept
 }
 
 
-std::span<const TmxLoader::Object> TmxLoader::getObjects() const noexcept
+std::span<const TmxObject> TmxLoader::getObjects() const noexcept
 {
     return m_objects;
 }

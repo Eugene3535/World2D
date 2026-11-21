@@ -172,8 +172,16 @@
 </data>
  </layer>
  <objectgroup id="3" name="Objects">
-  <object id="1" name="Tree" x="254" y="731" width="65" height="106"/>
-  <object id="2" name="Well" x="394" y="787" width="48" height="51"/>
+  <object id="1" name="Tree" x="254" y="731" width="65" height="106">
+   <properties>
+    <property name="Description" value="It`s green and high!"/>
+   </properties>
+  </object>
+  <object id="2" name="Well" x="394" y="787" width="48" height="51">
+   <properties>
+    <property name="Description" value="The well water tastes amazing!"/>
+   </properties>
+  </object>
   <object id="5" name="Tower" x="929" y="572" width="30" height="67"/>
   <object id="6" name="Old tower" x="1408" y="191" width="32" height="64"/>
   <object id="7" name="Oasis" x="2" y="2301" width="223" height="257"/>
