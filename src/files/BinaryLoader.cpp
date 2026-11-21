@@ -20,13 +20,6 @@ static constexpr uint32_t get_binary_version() noexcept
 }
 
 
-struct FileHeader
-{
-    uint32_t magic;
-    uint32_t version;
-};
-
-
 struct FileCloser
 {
     void operator()(FILE* f) const noexcept
@@ -38,25 +31,26 @@ struct FileCloser
 
 using FileOpener = std::unique_ptr<FILE, FileCloser>;
 
-
-struct TileMapHeader
+struct TilePlane
 {
+    uint32_t chunks;
+    uint32_t vertices;
+    uint32_t indices;
+    uint32_t texture;
+};
+
+
+struct FileHeader
+{
+    uint32_t magic;
+    uint32_t version;
     uint32_t mapWidth;
     uint32_t mapHeight;
     uint32_t tileWidth;
     uint32_t tileHeight;
-
-    char textureBG[texture_name_buffer_size + 1]; // +1 for '\0'; BG == background
-    char textureFG[texture_name_buffer_size + 1]; // FG == foreground
-
-    uint32_t chunkCountBG;
-    uint32_t chunkCountFG;
-
-    uint32_t vertexCountBG;
-    uint32_t indexCountBG;
-    uint32_t vertexCountFG;
-    uint32_t indexCountFG;
+    uint32_t tilePlaneCount;
 };
+
 
 
 BinaryLoader::BinaryLoader(const std::string& filename) noexcept :
@@ -115,40 +109,33 @@ bool BinaryLoader::save(const BinaryLoader::Data& data) const noexcept
     auto* fp = fileOpener.get();
 
     // Header
-    const FileHeader header = {.magic = get_binary_magic(), .version = get_binary_version()};
+    FileHeader header;
+    memset(static_cast<void*>(&header), 0, sizeof(FileHeader));
+    header.magic = get_binary_magic();
+    header.version = get_binary_version();
+
+    header.mapWidth   = static_cast<uint32_t>(data.mapSize.x);
+    header.mapHeight  = static_cast<uint32_t>(data.mapSize.y);
+    header.tileWidth  = static_cast<uint32_t>(data.tileSize.x);
+    header.tileHeight = static_cast<uint32_t>(data.tileSize.y);
+    header.tilePlaneCount = data.foreground.chunks.empty() ? 1u : 2u;
 
     if (!try_write_data<FileHeader>(&header, 1, fp))
         return false;
 
-    // Tilemap data
-    TileMapHeader tmData;
-    memset(static_cast<void*>(&tmData), 0, sizeof(TileMapHeader));
+    TilePlane plane;
+    {// Background
+        plane.chunks = static_cast<uint32_t>(data.background.chunks.size());
+        plane.vertices = static_cast<uint32_t>(data.background.vertices.size());
+        plane.indices = static_cast<uint32_t>(data.background.indices.size());
+        plane.texture = static_cast<uint32_t>(data.background.texture.size());
 
-    tmData.mapWidth   = static_cast<uint32_t>(data.mapSize.x);
-    tmData.mapHeight  = static_cast<uint32_t>(data.mapSize.y);
-    tmData.tileWidth  = static_cast<uint32_t>(data.tileSize.x);
-    tmData.tileHeight = static_cast<uint32_t>(data.tileSize.y);
+        if (!try_write_data<TilePlane>(&plane, 1, fp))
+            return false;
 
-    strncpy(tmData.textureBG,
-            data.background.texture.data(),
-            std::min(data.background.texture.size(), texture_name_buffer_size - 1));
-
-    strncpy(tmData.textureFG,
-            data.foreground.texture.data(),
-            std::min(data.foreground.texture.size(), texture_name_buffer_size - 1));
-
-    // Chunk data
-    tmData.chunkCountBG = data.background.chunks.size();
-    tmData.chunkCountFG = data.foreground.chunks.size();
-
-    // Vertices + indices
-    tmData.vertexCountBG = static_cast<uint32_t>(data.background.vertices.size());
-    tmData.indexCountBG  = static_cast<uint32_t>(data.background.indices.size());
-    tmData.vertexCountFG = static_cast<uint32_t>(data.foreground.vertices.size());
-    tmData.indexCountFG  = static_cast<uint32_t>(data.foreground.indices.size());
-
-    if (!try_write_data<TileMapHeader>(&tmData, 1, fp))
-        return false;
+        if (!try_write_data<char>(data.background.texture.data(), data.background.texture.size(), fp))
+            return false;
+    }
 
     auto write_large_binary_data = [](const Data::TilePlane& plane, FILE* fp) -> bool
     {
@@ -173,7 +160,18 @@ bool BinaryLoader::save(const BinaryLoader::Data& data) const noexcept
         return false;
 
     if (!data.foreground.chunks.empty())
-    {
+    {// Foreground
+        plane.chunks = static_cast<uint32_t>(data.foreground.chunks.size());
+        plane.vertices = static_cast<uint32_t>(data.foreground.vertices.size());
+        plane.indices = static_cast<uint32_t>(data.foreground.indices.size());
+        plane.texture = static_cast<uint32_t>(data.foreground.texture.size());
+
+        if (!try_write_data<TilePlane>(&plane, 1, fp))
+            return false;
+
+        if (!try_write_data<char>(data.foreground.texture.data(), data.foreground.texture.size(), fp))
+            return false;
+
         if (!write_large_binary_data(data.foreground, fp))
             return false;
     }
@@ -221,24 +219,26 @@ std::unique_ptr<BinaryLoader::Data> BinaryLoader::load() const noexcept
     if (header.magic != get_binary_magic())
         return {}; // Unknown format
 
-    TileMapHeader tmHdr;
-
-    if (!try_read_data<TileMapHeader>(&tmHdr, 1, fp))
-        return {};
-
     auto binaryData = std::make_unique<BinaryLoader::Data>();
 
-    binaryData->mapSize.x = tmHdr.mapWidth;
-    binaryData->mapSize.y = tmHdr.mapHeight;
-    binaryData->tileSize.x = tmHdr.tileWidth;
-    binaryData->tileSize.y = tmHdr.tileHeight;
-    
-    binaryData->background.texture = tmHdr.textureBG;
-    binaryData->foreground.texture = tmHdr.textureFG;
+    binaryData->mapSize.x = header.mapWidth;
+    binaryData->mapSize.y = header.mapHeight;
+    binaryData->tileSize.x = header.tileWidth;
+    binaryData->tileSize.y = header.tileHeight;
 
-    binaryData->background.chunks.resize(tmHdr.chunkCountBG);
-    binaryData->background.vertices.resize(tmHdr.vertexCountBG);
-    binaryData->background.indices.resize(tmHdr.indexCountBG);
+    TilePlane plane;
+
+    if (!try_read_data<TilePlane>(&plane, 1, fp))
+        return {};
+
+    auto& background = binaryData->background;
+    background.texture.resize(plane.texture);
+    background.chunks.resize(plane.chunks);
+    background.vertices.resize(plane.vertices);
+    background.indices.resize(plane.indices);
+
+    if (!try_read_data<char>(background.texture.data(), background.texture.size(), fp))
+        return {};
 
     auto read_large_binary_data = [](Data::TilePlane& plane, FILE* fp) -> bool
     {
@@ -262,12 +262,19 @@ std::unique_ptr<BinaryLoader::Data> BinaryLoader::load() const noexcept
     if (!read_large_binary_data(binaryData->background, fp))
         return {};
 
-    if (tmHdr.chunkCountFG > 0)
-    {
+    if (header.tilePlaneCount > 0)
+    {// Foreground
+        if (!try_read_data<TilePlane>(&plane, 1, fp))
+            return {};
+
         auto& foreground = binaryData->foreground;
-        foreground.chunks.resize(tmHdr.chunkCountFG);
-        foreground.vertices.resize(tmHdr.vertexCountFG);
-        foreground.indices.resize(tmHdr.indexCountFG);
+        foreground.texture.resize(plane.texture);
+        foreground.chunks.resize(plane.chunks);
+        foreground.vertices.resize(plane.vertices);
+        foreground.indices.resize(plane.indices);
+
+        if (!try_read_data<char>(foreground.texture.data(), foreground.texture.size(), fp))
+            return {};
 
         if (!read_large_binary_data(foreground, fp))
             return {};
