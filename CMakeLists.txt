@@ -54,7 +54,7 @@ if(LINUX)
     endforeach()
 endif()
 
-foreach(lib glfw3 glad cglm entt)
+foreach(lib glfw3 glad cglm EnTT)
 	find_package(${lib} CONFIG REQUIRED)
 endforeach()
 
