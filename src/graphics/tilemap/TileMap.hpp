@@ -11,19 +11,22 @@
 class TileMap : public Transform2D
 {
 public:
-    TileMap(const class TmxLoader& loader) noexcept;
+    TileMap(const std::string& locationName) noexcept;
     ~TileMap();
 
-    bool create() noexcept;
+    bool open() noexcept;
+    bool save() noexcept;
     void drawBackground(const ivec4s& viewport) noexcept;
     void drawForeground(const ivec4s& viewport) noexcept;
 
+        ivec2s                     getMapSize() const noexcept;
+    ivec2s                     getTileSize() const noexcept;
     std::span<TmxObject> getObjects() noexcept;
 
-    bool saveToFile(const class BinaryLoader& saver) noexcept;
-    bool openFromFile(const class BinaryLoader& saver) noexcept;
-
 private:
+    bool openFromFile(const class BinaryLoader* loader) noexcept;
+    bool saveToFile(const class BinaryLoader* saver) noexcept;
+
     struct TilePlane
     {
         std::string textureName;
@@ -46,14 +49,14 @@ private:
         uint32_t           height;
     };
 
-    bool loadTextures() noexcept;
+    bool loadTextures(const class TmxLoader& loader) noexcept;
     void createBufferData(TilePlane& plane, void* bufferData) noexcept;
-    void loadGraphics() noexcept;
+    void loadGraphics(const class TmxLoader& loader) noexcept;
     void cleanup() noexcept;
     void prepareChunks(TilePlane& plane, const ivec4s& extents) noexcept;
     void draw(const TilePlane& plane, const ivec4s& viewport) const noexcept;
 
-    const class TmxLoader* m_loader{nullptr};
+    std::string m_locationName;
     TilePlane              m_background{};
     TilePlane              m_foreground{};
     std::vector<TmxObject> m_objects;

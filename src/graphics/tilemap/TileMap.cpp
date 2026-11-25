@@ -26,10 +26,15 @@ struct BufferData
 };
 
 
-TileMap::TileMap(const TmxLoader& loader) noexcept :
+TileMap::TileMap(const std::string& locationName) noexcept :
     Transform2D(),
-    m_loader(&loader)
+    m_locationName(locationName)
 {
+    assert(!locationName.empty());
+    assert(m_locationName.find_first_of("\\/") == std::string::npos);
+
+    if (const size_t dot = m_locationName.rfind('.'); dot != std::string::npos)
+        m_locationName = m_locationName.substr(0, dot); // erase extension
 }
 
 
@@ -39,25 +44,59 @@ TileMap::~TileMap()
 }
 
 
-bool TileMap::create() noexcept
+bool TileMap::open() noexcept
 {
     if (m_isLoaded)
         return true;
 
-    cleanup();
+    namespace fs = std::filesystem;
+    std::error_code ec;
 
-    if (!loadTextures())
+    std::string fileName = m_locationName + ".bin";
+    auto binFile = FileProvider::findPathToFile(fileName);
+
+    if (fs::exists(binFile, ec))
+    {
+        auto binaryLoader = std::make_unique<BinaryLoader>(fileName);
+
+        if (openFromFile(binaryLoader.get()))
+            return true;
+    }
+
+    if (const size_t dot = fileName.rfind('.'); dot != std::string::npos)
+        fileName.replace(dot + 1, fileName.size() - dot - 1, "tmx");
+
+    TmxLoader tmxLoader;
+
+    if (!tmxLoader.loadFromFile(fileName))
         return false;
 
-    loadGraphics();
+    m_mapSize  = tmxLoader.getMapSize();
+    m_tileSize = tmxLoader.getTileSize();
 
-    if (auto objects = m_loader->getObjects(); !objects.empty())
+    if (!loadTextures(tmxLoader))
+        return false;
+
+    loadGraphics(tmxLoader);
+
+    if (auto objects = tmxLoader.getObjects(); !objects.empty())
     {
         m_objects.reserve(objects.size());
         m_objects.assign(objects.begin(), objects.end());
     }
 
     return m_isLoaded;
+}
+
+
+bool TileMap::save() noexcept
+{
+    if (!m_isLoaded)
+        return false;
+
+    auto binaryLoader = std::make_unique<BinaryLoader>(m_locationName + ".bin");
+
+    return saveToFile(binaryLoader.get());
 }
 
 
@@ -75,108 +114,27 @@ void TileMap::drawForeground(const ivec4s& viewport) noexcept
 }
 
 
+ivec2s TileMap::getMapSize() const noexcept
+{
+    return m_mapSize;
+}
+
+
+ivec2s TileMap::getTileSize() const noexcept
+{
+    return m_tileSize;
+}
+
+
 std::span<struct TmxObject> TileMap::getObjects() noexcept
 {
     return m_objects;
 }
 
 
-template <class T>
-static bool try_get_gpu_data(std::vector<T>& buffer, uint32_t handle)
+bool TileMap::openFromFile(const BinaryLoader* loader) noexcept
 {
-    GLint bufferSize;
-    glGetNamedBufferParameteriv(handle, GL_BUFFER_SIZE, &bufferSize);
-
-    void* mapped = glMapNamedBufferRange(handle, 0, bufferSize, GL_MAP_READ_BIT);
-
-    if (!mapped)
-        return false;
-
-    buffer.resize(bufferSize / (sizeof(T)));
-    memcpy(buffer.data(), mapped, bufferSize);
-
-    glUnmapNamedBuffer(handle);
-
-    return true;
-}
-
-
-bool TileMap::saveToFile(const BinaryLoader& saver) noexcept
-{
-    if (!m_isLoaded)
-        return false;
-
-    BinaryLoader::Data data;
-
-    data.mapSize            = m_mapSize;
-    data.tileSize           = m_tileSize;
-    data.background.texture = m_background.textureName;
-    data.foreground.texture = m_foreground.textureName;
-
-    std::vector<BinaryLoader::Data::TilePlane::Chunk> fileChunks;
-    std::vector<float>                                vertices;
-    std::vector<uint32_t>                             indices;
-
-    fileChunks.resize(m_background.chunks.size());
-    const auto& backgroundChunks = m_background.chunks;
-
-    for (size_t i = 0; i < fileChunks.size(); ++i)
-    {
-        auto& chunk  = fileChunks[i];
-        chunk.offset = reinterpret_cast<uintptr_t>(backgroundChunks[i].indices);
-        chunk.count  = backgroundChunks[i].count;
-        chunk.width  = backgroundChunks[i].width;
-        chunk.height = backgroundChunks[i].height;
-    }
-
-    if (!try_get_gpu_data<float>(vertices, m_background.VBO))
-        return false;
-
-    if (!try_get_gpu_data<uint32_t>(indices, m_background.EBO))
-        return false;
-
-    data.background.chunks.swap(fileChunks);
-    data.background.vertices.swap(vertices);
-    data.background.indices.swap(indices);
-
-    if (!m_foreground.chunks.empty())
-    {
-        fileChunks.resize(m_foreground.chunks.size());
-        const auto& foregroundChunks = m_foreground.chunks;
-
-        for (size_t i = 0; i < fileChunks.size(); ++i)
-        {
-            fileChunks[i].offset = reinterpret_cast<uint64_t>(foregroundChunks[i].indices);
-            fileChunks[i].count  = foregroundChunks[i].count;
-        }
-
-        if (!try_get_gpu_data<float>(vertices, m_foreground.VBO))
-            return false;
-
-        if (!try_get_gpu_data<uint32_t>(indices, m_foreground.EBO))
-            return false;
-
-        data.foreground.chunks.swap(fileChunks);
-        data.foreground.vertices.swap(vertices);
-        data.foreground.indices.swap(indices);
-    }
-
-    if (!m_objects.empty())
-    {
-        data.objects.reserve(m_objects.size());
-        data.objects.assign(m_objects.begin(), m_objects.end());
-    }
-
-    return saver.save(data);
-}
-
-
-bool TileMap::openFromFile(const BinaryLoader& saver) noexcept
-{
-    if (m_isLoaded)
-        return true;
-
-    const auto binaryData = saver.load();
+    const auto binaryData = loader->load();
 
     if (!binaryData)
         return false;
@@ -298,9 +256,99 @@ bool TileMap::openFromFile(const BinaryLoader& saver) noexcept
 }
 
 
-bool TileMap::loadTextures() noexcept
+template <class T>
+static bool try_get_gpu_data(std::vector<T>& buffer, uint32_t handle)
 {
-    const auto& tilePlanes = m_loader->getLayers();
+    GLint bufferSize;
+    glGetNamedBufferParameteriv(handle, GL_BUFFER_SIZE, &bufferSize);
+
+    void* mapped = glMapNamedBufferRange(handle, 0, bufferSize, GL_MAP_READ_BIT);
+
+    if (!mapped)
+        return false;
+
+    buffer.resize(bufferSize / (sizeof(T)));
+    memcpy(buffer.data(), mapped, bufferSize);
+
+    glUnmapNamedBuffer(handle);
+
+    return true;
+}
+
+
+bool TileMap::saveToFile(const BinaryLoader* saver) noexcept
+{
+    if (!m_isLoaded)
+        return false;
+
+    BinaryLoader::Data data;
+
+    data.mapSize            = m_mapSize;
+    data.tileSize           = m_tileSize;
+    data.background.texture = m_background.textureName;
+    data.foreground.texture = m_foreground.textureName;
+
+    std::vector<BinaryLoader::Data::TilePlane::Chunk> fileChunks;
+    std::vector<float>                                vertices;
+    std::vector<uint32_t>                             indices;
+
+    fileChunks.resize(m_background.chunks.size());
+    const auto& backgroundChunks = m_background.chunks;
+
+    for (size_t i = 0; i < fileChunks.size(); ++i)
+    {
+        auto& chunk  = fileChunks[i];
+        chunk.offset = reinterpret_cast<uintptr_t>(backgroundChunks[i].indices);
+        chunk.count  = backgroundChunks[i].count;
+        chunk.width  = backgroundChunks[i].width;
+        chunk.height = backgroundChunks[i].height;
+    }
+
+    if (!try_get_gpu_data<float>(vertices, m_background.VBO))
+        return false;
+
+    if (!try_get_gpu_data<uint32_t>(indices, m_background.EBO))
+        return false;
+
+    data.background.chunks.swap(fileChunks);
+    data.background.vertices.swap(vertices);
+    data.background.indices.swap(indices);
+
+    if (!m_foreground.chunks.empty())
+    {
+        fileChunks.resize(m_foreground.chunks.size());
+        const auto& foregroundChunks = m_foreground.chunks;
+
+        for (size_t i = 0; i < fileChunks.size(); ++i)
+        {
+            fileChunks[i].offset = reinterpret_cast<uint64_t>(foregroundChunks[i].indices);
+            fileChunks[i].count  = foregroundChunks[i].count;
+        }
+
+        if (!try_get_gpu_data<float>(vertices, m_foreground.VBO))
+            return false;
+
+        if (!try_get_gpu_data<uint32_t>(indices, m_foreground.EBO))
+            return false;
+
+        data.foreground.chunks.swap(fileChunks);
+        data.foreground.vertices.swap(vertices);
+        data.foreground.indices.swap(indices);
+    }
+
+    if (!m_objects.empty())
+    {
+        data.objects.reserve(m_objects.size());
+        data.objects.assign(m_objects.begin(), m_objects.end());
+    }
+
+    return saver->save(data);
+}
+
+
+bool TileMap::loadTextures(const TmxLoader& loader) noexcept
+{
+    const auto& tilePlanes = loader.getLayers();
 
     auto planeB = std::find_if(tilePlanes.begin(),
                                tilePlanes.end(),
@@ -351,8 +399,6 @@ void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
 
     const vec2s ratio = {1.f / static_cast<float>(tileset->width), 1.f / static_cast<float>(tileset->height)};
 
-    m_mapSize              = m_loader->getMapSize();
-    m_tileSize             = m_loader->getTileSize();
     const uint32_t chunksX = (m_mapSize.x + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
     const uint32_t chunksY = (m_mapSize.y + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
 
@@ -453,11 +499,11 @@ void TileMap::createBufferData(TilePlane& plane, void* bufferData) noexcept
 }
 
 
-void TileMap::loadGraphics() noexcept
+void TileMap::loadGraphics(const TmxLoader& loader) noexcept
 {
     auto glResources = Assets->getResourceManager();
 
-    const auto& layers  = m_loader->getLayers();
+    const auto& layers  = loader.getLayers();
     auto        buffers = glResources->getHandles(GlResourceManager::GLBuffer, 4);
 
     m_background.VBO = buffers[0];

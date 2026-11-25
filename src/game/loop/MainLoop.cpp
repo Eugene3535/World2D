@@ -7,8 +7,6 @@
 #include <glad/glad.h>
 #include <imgui.h>
 
-#include "files/BinaryLoader.hpp"
-#include "files/TmxLoader.hpp"
 #include "game/Game.hpp"
 #include "game/assets/AssetManager.hpp"
 #include "game/loop/MainLoop.hpp"
@@ -39,21 +37,12 @@ void MainLoop::operator()(Game& game) noexcept
 
     AssetManager assets(game.glResources);
 
-    TmxLoader         loader;
-    const std::string locationName("Location-2.tmx");
 
+    const std::string locationName("Location-2");
+    TileMap tilemap(locationName);
 
-    TileMap      tilemap(loader);
-    BinaryLoader binaryLoader(locationName);
-
-    if (!tilemap.openFromFile(binaryLoader))
-    {
-        if (!loader.loadFromFile(locationName))
-            return;
-
-        if (!tilemap.create())
-            return;
-    }
+    if (!tilemap.open())
+        return;
 
     auto objects = tilemap.getObjects();
 
@@ -62,8 +51,8 @@ void MainLoop::operator()(Game& game) noexcept
 
     float lastFrame = 0.f;
 
-    const auto mapSize           = loader.getMapSize();
-    const auto tileSize          = loader.getTileSize();
+    const auto mapSize           = tilemap.getMapSize();
+    const auto tileSize          = tilemap.getTileSize();
     game.windowData.locationSize = glms_ivec2_mul(mapSize, tileSize);
 
     while (m_window->isOpen())
@@ -123,14 +112,13 @@ void MainLoop::operator()(Game& game) noexcept
         }
 
         ImGui::End();
-
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         m_window->display();
     }
 
-    tilemap.saveToFile(binaryLoader);
+    tilemap.save();
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
