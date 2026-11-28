@@ -53,7 +53,7 @@ bool TileMap::open() noexcept
     std::error_code ec;
 
     std::string fileName = m_locationName + ".bin";
-    auto binFile = FileProvider::findPathToFile(fileName);
+    auto        binFile  = FileProvider::findPathToFile(fileName);
 
     if (fs::exists(binFile, ec))
     {
@@ -103,14 +103,14 @@ bool TileMap::save() noexcept
 void TileMap::drawBackground(const ivec4s& viewport) noexcept
 {
     prepareChunks(m_background, viewport);
-    draw(m_background, viewport);
+    draw(m_background);
 }
 
 
 void TileMap::drawForeground(const ivec4s& viewport) noexcept
 {
     prepareChunks(m_foreground, viewport);
-    draw(m_foreground, viewport);
+    draw(m_foreground);
 }
 
 
@@ -139,8 +139,10 @@ bool TileMap::openFromFile(const BinaryLoader* loader) noexcept
     if (!binaryData)
         return false;
 
-    m_mapSize  = binaryData->mapSize;
-    m_tileSize = binaryData->tileSize;
+    m_mapSize              = binaryData->mapSize;
+    m_tileSize             = binaryData->tileSize;
+    const uint32_t chunksX = (m_mapSize.x + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
+    const uint32_t chunksY = (m_mapSize.y + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
 
     { // Textures
         const Texture2D* background = Assets->get<Texture2D>(binaryData->background.texture);
@@ -169,6 +171,8 @@ bool TileMap::openFromFile(const BinaryLoader* loader) noexcept
     m_foreground.EBO = buffers[3];
 
     m_background.chunks.resize(binaryData->background.chunks.size());
+    m_background.width  = chunksX;
+    m_background.height = chunksY;
 
     for (size_t i = 0; i < m_background.chunks.size(); ++i)
     {
@@ -212,6 +216,8 @@ bool TileMap::openFromFile(const BinaryLoader* loader) noexcept
                              GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
 
         m_foreground.chunks.resize(binaryData->foreground.chunks.size());
+        m_foreground.width  = chunksX;
+        m_foreground.height = chunksY;
 
         for (size_t i = 0; i < m_foreground.chunks.size(); ++i)
         {
@@ -321,8 +327,11 @@ bool TileMap::saveToFile(const BinaryLoader* saver) noexcept
 
         for (size_t i = 0; i < fileChunks.size(); ++i)
         {
-            fileChunks[i].offset = reinterpret_cast<uint64_t>(foregroundChunks[i].indices);
-            fileChunks[i].count  = foregroundChunks[i].count;
+            auto& chunk  = fileChunks[i];
+            chunk.offset = reinterpret_cast<uint64_t>(foregroundChunks[i].indices);
+            chunk.count  = foregroundChunks[i].count;
+            chunk.width  = backgroundChunks[i].width;
+            chunk.height = backgroundChunks[i].height;
         }
 
         if (!try_get_gpu_data<float>(vertices, m_foreground.VBO))
@@ -678,7 +687,7 @@ void TileMap::prepareChunks(TileMap::TilePlane& plane, const ivec4s& extents) no
 }
 
 
-void TileMap::draw(const TileMap::TilePlane& plane, const ivec4s& viewport) const noexcept
+void TileMap::draw(const TileMap::TilePlane& plane) const noexcept
 {
     if (plane.visibleChunks.empty())
         return;

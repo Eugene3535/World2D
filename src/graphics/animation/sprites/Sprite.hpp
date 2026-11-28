@@ -4,8 +4,7 @@
 #include "graphics/transform/Transform2D.hpp"
 
 
-class Sprite:
-    public Transform2D
+class Sprite : public Transform2D
 {
 public:
     Sprite() noexcept;

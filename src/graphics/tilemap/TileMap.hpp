@@ -19,8 +19,8 @@ public:
     void drawBackground(const ivec4s& viewport) noexcept;
     void drawForeground(const ivec4s& viewport) noexcept;
 
-        ivec2s                     getMapSize() const noexcept;
-    ivec2s                     getTileSize() const noexcept;
+    ivec2s               getMapSize() const noexcept;
+    ivec2s               getTileSize() const noexcept;
     std::span<TmxObject> getObjects() noexcept;
 
 private:
@@ -54,9 +54,9 @@ private:
     void loadGraphics(const class TmxLoader& loader) noexcept;
     void cleanup() noexcept;
     void prepareChunks(TilePlane& plane, const ivec4s& extents) noexcept;
-    void draw(const TilePlane& plane, const ivec4s& viewport) const noexcept;
+    void draw(const TilePlane& plane) const noexcept;
 
-    std::string m_locationName;
+    std::string            m_locationName;
     TilePlane              m_background{};
     TilePlane              m_foreground{};
     std::vector<TmxObject> m_objects;

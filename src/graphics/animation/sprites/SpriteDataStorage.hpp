@@ -41,6 +41,6 @@ private:
     std::unordered_map<std::string, sprite_range> m_animations;
 
     std::vector<struct SpriteData> m_sprites;
-    std::vector<float>    m_vertices;
-    bool                  m_isLocked{false};
+    std::vector<float>             m_vertices;
+    bool                           m_isLocked{false};
 };

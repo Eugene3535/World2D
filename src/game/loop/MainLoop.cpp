@@ -16,11 +16,10 @@
 #include "graphics/tilemap/TileMap.hpp"
 
 // just for sprite example
+#include "graphics/animation/sprites/Sprite.hpp"
+#include "graphics/animation/sprites/SpriteDataStorage.hpp"
 #include <array>
 #include <graphics/vao/VertexBufferLayout.hpp>
-#include "graphics/animation/sprites/SpriteDataStorage.hpp"
-#include "graphics/animation/sprites/Sprite.hpp"
-
 
 
 MainLoop::MainLoop(MainWindow& window) noexcept :
@@ -46,7 +45,7 @@ void MainLoop::operator()(Game& game) noexcept
 
 
     const std::string locationName("Location-2");
-    TileMap tilemap(locationName);
+    TileMap           tilemap(locationName);
 
     if (!tilemap.open())
         return;
@@ -63,9 +62,9 @@ void MainLoop::operator()(Game& game) noexcept
     game.windowData.locationSize = glms_ivec2_mul(mapSize, tileSize);
 
     // Sprite example demo
-    const auto spriteTexture = Assets->get<Texture2D>("Vortex.png");
-    auto spriteVertexBuffers = game.glResources.getHandles(GlResourceManager::GLBuffer, 1);
-    auto spriteVertexArrays = game.glResources.getHandles(GlResourceManager::GLVertexArray, 1);
+    const auto spriteTexture       = Assets->get<Texture2D>("Vortex.png");
+    auto       spriteVertexBuffers = game.glResources.getHandles(GlResourceManager::GLBuffer, 1);
+    auto       spriteVertexArrays  = game.glResources.getHandles(GlResourceManager::GLVertexArray, 1);
 
     if (!spriteTexture || spriteVertexBuffers.empty() || spriteVertexArrays.empty())
         return;
@@ -77,17 +76,17 @@ void MainLoop::operator()(Game& game) noexcept
     const std::array<VertexBufferLayout::Attribute, 1> attributes = {VertexBufferLayout::Attribute::Float4};
     VertexBufferLayout                                 layout(attributes);
     layout.createVertexInputState(spriteVertexArrays[0], spriteVertexBuffers[0]);
-    
+
     auto spriteData = spriteStorage.getSprite("Vortex");
-    
+
     if (!spriteData)
         return;
 
-    Sprite sprite(spriteData.value());
+    Sprite      sprite(spriteData.value());
     const auto& currentWorldMatrix = game.windowData.view->getProjectionMatrix();
     sprite.setOrigin(spriteTexture->getSize().x * 0.5f, spriteTexture->getSize().y * 0.5f);
     sprite.setScale(0.5f, 0.5f);
-    const vec2s spritePosition {655.f, 270.f};
+    const vec2s spritePosition{655.f, 270.f};
     sprite.setPosition(spritePosition);
 
     while (m_window->isOpen())
@@ -103,7 +102,7 @@ void MainLoop::operator()(Game& game) noexcept
         sprite.setPosition(glms_vec2_add(spritePosition, tilemap.getPosition()));
         sprite.rotate(deltaTime * 10);
         const auto& model = sprite.getMatrix();
-        auto mvp = glms_mul(currentWorldMatrix, model);
+        auto        mvp   = glms_mul(currentWorldMatrix, model);
         game.windowData.view->updateUniformBuffer(mvp.raw);
         sprite.draw(spriteVertexArrays[0]);
 
