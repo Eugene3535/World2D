@@ -3,14 +3,15 @@
 #include "RapidXML/rapidxml_utils.hpp"
 #include <glad/glad.h>
 
-#include "graphics/animation/sprites/SpriteAnimator.hpp"
+#include "graphics/animation/sprites/SpriteData.hpp"
+#include "graphics/animation/sprites/SpriteDataStorage.hpp"
 
 
-SpriteAnimator::SpriteAnimator() noexcept = default;
-SpriteAnimator::~SpriteAnimator()         = default;
+SpriteDataStorage::SpriteDataStorage() noexcept = default;
+SpriteDataStorage::~SpriteDataStorage()         = default;
 
 
-void SpriteAnimator::createSprite(const std::string& name, uint32_t texture) noexcept
+void SpriteDataStorage::createSprite(const std::string& name, uint32_t texture) noexcept
 {
     if (m_isLocked)
         return;
@@ -28,7 +29,7 @@ void SpriteAnimator::createSprite(const std::string& name, uint32_t texture) noe
 }
 
 
-void SpriteAnimator::createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept
+void SpriteDataStorage::createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept
 {
     if (m_isLocked)
         return;
@@ -49,7 +50,7 @@ void SpriteAnimator::createSprite(const std::string& name, uint32_t texture, con
 }
 
 
-void SpriteAnimator::createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept
+void SpriteDataStorage::createLinearAnimaton(const std::string& name, uint32_t texture, int duration) noexcept
 {
     if (m_isLocked)
         return;
@@ -77,7 +78,7 @@ void SpriteAnimator::createLinearAnimaton(const std::string& name, uint32_t text
 }
 
 
-void SpriteAnimator::createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept
+void SpriteDataStorage::createGridAnimaton(const std::string& name, uint32_t texture, int columns, int rows) noexcept
 {
     if (m_isLocked)
         return;
@@ -110,7 +111,7 @@ void SpriteAnimator::createGridAnimaton(const std::string& name, uint32_t textur
 }
 
 
-void SpriteAnimator::createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept
+void SpriteDataStorage::createCustomAnimaton(const std::string& name, uint32_t texture, std::span<const ivec4s> frames) noexcept
 {
     if (m_isLocked)
         return;
@@ -132,7 +133,7 @@ void SpriteAnimator::createCustomAnimaton(const std::string& name, uint32_t text
 }
 
 
-void SpriteAnimator::loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept
+void SpriteDataStorage::loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept
 {
     if (m_isLocked)
         return;
@@ -194,21 +195,21 @@ void SpriteAnimator::loadSpriteSheet(const std::filesystem::path& filePath, uint
 }
 
 
-std::optional<Sprite2D> SpriteAnimator::getSprite(const std::string& name) const noexcept
+std::optional<SpriteData> SpriteDataStorage::getSprite(const std::string& name) const noexcept
 {
     if (auto it = m_animations.find(name); it != m_animations.end())
     {
         const auto sprites = m_sprites.data();
         const auto sprite  = sprites + static_cast<ptrdiff_t>(it->second.first);
 
-        return std::make_optional<Sprite2D>(*sprite);
+        return std::make_optional<SpriteData>(*sprite);
     }
 
     return std::nullopt;
 }
 
 
-std::span<const Sprite2D> SpriteAnimator::getAnimation(const std::string& name) const noexcept
+std::span<const SpriteData> SpriteDataStorage::getAnimation(const std::string& name) const noexcept
 {
     if (auto it = m_animations.find(name); it != m_animations.end())
     {
@@ -222,7 +223,7 @@ std::span<const Sprite2D> SpriteAnimator::getAnimation(const std::string& name) 
 }
 
 
-void SpriteAnimator::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
+void SpriteDataStorage::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
 {
     if (m_vertices.empty())
         return;
@@ -237,7 +238,7 @@ void SpriteAnimator::pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept
 }
 
 
-void SpriteAnimator::addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept
+void SpriteDataStorage::addSprite(const uint32_t texture, const ivec4s frame, const vec2s ratio) noexcept
 {
     auto& sprite   = m_sprites.emplace_back();
     sprite.frame   = m_vertices.size() >> 2;

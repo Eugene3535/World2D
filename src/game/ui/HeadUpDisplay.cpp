@@ -87,7 +87,7 @@ void HeadUpDisplay::update(TileMap& tilemap, float dt) noexcept
             scenePosition.y = 0;
 
         if (scenePosition.y < (viewSize.y - locationSize.y))
-            scenePosition.y = viewSize.y - locationSize.y;
+            scenePosition.y = viewSize.y - locationSize.y;      
     }
 
     tilemap.setPosition(scenePosition);

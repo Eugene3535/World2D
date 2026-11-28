@@ -15,6 +15,13 @@
 #include "graphics/camera/View.hpp"
 #include "graphics/tilemap/TileMap.hpp"
 
+// just for sprite example
+#include <array>
+#include <graphics/vao/VertexBufferLayout.hpp>
+#include "graphics/animation/sprites/SpriteDataStorage.hpp"
+#include "graphics/animation/sprites/Sprite.hpp"
+
+
 
 MainLoop::MainLoop(MainWindow& window) noexcept :
     m_window(&window)
@@ -55,6 +62,34 @@ void MainLoop::operator()(Game& game) noexcept
     const auto tileSize          = tilemap.getTileSize();
     game.windowData.locationSize = glms_ivec2_mul(mapSize, tileSize);
 
+    // Sprite example demo
+    const auto spriteTexture = Assets->get<Texture2D>("Vortex.png");
+    auto spriteVertexBuffers = game.glResources.getHandles(GlResourceManager::GLBuffer, 1);
+    auto spriteVertexArrays = game.glResources.getHandles(GlResourceManager::GLVertexArray, 1);
+
+    if (!spriteTexture || spriteVertexBuffers.empty() || spriteVertexArrays.empty())
+        return;
+
+    SpriteDataStorage spriteStorage;
+    spriteStorage.createSprite("Vortex", spriteTexture->getHandle());
+    spriteStorage.pushVerticesOnGPU(spriteVertexBuffers[0]);
+
+    const std::array<VertexBufferLayout::Attribute, 1> attributes = {VertexBufferLayout::Attribute::Float4};
+    VertexBufferLayout                                 layout(attributes);
+    layout.createVertexInputState(spriteVertexArrays[0], spriteVertexBuffers[0]);
+    
+    auto spriteData = spriteStorage.getSprite("Vortex");
+    
+    if (!spriteData)
+        return;
+
+    Sprite sprite(spriteData.value());
+    const auto& currentWorldMatrix = game.windowData.view->getProjectionMatrix();
+    sprite.setOrigin(spriteTexture->getSize().x * 0.5f, spriteTexture->getSize().y * 0.5f);
+    sprite.setScale(0.5f, 0.5f);
+    const vec2s spritePosition {655.f, 270.f};
+    sprite.setPosition(spritePosition);
+
     while (m_window->isOpen())
     {
         m_window->clear();
@@ -63,6 +98,14 @@ void MainLoop::operator()(Game& game) noexcept
         const float currentFrame = m_window->getElapsedTime();
         const float deltaTime    = currentFrame - lastFrame;
         lastFrame                = currentFrame;
+
+        // sprite example demo
+        sprite.setPosition(glms_vec2_add(spritePosition, tilemap.getPosition()));
+        sprite.rotate(deltaTime * 10);
+        const auto& model = sprite.getMatrix();
+        auto mvp = glms_mul(currentWorldMatrix, model);
+        game.windowData.view->updateUniformBuffer(mvp.raw);
+        sprite.draw(spriteVertexArrays[0]);
 
         HeadUpDisplay hud(game.windowData);
         hud.update(tilemap, deltaTime);
@@ -83,6 +126,8 @@ void MainLoop::operator()(Game& game) noexcept
         ImGui::NewFrame();
 
         ImGui::Begin("Debug Info");
+        ImGui::Text("Window size: (%d, %d)", windowSize.x, windowSize.y);
+        ImGui::Text("Viewport: (%d, %d, %d, %d)", viewport.x, viewport.y, viewport.z, viewport.w);
         ImGui::Text("Local mouse position: (%.1f, %.1f)", game.windowData.cursor.x, game.windowData.cursor.y);
         ImGui::Text("Tilemap position: (%.1f, %.1f)", -position.x, -position.y);
         ImGui::Text("World cursor position: (%.1f, %.1f)", worldCoords.x, worldCoords.y);

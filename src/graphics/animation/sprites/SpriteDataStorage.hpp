@@ -10,24 +10,15 @@
 #include <cglm/struct/ivec4.h>
 
 
-struct Sprite2D
-{
-    uint32_t texture;
-    uint32_t frame;
-    uint32_t width;
-    uint32_t height;
-};
-
-
-class SpriteAnimator final
+class SpriteDataStorage final
 {
 public:
-    SpriteAnimator() noexcept;
-    SpriteAnimator(const SpriteAnimator&) noexcept            = delete;
-    SpriteAnimator(SpriteAnimator&&) noexcept                 = delete;
-    SpriteAnimator& operator=(const SpriteAnimator&) noexcept = delete;
-    SpriteAnimator& operator=(SpriteAnimator&&) noexcept      = delete;
-    ~SpriteAnimator();
+    SpriteDataStorage() noexcept;
+    SpriteDataStorage(const SpriteDataStorage&) noexcept            = delete;
+    SpriteDataStorage(SpriteDataStorage&&) noexcept                 = delete;
+    SpriteDataStorage& operator=(const SpriteDataStorage&) noexcept = delete;
+    SpriteDataStorage& operator=(SpriteDataStorage&&) noexcept      = delete;
+    ~SpriteDataStorage();
 
     void createSprite(const std::string& name, uint32_t texture) noexcept;
     void createSprite(const std::string& name, uint32_t texture, const ivec4s& frame) noexcept;
@@ -38,8 +29,8 @@ public:
 
     void loadSpriteSheet(const std::filesystem::path& filePath, uint32_t texture) noexcept;
 
-    std::optional<Sprite2D>   getSprite(const std::string& name) const noexcept;
-    std::span<const Sprite2D> getAnimation(const std::string& name) const noexcept;
+    std::optional<struct SpriteData>   getSprite(const std::string& name) const noexcept;
+    std::span<const struct SpriteData> getAnimation(const std::string& name) const noexcept;
 
     void pushVerticesOnGPU(const uint32_t vertexBuffer) noexcept;
 
@@ -49,7 +40,7 @@ private:
     using sprite_range = std::pair<uint32_t, uint32_t>; // start sprite number, count ( single = 1, animation = n )
     std::unordered_map<std::string, sprite_range> m_animations;
 
-    std::vector<Sprite2D> m_sprites;
+    std::vector<struct SpriteData> m_sprites;
     std::vector<float>    m_vertices;
     bool                  m_isLocked{false};
 };
